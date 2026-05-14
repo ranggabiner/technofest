@@ -52,7 +52,7 @@ Follow this order for Sprint 1 implementation:
 4. Implement crypto utilities for AES-GCM, canonical JSON, HMAC ID hashing, file encryption/decryption, and safe logging.
 5. Implement Supabase Auth callbacks and session role resolution for Patient, Doctor, and Medical Admin.
 6. Implement Medical Admin allowlist and doctor KYC flow.
-7. Implement doctor approval/rejection, QR/code generation, Resend emails, and code rate limiting.
+7. Implement doctor approval/rejection, QR/code generation, Resend emails, and code rate limiting with both 10 failed lookups per rolling 15 minutes and 20 failed lookups per rolling 24 hours per authenticated user plus IP.
 8. Implement patient onboarding, AI processing consent, dashboard, and AI chat shell.
 9. Implement AI message storage, session lifecycle, final extraction, emergency flagging, and encrypted Scope 2 writes.
 10. Implement patient access grant/replacement/revoke and access history.
@@ -62,7 +62,7 @@ Follow this order for Sprint 1 implementation:
 14. Implement Doctor RAG with SQL retrieval and DeepSeek response.
 15. Implement audit logging and patient/admin audit UI.
 16. Implement smart contract, Amoy deployment, relayer calls, pending retry, proof status, and Verify button.
-17. Add loading, empty, error, unauthorized, expired, revoked, pending, failed, and mismatch states.
+17. Add loading, empty, error, unauthorized, expired, revoked, pending, failed, and Verify mismatch states.
 18. Run validation checklist and report results.
 
 Do not skip earlier security layers to build UI faster. If scope pressure appears, reduce visual polish before reducing authorization, encryption, audit, or RLS.
@@ -132,9 +132,9 @@ Once app scaffold and scripts exist, run:
 - [ ] RLS verification for Patient, approved Doctor, pending Doctor, rejected Doctor, Medical Admin, and anonymous sessions.
 - [ ] Supabase Data API grants/exposure verification for intended and private tables.
 - [ ] Encryption verification for database rows and storage bytes.
-- [ ] Doctor Access Code rate-limit verification.
+- [ ] Doctor Access Code rate-limit verification for both 10 failed lookups per rolling 15 minutes and 20 failed lookups per rolling 24 hours per authenticated user plus IP.
 - [ ] Access expiry/revocation verification.
-- [ ] Blockchain pending, failed, confirmed, and mismatch-state verification.
+- [ ] Blockchain pending/failed/confirmed verification plus Verify mismatch-state verification.
 - [ ] Manual QA for Patient, Doctor, and Medical Admin primary flows.
 - [ ] Confirmation that no non-scope features were added.
 

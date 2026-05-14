@@ -12,12 +12,12 @@ Build MedProof as a secure web competition MVP for demo/test data only. Sprint 1
 
 - Next.js 16 App Router app with TypeScript, pnpm, Tailwind CSS, shadcn/ui, Supabase JS, `@supabase/ssr`, Vercel AI SDK, DeepSeek, Resend, Hardhat, viem, and Polygon Amoy.
 - Supabase Google OAuth for Patient, Doctor, and Medical Admin roles.
-- Medical Admin allowlist and manual doctor KYC review for STR, SIP, and KTP documents.
+- Medical Admin allowlist and manual doctor KYC review for STR, SIP, and KTP documents, with optional manual KKI cross-check outside MedProof.
 - Patient AI onboarding, AI processing consent, chat sessions, encrypted messages, final Scope 2 extraction, emergency flags, and encrypted summaries.
 - Patient access management through Doctor QR Code or 6-digit Doctor Access Code, with boolean scope flags, finite expiry, replacement, revocation, and access history.
 - Doctor temporary patient data view, Scope 1 append-only record creation, encrypted attachments, and text Doctor RAG over authorized Scope 2 data.
 - Supabase SQL migrations, RLS policies, private storage buckets, explicit Data API grants where tables are intentionally reachable, and validation for anonymous, Patient, approved Doctor, pending Doctor, rejected Doctor, and Medical Admin sessions.
-- Blockchain proof for Scope 1 records, consent events, and audit events using privacy-preserving hashes only.
+- Blockchain proof for Scope 1 records, access-grant consent events, and audit events using privacy-preserving hashes only. Proof hashes are computed before off-chain insert/update and saved with `blockchain_status = 'pending'`. AI processing consent is persisted as an audit event and does not create an access-grant consent proof.
 
 ## Sprint Non-Scope
 
@@ -36,6 +36,9 @@ Do not implement:
 - `plans/sprint-01/Draft.md` remains detailed source context. This `overview.md` is the active Sprint 1 contract.
 - Supabase table exposure behavior must be handled explicitly: RLS alone controls rows, while Data API reachability may require explicit grants/settings for intended client-accessed tables.
 - App-level encryption limits direct SQL analytics over health content; implementation queries operational metadata, decrypts after authorization, and computes trends server-side.
+- Medical Admin may manually cross-check STR/SIP/KTP against official KKI sources outside MedProof. This is optional review support, not KKI API automation.
+- Patient AI processing consent is persisted as an `audit_logs` event with `action = 'ai_processing_consent_accepted'` before AI chat starts.
+- Audit actions and `access_status` values must use the shared taxonomy defined in Features 02 and 06, including AI consent acceptance, grant lifecycle, doctor view allowed/denied, Scope 1 create/amend, RAG request, admin approval/rejection, KYC email notification failure, failed Doctor Access Code lookup, and blockchain verification mismatch.
 
 ## Feature List
 
@@ -66,7 +69,7 @@ Read feature specs in this order:
 4. Implement crypto utilities, canonical JSON, HMAC hashing, file encryption, and safe logging.
 5. Implement role resolution, admin allowlist, KYC document upload, and admin review.
 6. Implement patient onboarding, AI consent, AI chat shell, message storage, final extraction, Scope 2 writes, and summaries.
-7. Implement doctor lookup, grant create/replace/revoke, access expiry, access history, and rate limits.
+7. Implement doctor lookup, grant create/replace/revoke, access expiry, access history, and Doctor Access Code rate limits: 10 failed attempts per rolling 15 minutes and 20 failed attempts per rolling 24 hours per authenticated user plus IP.
 8. Implement doctor data view, encrypted attachment preview/download policy, Scope 1 append-only records, and Doctor RAG.
 9. Implement audit events, smart contract, relayer jobs, blockchain retry, status, and verification.
 10. Add required UI states, run validation, and report changed files, assumptions, risks, and out-of-scope items not touched.
@@ -118,7 +121,7 @@ Required model rules:
 - Enable RLS on exposed-schema tables and write policies with explicit `TO authenticated` where applicable.
 - Since Supabase is changing table exposure behavior, migrations must include explicit grants/exposure checks for any table meant to be accessed through Supabase Data API. Private/internal tables should remain unexposed or have grants revoked.
 - Use explicit SQL column selection in access-sensitive logic. Do not use `SELECT *` in production API logic.
-- Blockchain write path is save-first: persist off-chain row, mark `pending`, retry safely, expose status.
+- Blockchain write path is hash-first/save-first: compute deterministic proof hash, persist off-chain row with `pending`, retry safely, expose status.
 
 ## Milestones
 
@@ -136,7 +139,7 @@ Required model rules:
 - Medical Admin is allowlisted and cannot access patient medical data.
 - Pending/rejected doctors cannot access doctor features.
 - Approved doctors get QR Code and 6-digit Doctor Access Code.
-- Doctor code lookup is rate-limited and returns generic errors.
+- Doctor code lookup is rate-limited at both 10 failed attempts per rolling 15 minutes and 20 failed attempts per rolling 24 hours per authenticated user plus IP, and returns generic errors.
 - Patients can grant, replace, expire, revoke, and review doctor access.
 - Doctors cannot free-search patients and can see only authorized categories.
 - Health fields and file bytes are encrypted before persistence.
@@ -145,7 +148,7 @@ Required model rules:
 - Doctor RAG uses authorized Scope 2 SQL retrieval only and includes Indonesian non-diagnostic disclaimer.
 - Scope 1 records are append-only and amendments are linked.
 - Audit logs exist for required sensitive actions.
-- Blockchain status and Verify UI support pending, failed, confirmed, and mismatch.
+- Database `blockchain_status` supports pending, failed, and confirmed. Verify is enabled only after transaction confirmation; before confirmation, verification is unavailable/pending. Verification mismatch is a Verify result and audit event, not a `blockchain_status` value.
 - No non-scope features are implemented.
 
 ## Sprint Validation Checklist
@@ -160,9 +163,9 @@ Required model rules:
 - [ ] RLS checks for anonymous, Patient, approved Doctor, pending Doctor, rejected Doctor, and Medical Admin.
 - [ ] Data API exposure/grants checked for intended tables and private tables.
 - [ ] Encryption checks confirm DB rows and storage bytes are unreadable without app key.
-- [ ] Doctor Access Code rate limit and generic error checks.
+- [ ] Doctor Access Code rolling 15-minute and rolling 24-hour rate limits plus generic error checks.
 - [ ] Access expiry/revocation blocks doctor data requests.
-- [ ] Blockchain pending, failed, confirmed, and mismatch checks.
+- [ ] Blockchain pending/failed/confirmed checks plus Verify mismatch checks.
 - [ ] Manual QA for Patient, Doctor, and Medical Admin flows.
 - [ ] Confirm non-scope features were not added.
 
@@ -176,7 +179,7 @@ Required model rules:
 | External AI sees decrypted text | Require explicit consent and demo/test-data disclaimer. |
 | App encryption limits SQL analytics | Query metadata, decrypt after authorization, compute trends server-side. |
 | Polygon Amoy fails or slows | Save off-chain first; mark pending/failed; retry safely. |
-| 6-digit doctor codes are brute-forceable | Rate-limit by authenticated user plus IP, generic errors, audit failed lookups. |
+| 6-digit doctor codes are brute-forceable | Rate-limit 10 failed attempts per rolling 15 minutes and 20 failed attempts per rolling 24 hours by authenticated user plus IP, generic errors, audit failed lookups. |
 | Medical/legal claims overreach | Keep non-diagnostic and competition MVP disclaimers visible. |
 
 ## Sprint Decisions Log

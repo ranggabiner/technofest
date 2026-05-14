@@ -216,8 +216,8 @@ Policy:
 
 1. Code format: unique 6-digit numeric string.
 2. Available only for approved doctors.
-3. 10 failed lookup attempts per 15 minutes per authenticated user plus IP.
-4. 20 failed lookup attempts per day per authenticated user plus IP.
+3. 10 failed lookup attempts per rolling 15 minutes per authenticated user plus IP.
+4. 20 failed lookup attempts per rolling 24 hours per authenticated user plus IP.
 5. Failed lookups are logged in `audit_logs` with generic reason.
 6. UI errors must not reveal whether a code exists.
 
@@ -426,13 +426,19 @@ schema_version TEXT NOT NULL DEFAULT 'v1'
 raw_extraction_jsonb_ciphertext TEXT NULL
 raw_extraction_jsonb_iv TEXT NULL
 raw_extraction_jsonb_tag TEXT NULL
-raw_quote_hash TEXT NULL
+raw_quote_hash TEXT NOT NULL
 key_version TEXT NOT NULL DEFAULT 'v1'
 created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 updated_at TIMESTAMPTZ NULL
 ```
 
-Duplicate prevention: do not create multiple `scope_2_physical` rows for the same `session_id` plus `raw_quote_hash`.
+Required duplicate-prevention constraint:
+
+```sql
+UNIQUE (session_id, raw_quote_hash)
+```
+
+Duplicate prevention: do not create multiple `scope_2_physical` rows for the same `session_id` plus `raw_quote_hash`. `raw_quote_hash` is required for persisted physical rows so null values cannot bypass duplicate prevention.
 
 ### Scope 1 Medical Records
 
@@ -501,7 +507,7 @@ Rules:
 2. `expires_at` is always required and finite.
 3. Custom duration has no maximum, but UI must warn when the chosen expiry is more than 30 days away.
 4. Only one active patient-doctor grant may exist at a time.
-5. Creating a new grant for the same patient-doctor pair revokes the prior active grant, sets `replaced_by_grant_id`, and creates new consent/audit blockchain events.
+5. Creating a new grant for the same patient-doctor pair revokes the prior active grant, sets `replaced_by_grant_id`, creates a consent proof for the prior replaced grant state, creates a consent proof for the new active grant state, and creates a new audit blockchain event.
 
 Access check must not use `SELECT *`. Use explicit columns and deterministic ordering:
 
@@ -615,7 +621,7 @@ Backend behavior:
 4. Run final extraction when session ends.
 5. Write at most one `scope_2_mental` row per session.
 6. Write one `scope_2_physical` row per primary symptom per session.
-7. Store traceability through `session_id`, encrypted `raw_quote`, and optional `raw_quote_hash`.
+7. Store traceability through `session_id`, encrypted `raw_quote`, optional mental `raw_quote_hash`, and required non-null physical `raw_quote_hash`.
 8. Generate encrypted `summary_text` after session end.
 
 Session ends when:
@@ -729,12 +735,13 @@ Doctors can add Scope 1 records only while active grant includes Scope 1.
 Save flow:
 
 1. Validate doctor auth, approval, active grant, and Scope 1 flag.
-2. Encrypt clinical fields and attachment bytes.
-3. Save Scope 1 record.
-4. Generate canonical encrypted payload hash.
-5. Create audit log.
-6. Create blockchain pending jobs for record and audit event.
-7. UI shows proof pending until confirmed.
+2. Generate the Scope 1 record UUID before insert.
+3. Encrypt clinical fields and attachment bytes.
+4. Build the canonical encrypted record payload and compute `record_hash` before insert.
+5. Save Scope 1 record with `record_hash` and `blockchain_status = 'pending'` in the same transaction.
+6. Create audit log with `audit_event_hash` and `blockchain_status = 'pending'`.
+7. Create blockchain pending jobs for record and audit event.
+8. UI shows proof pending until confirmed.
 
 ### Doctor RAG
 
@@ -794,11 +801,64 @@ Required patterns:
 1. `patient_hash = HMAC_SHA256(HASH_PEPPER, patient_id)`.
 2. `doctor_hash = HMAC_SHA256(HASH_PEPPER, doctor_id)`.
 3. `actor_hash = HMAC_SHA256(HASH_PEPPER, actor_auth_user_id)`.
-4. `record_hash = SHA256(canonical_json(encrypted_record_payload))`.
-5. `consent_hash = SHA256(canonical_json(consent_event_payload_with_hmac_ids))`.
-6. `audit_event_hash = SHA256(canonical_json(audit_event_payload_with_hmac_ids))`.
+4. `target_ref_hash = HMAC_SHA256(HASH_PEPPER, target_id)` when a target ID exists.
+5. `record_hash = SHA256(canonical_json(encrypted_record_payload))`.
+6. `consent_hash = SHA256(canonical_json(consent_event_payload_with_hmac_ids))`.
+7. `audit_event_hash = SHA256(canonical_json(audit_event_payload_with_hmac_ids))`.
 
-Canonical JSON must use stable key ordering, stable timestamp format, and no plaintext health content.
+Canonical JSON must use stable key ordering, stable UTC timestamp format, stable schema version, explicit nulls for nullable included fields, and no plaintext health content. Proof payloads must exclude mutable proof transport fields: `blockchain_tx_hash`, `blockchain_status`, and `blockchain_last_error`.
+
+Exact proof payloads:
+
+`encrypted_record_payload` includes exactly:
+
+1. `proof_type = "scope_1_record"`.
+2. `schema_version = "v1"`.
+3. `record_ref_hash = HMAC_SHA256(HASH_PEPPER, record_id)`.
+4. `patient_hash`.
+5. `doctor_hash`.
+6. `amends_record_ref_hash` or null.
+7. `record_type_ciphertext`, `record_type_iv`, `record_type_tag`.
+8. `title_ciphertext`, `title_iv`, `title_tag`.
+9. `description_ciphertext`, `description_iv`, `description_tag`.
+10. `attachment_file_ref_hash` or null.
+11. `attachment_file_sha256` or null.
+12. `key_version`.
+13. `created_at`.
+
+`consent_event_payload_with_hmac_ids` includes exactly:
+
+1. `proof_type = "access_grant_consent"`.
+2. `schema_version = "v1"`.
+3. `grant_ref_hash = HMAC_SHA256(HASH_PEPPER, grant_id)`.
+4. `patient_hash`.
+5. `doctor_hash`.
+6. `can_view_scope1`.
+7. `can_view_scope2_mental`.
+8. `can_view_scope2_physical`.
+9. `can_download_attachments`.
+10. `granted_at`.
+11. `expires_at`.
+12. `is_revoked`.
+13. `revoked_at` or null.
+14. `replaced_by_grant_ref_hash` or null.
+15. `created_at`.
+
+`audit_event_payload_with_hmac_ids` includes exactly:
+
+1. `proof_type = "audit_event"`.
+2. `schema_version = "v1"`.
+3. `log_ref_hash = HMAC_SHA256(HASH_PEPPER, log_id)`.
+4. `actor_hash`.
+5. `actor_role`.
+6. `action`.
+7. `target_type` or null.
+8. `target_ref_hash` or null.
+9. `patient_hash` or null.
+10. `doctor_hash` or null.
+11. `access_status`.
+12. `reason_code` or null, using only generic non-sensitive reason values.
+13. `created_at`.
 
 ### Contract Interface
 
@@ -828,25 +888,38 @@ function recordAuditEvent(
 ) external;
 ```
 
+Contract must also emit deterministic indexed events for verification:
+
+```solidity
+event HealthRecordRegistered(bytes32 indexed recordHash, bytes32 indexed patientHash, bytes32 indexed issuerHash, uint256 version);
+event ConsentRecorded(bytes32 indexed consentHash, bytes32 indexed patientHash, bytes32 indexed granteeHash, uint256 expiresAt, bool isRevoked);
+event AuditEventRecorded(bytes32 indexed auditEventHash, bytes32 indexed actorHash, bytes32 indexed targetHash, bytes32 actionHash);
+```
+
+Verify reads confirmed transaction receipts or indexed contract logs and compares the event hash argument with the recomputed local hash.
+Contract implementation must prevent duplicate registration of the same `recordHash`, `consentHash`, or `auditEventHash`; relayer retries must treat a duplicate matching hash as idempotent success after event lookup.
+
 ### Transaction Policy
 
 Use a server relayer wallet stored in Vercel env. Users do not need wallets.
 
 If Polygon Amoy write is slow or fails:
 
-1. Save off-chain record/grant/audit first.
-2. Set `blockchain_status = 'pending'`.
+1. Generate stable row IDs, capture one transaction timestamp for included timestamp fields, build canonical proof payload, and compute the required hash before the off-chain insert/update.
+2. Save off-chain record/grant/audit with the hash and `blockchain_status = 'pending'`.
 3. Retry through a controlled server job.
 4. If retry fails, set `blockchain_status = 'failed'` and store non-sensitive error summary.
 5. UI must show pending/failed/confirmed status.
 6. User can press Verify after tx confirmation.
+
+Relayer retry must claim rows with `FOR UPDATE SKIP LOCKED`. Duplicate matching proof hashes are idempotent and must be resolved through confirmed event lookup before marking a proof failed.
 
 Proof UI:
 
 1. Scope 1 records show tx status/hash and Verify button.
 2. Access grants show tx status/hash and Verify button.
 3. Patient access history shows audit proof status.
-4. Verification recomputes hash from current encrypted payload/event and compares with on-chain value.
+4. Verification recomputes hash from current encrypted payload/event and compares with the matching confirmed contract event hash.
 5. Mismatch shows integrity warning and writes audit log.
 
 ## End-To-End Flows
@@ -1006,7 +1079,7 @@ Use exact commands once scripts exist. Until then, implementation must add equiv
 - [ ] Verify encrypted file bytes are unreadable directly from storage.
 - [ ] Verify Doctor Access Code rate limit and generic errors.
 - [ ] Verify access expiry/revocation blocks doctor data requests.
-- [ ] Verify blockchain pending, failed, confirmed, and mismatch states.
+- [ ] Verify blockchain pending/failed/confirmed states plus Verify mismatch state.
 - [ ] Manually test patient full flow.
 - [ ] Manually test doctor full flow.
 - [ ] Manually test admin full flow.
