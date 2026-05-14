@@ -105,6 +105,7 @@ Before editing implementation code, read:
 
 ## UI Rules
 
+- For UI-related work, read `DESIGN.md` first and treat it as the source of truth for layout direction, visual style, component patterns, spacing, interaction behavior, and overall design language. Do not introduce styles that conflict with `DESIGN.md` unless the user explicitly requests it; when existing UI differs, prioritize alignment with `DESIGN.md`.
 - Use Indonesian for UI copy and AI responses.
 - Build application screens directly, not a marketing landing page.
 - Use restrained dashboard/product UI, not decorative landing-page styling.
