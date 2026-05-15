@@ -2,12 +2,14 @@
 
 ## Automated Checks
 
+Run from `apps/web`:
+
 - [ ] `pnpm typecheck`
 - [ ] `pnpm lint`
 - [ ] `pnpm test`
 - [ ] `pnpm build`
-- [ ] `supabase test db`
-- [ ] `supabase db advisors --local --type all --fail-on warn`
+- [ ] `pnpm supabase:test`
+- [ ] `pnpm supabase:advisors`
 - [ ] `pnpm validate:privacy`
 
 ## Supabase And Privacy Checks

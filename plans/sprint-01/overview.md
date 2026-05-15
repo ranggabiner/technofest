@@ -32,7 +32,7 @@ Do not implement:
 ## Sprint Assumptions
 
 - Repository docs stay in English; user-facing UI copy and AI responses stay Indonesian.
-- No app scaffold exists at planning time, so exact app folders and scripts are finalized during scaffold and reported after implementation.
+- The repository root is documentation-first. Website dependencies, config, scripts, source, assets, contracts, and the pnpm lockfile live in `apps/web`, while Supabase CLI config, migrations, and tests live in `apps/supabase/supabase`.
 - `plans/sprint-01/Draft.md` remains detailed source context. This `overview.md` is the active Sprint 1 contract.
 - Supabase table exposure behavior must be handled explicitly: RLS alone controls rows, while Data API reachability may require explicit grants/settings for intended client-accessed tables.
 - App-level encryption limits direct SQL analytics over health content; implementation queries operational metadata, decrypts after authorization, and computes trends server-side.
@@ -153,11 +153,11 @@ Required model rules:
 
 ## Sprint Validation Checklist
 
-- [ ] `pnpm install` when scaffold or deps changed.
-- [ ] `pnpm typecheck`.
-- [ ] `pnpm lint`.
-- [ ] `pnpm test`.
-- [ ] `pnpm build`.
+- [ ] From `apps/web`, run `pnpm install` when scaffold or deps changed.
+- [ ] From `apps/web`, run `pnpm typecheck`.
+- [ ] From `apps/web`, run `pnpm lint`.
+- [ ] From `apps/web`, run `pnpm test`.
+- [ ] From `apps/web`, run `pnpm build`.
 - [ ] Supabase migration apply/verify against local or staging.
 - [ ] Supabase advisors reviewed for security and performance.
 - [ ] RLS checks for anonymous, Patient, approved Doctor, pending Doctor, rejected Doctor, and Medical Admin.
