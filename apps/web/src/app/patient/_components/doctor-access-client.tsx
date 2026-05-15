@@ -1,8 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Camera, Search, ShieldCheck, StopCircle, Trash2 } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Camera, Search, ShieldCheck, StopCircle, Trash2, UserRound } from "lucide-react";
 
+import { DoctorLookupSkeleton } from "@/components/loading-skeletons";
 import { ProofStatus } from "@/components/proof-status";
 import { StatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
@@ -25,12 +26,8 @@ import type {
 } from "@/lib/access/doctor-access";
 
 import { grantDoctorAccessAction, revokeDoctorAccessAction } from "../actions";
-
-type BarcodeDetectorConstructor = new (options?: {
-  formats?: string[];
-}) => {
-  detect(source: HTMLVideoElement): Promise<Array<{ rawValue: string }>>;
-};
+import { consumePendingDoctorLookup } from "./doctor-lookup-handoff";
+import { useDoctorQrScanner } from "./use-doctor-qr-scanner";
 
 export function DoctorAccessClient({
   state,
@@ -47,120 +44,86 @@ export function DoctorAccessClient({
   const [doctor, setDoctor] = useState<DoctorLookupResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLookingUp, setIsLookingUp] = useState(false);
-  const [isScanning, setIsScanning] = useState(false);
   const [nowMs] = useState(() => Date.now());
   const [expiresAt, setExpiresAt] = useState(defaultExpiryValue);
   const [canViewScope1, setCanViewScope1] = useState(true);
   const [longExpiryConfirmed, setLongExpiryConfirmed] = useState(false);
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-  const streamRef = useRef<MediaStream | null>(null);
-  const scanTimerRef = useRef<number | null>(null);
 
   const longExpiryRequired = useMemo(() => {
     const expiresMs = new Date(expiresAt).getTime();
     return Number.isFinite(expiresMs) && expiresMs - nowMs > 30 * 24 * 60 * 60 * 1000;
   }, [expiresAt, nowMs]);
-  const cameraSupported =
-    typeof window !== "undefined" &&
-    typeof navigator !== "undefined" &&
-    typeof navigator.mediaDevices?.getUserMedia === "function" &&
-    Boolean(
-      (window as unknown as { BarcodeDetector?: BarcodeDetectorConstructor }).BarcodeDetector,
-    );
 
-  const stopCamera = useCallback(() => {
-    if (scanTimerRef.current) {
-      window.clearTimeout(scanTimerRef.current);
-      scanTimerRef.current = null;
-    }
-    streamRef.current?.getTracks().forEach((track) => track.stop());
-    streamRef.current = null;
-    if (videoRef.current) videoRef.current.srcObject = null;
-    setIsScanning(false);
-  }, []);
-
-  useEffect(() => stopCamera, [stopCamera]);
-
-  async function lookupDoctor(value = lookupValue) {
-    const nextValue = value.trim();
-    if (!nextValue) {
-      setError(copy.patient.access.enterCode);
-      return;
-    }
-
-    setIsLookingUp(true);
-    setError(null);
-    setDoctor(null);
-
-    try {
-      const response = await fetch("/api/patient/doctor-access/lookup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ value: nextValue }),
-      });
-      const body = (await response.json()) as {
-        doctor?: DoctorLookupResult;
-        error?: string;
-      };
-      if (!response.ok || !body.doctor) {
-        throw new Error(body.error ?? copy.patient.access.doctorNotFound);
+  const lookupDoctor = useCallback(
+    async (value = lookupValue) => {
+      const nextValue = value.trim();
+      if (!nextValue) {
+        setError(copy.patient.access.enterCode);
+        return;
       }
-      setDoctor(body.doctor);
-    } catch (lookupError) {
-      setError(lookupError instanceof Error ? lookupError.message : copy.patient.access.lookupFailed);
-    } finally {
-      setIsLookingUp(false);
-    }
-  }
 
-  async function startCamera() {
-    const Detector = (window as unknown as { BarcodeDetector?: BarcodeDetectorConstructor })
-      .BarcodeDetector;
-    if (!Detector) {
-      setError(copy.patient.access.scannerUnavailable);
-      return;
-    }
+      setIsLookingUp(true);
+      setError(null);
+      setDoctor(null);
 
-    setError(null);
-    setDoctor(null);
-    stopCamera();
-
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment" },
-        audio: false,
-      });
-      streamRef.current = stream;
-      setIsScanning(true);
-
-      if (!videoRef.current) return;
-      videoRef.current.srcObject = stream;
-      await videoRef.current.play();
-
-      const detector = new Detector({ formats: ["qr_code"] });
-      const scan = async () => {
-        if (!videoRef.current) return;
-        try {
-          const codes = await detector.detect(videoRef.current);
-          const rawValue = codes[0]?.rawValue?.trim();
-          if (rawValue) {
-            stopCamera();
-            setLookupValue(rawValue);
-            void lookupDoctor(rawValue);
-            return;
-          }
-        } catch {
-          setError(copy.patient.access.qrUnreadable);
+      try {
+        const response = await fetch("/api/patient/doctor-access/lookup", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ value: nextValue }),
+        });
+        const body = (await response.json()) as {
+          doctor?: DoctorLookupResult;
+          error?: string;
+        };
+        if (!response.ok || !body.doctor) {
+          throw new Error(body.error ?? copy.patient.access.doctorNotFound);
         }
-        scanTimerRef.current = window.setTimeout(scan, 500);
-      };
+        setDoctor(body.doctor);
+      } catch (lookupError) {
+        setError(lookupError instanceof Error ? lookupError.message : copy.patient.access.lookupFailed);
+      } finally {
+        setIsLookingUp(false);
+      }
+    },
+    [copy, lookupValue],
+  );
 
-      await scan();
-    } catch {
-      stopCamera();
-      setError(copy.patient.access.cameraFailed);
-    }
-  }
+  const scannerMessages = useMemo(
+    () => ({
+      scannerUnavailable: copy.patient.access.scannerUnavailable,
+      qrUnreadable: copy.patient.access.qrUnreadable,
+      cameraFailed: copy.patient.access.cameraFailed,
+      cameraPermissionDenied: copy.patient.access.cameraPermissionDenied,
+    }),
+    [copy],
+  );
+
+  const {
+    error: scannerError,
+    isScanning,
+    setError: setScannerError,
+    startCamera,
+    stopCamera,
+    videoRef,
+  } = useDoctorQrScanner({
+    messages: scannerMessages,
+    onScan: (rawValue) => {
+      setLookupValue(rawValue);
+      void lookupDoctor(rawValue);
+    },
+  });
+
+  useEffect(() => {
+    const pendingLookup = consumePendingDoctorLookup();
+    if (!pendingLookup) return;
+    queueMicrotask(() => {
+      setLookupValue(pendingLookup);
+      void lookupDoctor(pendingLookup);
+    });
+  }, [lookupDoctor]);
+
+  const visibleError = error ?? scannerError;
 
   return (
     <div className="grid gap-5">
@@ -190,8 +153,12 @@ export function DoctorAccessClient({
             type="button"
             variant="ghost"
             className="self-end rounded-[10px]"
-            onClick={isScanning ? stopCamera : () => void startCamera()}
-            disabled={!cameraSupported && !isScanning}
+            onClick={isScanning ? stopCamera : () => {
+              setDoctor(null);
+              setError(null);
+              setScannerError(null);
+              void startCamera();
+            }}
           >
             {isScanning ? <StopCircle size={16} /> : <Camera size={16} />}
             {isScanning ? copy.patient.access.scanStop : copy.patient.access.scanStart}
@@ -205,13 +172,15 @@ export function DoctorAccessClient({
           className={isScanning ? "aspect-video w-full rounded-[10px] bg-black" : "hidden"}
         />
 
-        {error ? (
+        {visibleError ? (
           <p className="rounded-[10px] border border-[var(--color-error-red)] bg-[var(--color-error-surface)] px-3 py-2 text-sm text-[var(--color-error-red)]">
-            {error}
+            {visibleError}
           </p>
         ) : null}
 
-        {doctor ? (
+        {isLookingUp ? (
+          <DoctorLookupSkeleton />
+        ) : doctor ? (
           <form action={grantDoctorAccessAction} className="grid gap-4 rounded-[10px] bg-[var(--color-card)] p-4">
             <input type="hidden" name="doctor_id" value={doctor.doctorId} />
             <div className="flex flex-wrap items-start justify-between gap-3">
@@ -377,6 +346,66 @@ export function AccessHistoryList({
                   txHash={item.blockchainTxHash}
                   messages={proofStatusMessages(copy)}
                 />
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="rounded-[10px] bg-[var(--color-stone-surface)] p-4 text-sm text-[var(--color-ash)]">
+          {copy.patient.dashboard.noHistory}
+        </p>
+      )}
+    </div>
+  );
+}
+
+export function DoctorAccessStatusLog({
+  items,
+  locale,
+  copy,
+}: {
+  items: PatientAccessState["accessLog"];
+  locale: Locale;
+  copy: Dictionary;
+}) {
+  return (
+    <div className="grid gap-0">
+      {items.length > 0 ? (
+        <div className="border-t border-[var(--color-stone-surface)] pt-2">
+          {items.map((item) => (
+            <div
+              key={item.grantId}
+              className="flex items-center justify-between gap-4 border-b border-[var(--color-stone-surface)] py-4 last:border-b-0"
+            >
+              <div className="flex min-w-0 items-center gap-4">
+                <span className="grid size-12 shrink-0 place-items-center rounded-full bg-[var(--color-stone-surface)] text-[var(--color-ash)]">
+                  <UserRound size={20} aria-hidden="true" />
+                </span>
+                <span className="min-w-0">
+                  <span className="block truncate text-base font-semibold leading-5 text-[var(--color-midnight)]">
+                    {item.doctorName}
+                  </span>
+                  <span className="block truncate text-xs leading-5 text-[var(--color-ash)]">
+                    {item.specialization ?? copy.common.noSpecialization}
+                  </span>
+                </span>
+              </div>
+              <div className="shrink-0 text-right">
+                <p className="mb-2 text-xs leading-5 text-[var(--color-ash)]">
+                  {formatDateTime(item.grantedAt, locale)}
+                </p>
+                <span
+                  className={[
+                    "inline-flex rounded-md px-2.5 py-1 text-[10px] font-semibold leading-4",
+                    item.displayStatus === "ongoing"
+                      ? "bg-[var(--color-teal-surface)] text-[var(--color-teal-deep)]"
+                      : "bg-[var(--color-stone-surface)] text-[var(--color-graphite)]",
+                  ].join(" ")}
+                >
+                  {item.displayStatus === "ongoing"
+                    ? copy.patient.dashboard.accessStatusOngoing
+                    : copy.patient.dashboard.accessStatusCompleted}
+                </span>
               </div>
             </div>
           ))}

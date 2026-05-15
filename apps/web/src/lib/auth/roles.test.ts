@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { publicRouteRedirectPath, resolveRoleFromRows, roleEntryPath } from "./roles";
+import { publicRouteRedirectPath, resolveRoleFromRows, roleEntryPath, userRoleName } from "./roles";
 
 describe("role resolution", () => {
   it("does not assign a default role when no MedProof profile exists", () => {
@@ -31,6 +31,23 @@ describe("role resolution", () => {
     });
 
     expect(role?.kind).toBe("medical_admin");
+  });
+
+  it("maps the local demo admin account to the admin role and admin dashboard", () => {
+    const role = resolveRoleFromRows({
+      authUserId: "user-ranggabiner",
+      email: "RanggaBiner@gmail.com",
+      fullName: "Rangga Biner",
+      adminAllowlist: ["ranggabiner@gmail.com"],
+      intent: null,
+      patient: null,
+      doctor: null,
+      admin: { admin_id: "admin-ranggabiner", email: "ranggabiner@gmail.com", full_name: "Rangga Biner" },
+    });
+
+    expect(role).toMatchObject({ kind: "medical_admin", adminId: "admin-ranggabiner" });
+    expect(userRoleName(role!)).toBe("admin");
+    expect(roleEntryPath(role!)).toBe("/admin/doctors");
   });
 
   it("routes existing patients without requiring role selection again", () => {

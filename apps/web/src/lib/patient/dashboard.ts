@@ -6,6 +6,8 @@ import { decryptString } from "@/lib/crypto/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { Database } from "@/lib/supabase/database.types";
 
+import { PATIENT_DASHBOARD_ITEM_LIMIT } from "./dashboard-limits";
+
 type Scope1Row = Pick<
   Database["public"]["Tables"]["scope_1_medical_records"]["Row"],
   | "record_id"
@@ -53,7 +55,7 @@ export async function loadPatientDashboardState(role: ResolvedRole): Promise<Pat
       )
       .eq("patient_id", role.patientId)
       .order("created_at", { ascending: false })
-      .limit(3),
+      .limit(PATIENT_DASHBOARD_ITEM_LIMIT),
     admin
       .from("access_grants")
       .select("blockchain_status")

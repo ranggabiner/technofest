@@ -1,8 +1,7 @@
 import { redirect } from "next/navigation";
 import { AlertTriangle, Bot, CheckCircle2, LockKeyhole } from "lucide-react";
 
-import { AppShell } from "@/components/app-shell";
-import { EmptyState, ForbiddenState } from "@/components/state-panel";
+import { EmptyState } from "@/components/state-panel";
 import { StatusBadge } from "@/components/status-badge";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { requireRole } from "@/lib/auth/session";
@@ -11,8 +10,7 @@ import { loadPatientJournalState } from "@/lib/ai/journal-service";
 import { proofLabel } from "@/lib/i18n/labels";
 import { getDictionary } from "@/lib/i18n/server";
 
-import { AiJournalClient } from "../_components/ai-journal-client";
-import { patientNav } from "../_components/nav";
+import { AiJournalClient } from "../../_components/ai-journal-client";
 
 export const dynamic = "force-dynamic";
 
@@ -24,11 +22,7 @@ export default async function PatientChatPage({
   const copy = await getDictionary();
   const role = await requireRole();
   if (role.kind !== "patient") {
-    return (
-      <AppShell title={copy.patient.chat.shortTitle} nav={[]}>
-        <ForbiddenState role={role} />
-      </AppShell>
-    );
+    return null;
   }
   const onboardingPath = roleOnboardingPath(role);
   if (!role.patientId || onboardingPath) redirect(onboardingPath ?? "/login/role");
@@ -37,7 +31,7 @@ export default async function PatientChatPage({
   const state = await loadPatientJournalState(role);
 
   return (
-    <AppShell title={copy.patient.chat.title} nav={patientNav("/patient/chat", copy)}>
+    <>
       <div className="grid gap-5">
         {params.ai_error === "finalize_failed" ? (
           <StatusMessage
@@ -113,7 +107,7 @@ export default async function PatientChatPage({
           )}
         </Card>
       </div>
-    </AppShell>
+    </>
   );
 }
 

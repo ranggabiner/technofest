@@ -6,6 +6,7 @@ import { writeAuditLog } from "@/lib/audit/audit";
 import type { ResolvedRole } from "@/lib/auth/roles";
 import { requireEnv } from "@/lib/config/env";
 import { decryptString, encryptString, type EncryptedValue } from "@/lib/crypto/server";
+import { PATIENT_DASHBOARD_ITEM_LIMIT } from "@/lib/patient/dashboard-limits";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { Database, TablesInsert } from "@/lib/supabase/database.types";
 
@@ -27,6 +28,13 @@ export type JournalMessageView = {
   createdAt: string;
 };
 
+export type JournalSummaryView = {
+  id: string;
+  title: string | null;
+  summary: string;
+  summaryGeneratedAt: string;
+};
+
 export type PatientJournalState = {
   consentAccepted: boolean;
   consentBlockchainStatus: string | null;
@@ -35,6 +43,7 @@ export type PatientJournalState = {
   activePatientMessageCount: number;
   messages: JournalMessageView[];
   latestSummary: string | null;
+  recentSummaries: JournalSummaryView[];
   latestSummaryStatus: "none" | "pending" | "generated";
 };
 
@@ -71,12 +80,13 @@ export async function loadPatientJournalState(role: ResolvedRole): Promise<Patie
       .maybeSingle(),
     admin
       .from("ai_sessions")
-      .select("summary_text_ciphertext,summary_text_iv,summary_text_tag,key_version,summary_generated_at")
+      .select(
+        "session_id,session_title_ciphertext,session_title_iv,session_title_tag,summary_text_ciphertext,summary_text_iv,summary_text_tag,key_version,summary_generated_at",
+      )
       .eq("patient_id", patientId)
       .not("summary_generated_at", "is", null)
       .order("summary_generated_at", { ascending: false })
-      .limit(1)
-      .maybeSingle(),
+      .limit(PATIENT_DASHBOARD_ITEM_LIMIT),
   ]);
 
   if (patientResult.error) throw patientResult.error;
@@ -86,6 +96,17 @@ export async function loadPatientJournalState(role: ResolvedRole): Promise<Patie
 
   const activeSession = sessionResult.data;
   const messages = activeSession ? await loadDecryptedMessages(activeSession.session_id) : [];
+  const recentSummaries = (summaryResult.data ?? []).flatMap((row) => {
+    const summary = decryptFromColumns(row, "summary_text");
+    if (!summary || !row.summary_generated_at) return [];
+
+    return [{
+      id: row.session_id,
+      title: decryptFromColumns(row, "session_title"),
+      summary,
+      summaryGeneratedAt: row.summary_generated_at,
+    }];
+  });
 
   return {
     consentAccepted: Boolean(consentResult.data),
@@ -99,10 +120,9 @@ export async function loadPatientJournalState(role: ResolvedRole): Promise<Patie
       content: message.content,
       createdAt: message.createdAt,
     })),
-    latestSummary: summaryResult.data
-      ? decryptFromColumns(summaryResult.data, "summary_text")
-      : null,
-    latestSummaryStatus: summaryResult.data ? "generated" : activeSession ? "pending" : "none",
+    latestSummary: recentSummaries[0]?.summary ?? null,
+    recentSummaries,
+    latestSummaryStatus: recentSummaries.length > 0 ? "generated" : activeSession ? "pending" : "none",
   };
 }
 

@@ -1,4 +1,5 @@
 export type AuthIntent = "patient" | "doctor" | null;
+export type UserRoleName = "patient" | "doctor" | "admin";
 export type DoctorStatus = "pending" | "approved" | "rejected";
 export type PatientOnboardingStep = "basic" | "health" | "ai_consent" | "complete";
 export type DoctorOnboardingStep = "profile" | "documents" | "review" | "complete";
@@ -120,6 +121,11 @@ export function roleHomePath(role: ResolvedRole): string {
     return role.status === "approved" ? "/doctor" : "/doctor/status";
   }
   return "/patient";
+}
+
+export function userRoleName(role: ResolvedRole): UserRoleName {
+  if (role.kind === "medical_admin") return "admin";
+  return role.kind;
 }
 
 export function roleEntryPath(role: ResolvedRole): string {

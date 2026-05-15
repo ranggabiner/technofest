@@ -2,8 +2,6 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AlertTriangle, CheckCircle2, History } from "lucide-react";
 
-import { AppShell } from "@/components/app-shell";
-import { ForbiddenState } from "@/components/state-panel";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { loadPatientAccessState } from "@/lib/access/doctor-access";
@@ -11,8 +9,7 @@ import { requireRole } from "@/lib/auth/session";
 import { roleOnboardingPath } from "@/lib/auth/roles";
 import { getDictionary, getLocale } from "@/lib/i18n/server";
 
-import { DoctorAccessClient } from "../_components/doctor-access-client";
-import { patientNav } from "../_components/nav";
+import { DoctorAccessClient } from "../../_components/doctor-access-client";
 
 export const dynamic = "force-dynamic";
 
@@ -25,11 +22,7 @@ export default async function PatientAccessPage({
   const copy = await getDictionary();
   const role = await requireRole();
   if (role.kind !== "patient") {
-    return (
-      <AppShell title={copy.patient.access.shortTitle} nav={[]}>
-        <ForbiddenState role={role} />
-      </AppShell>
-    );
+    return null;
   }
   const onboardingPath = roleOnboardingPath(role);
   if (!role.patientId || onboardingPath) redirect(onboardingPath ?? "/login/role");
@@ -38,7 +31,7 @@ export default async function PatientAccessPage({
   const accessState = await loadPatientAccessState(role);
 
   return (
-    <AppShell title={copy.patient.access.title} nav={patientNav("/patient/access", copy)}>
+    <>
       <div className="grid gap-5">
         {params.access_error ? (
           <StatusMessage tone="failed" message={params.access_error} />
@@ -72,7 +65,7 @@ export default async function PatientAccessPage({
           </Link>
         </Button>
       </div>
-    </AppShell>
+    </>
   );
 }
 

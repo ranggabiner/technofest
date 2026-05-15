@@ -9,16 +9,12 @@ import {
 } from "./onboarding-progress";
 
 export async function OnboardingShell({
-  exitHref,
-  exitLabel,
   steps,
   activeStep,
   children,
   footer,
 }: {
   brand: string;
-  exitHref: string;
-  exitLabel: string;
   steps: readonly string[];
   activeStep: number;
   themeLabels: {
@@ -34,7 +30,6 @@ export async function OnboardingShell({
     <div className="flex min-h-screen flex-col bg-[var(--color-warm-canvas)] text-[var(--color-graphite)]">
       <SharedHeader
         authMode="authenticated"
-        contextAction={{ href: exitHref, label: exitLabel }}
         isAuthenticated
         position="sticky"
       />

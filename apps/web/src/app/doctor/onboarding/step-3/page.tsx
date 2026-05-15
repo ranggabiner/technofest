@@ -49,8 +49,6 @@ export default async function DoctorOnboardingStep3Page() {
   return (
     <OnboardingShell
       brand={copy.common.brand}
-      exitHref="/doctor/status"
-      exitLabel={copy.doctor.onboarding.exit}
       steps={copy.doctor.onboarding.steps}
       activeStep={3}
       themeLabels={copy.common.theme}

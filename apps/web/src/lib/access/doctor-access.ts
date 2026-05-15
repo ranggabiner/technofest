@@ -15,6 +15,11 @@ import {
   getDoctorLookupLimitState,
   parseDoctorLookupInput,
 } from "./grants";
+import {
+  getDoctorAccessDisplayStatus,
+  type DoctorAccessDisplayStatus,
+} from "./display-status";
+import { PATIENT_DASHBOARD_ITEM_LIMIT } from "@/lib/patient/dashboard-limits";
 
 const DOCTOR_LOOKUP_RATE_LIMIT_ERROR =
   "Terlalu banyak percobaan kode dokter. Coba lagi nanti.";
@@ -87,17 +92,32 @@ export type PatientAccessHistoryItem = {
   createdAt: string;
 };
 
+export type PatientDoctorAccessLogItem = {
+  grantId: string;
+  doctorName: string;
+  specialization: string | null;
+  displayStatus: DoctorAccessDisplayStatus;
+  grantedAt: string;
+  expiresAt: string;
+  blockchainStatus: string;
+};
+
 export type PatientAccessState = {
   activeGrants: PatientAccessGrantView[];
+  accessLog: PatientDoctorAccessLogItem[];
   history: PatientAccessHistoryItem[];
 };
 
-export async function loadPatientAccessState(role: ResolvedRole): Promise<PatientAccessState> {
+export async function loadPatientAccessState(
+  role: ResolvedRole,
+  options: { accessLogLimit?: number } = {},
+): Promise<PatientAccessState> {
   const patientId = requirePatientId(role);
   const admin = createAdminClient();
   const now = new Date().toISOString();
+  const accessLogLimit = options.accessLogLimit ?? PATIENT_DASHBOARD_ITEM_LIMIT;
 
-  const [grantsResult, historyResult] = await Promise.all([
+  const [grantsResult, accessLogResult, historyResult] = await Promise.all([
     admin
       .from("access_grants")
       .select(
@@ -107,6 +127,14 @@ export async function loadPatientAccessState(role: ResolvedRole): Promise<Patien
       .eq("is_revoked", false)
       .gt("expires_at", now)
       .order("granted_at", { ascending: false }),
+    admin
+      .from("access_grants")
+      .select(
+        "grant_id,doctor_id,can_view_scope1,can_view_scope2_mental,can_view_scope2_physical,can_download_attachments,granted_at,expires_at,is_revoked,revoked_at,replaced_by_grant_id,blockchain_status,blockchain_tx_hash,created_at",
+      )
+      .eq("patient_id", patientId)
+      .order("granted_at", { ascending: false })
+      .limit(accessLogLimit),
     admin
       .from("audit_logs")
       .select(
@@ -130,12 +158,15 @@ export async function loadPatientAccessState(role: ResolvedRole): Promise<Patien
   ]);
 
   if (grantsResult.error) throw grantsResult.error;
+  if (accessLogResult.error) throw accessLogResult.error;
   if (historyResult.error) throw historyResult.error;
 
   const grants = (grantsResult.data ?? []) as AccessGrantRow[];
+  const accessLogGrants = (accessLogResult.data ?? []) as AccessGrantRow[];
   const history = (historyResult.data ?? []) as AuditLogRow[];
   const doctorMap = await loadDoctorMap([
     ...grants.map((grant) => grant.doctor_id),
+    ...accessLogGrants.map((grant) => grant.doctor_id),
     ...history.map((item) => item.doctor_id).filter((doctorId): doctorId is string => Boolean(doctorId)),
   ]);
 
@@ -151,6 +182,19 @@ export async function loadPatientAccessState(role: ResolvedRole): Promise<Patien
       expiresAt: grant.expires_at,
       blockchainStatus: grant.blockchain_status,
       blockchainTxHash: grant.blockchain_tx_hash,
+    })),
+    accessLog: accessLogGrants.map((grant) => ({
+      grantId: grant.grant_id,
+      doctorName: doctorMap.get(grant.doctor_id)?.full_name ?? "Dokter",
+      specialization: doctorMap.get(grant.doctor_id)?.specialization ?? null,
+      displayStatus: getDoctorAccessDisplayStatus({
+        expiresAt: grant.expires_at,
+        isRevoked: grant.is_revoked,
+        replacedByGrantId: grant.replaced_by_grant_id,
+      }),
+      grantedAt: grant.granted_at,
+      expiresAt: grant.expires_at,
+      blockchainStatus: grant.blockchain_status,
     })),
     history: history.map((item) => ({
       id: item.log_id,

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { RefreshCw } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type RetryResult = {
   claimed: number;
@@ -58,7 +59,11 @@ export function BlockchainRetryButton({
         <RefreshCw size={16} />
         {isRunning ? copy.buttonRunning : copy.buttonIdle}
       </Button>
-      {message ? <p className="text-[var(--color-ash)]">{message}</p> : null}
+      {isRunning ? (
+        <Skeleton className="h-4 w-full max-w-md" />
+      ) : message ? (
+        <p className="text-[var(--color-ash)]">{message}</p>
+      ) : null}
     </div>
   );
 }

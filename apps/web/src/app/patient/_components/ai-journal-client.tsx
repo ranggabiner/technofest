@@ -3,6 +3,7 @@
 import { useMemo, useState, useTransition } from "react";
 import { Send, Square } from "lucide-react";
 
+import { AssistantBubbleSkeleton } from "@/components/loading-skeletons";
 import { Button } from "@/components/ui/button";
 import type { JournalMessageView } from "@/lib/ai/journal-service";
 import { MAX_PATIENT_MESSAGES_PER_SESSION } from "@/lib/ai/session-limits";
@@ -150,18 +151,26 @@ export function AiJournalClient({
           </div>
         ) : (
           <div className="grid gap-3">
-            {messages.map((message) => (
-              <div
-                key={message.id}
-                className={
-                  message.role === "user"
-                    ? "ml-auto max-w-[78%] rounded-[10px] bg-[var(--color-teal-primary)] px-4 py-3 text-sm leading-6 text-[var(--color-inverted)]"
-                    : "mr-auto max-w-[78%] rounded-[10px] bg-[var(--color-card)] px-4 py-3 text-sm leading-6 text-[var(--color-charcoal-primary)] shadow-[var(--shadow-subtle)]"
-                }
-              >
-                {message.content || copy.writing}
-              </div>
-            ))}
+            {messages.map((message) => {
+              const isPendingAssistant = message.role === "assistant" && !message.content && isStreaming;
+
+              if (isPendingAssistant) {
+                return <AssistantBubbleSkeleton key={message.id} />;
+              }
+
+              return (
+                <div
+                  key={message.id}
+                  className={
+                    message.role === "user"
+                      ? "ml-auto max-w-[78%] rounded-[10px] bg-[var(--color-teal-primary)] px-4 py-3 text-sm leading-6 text-[var(--color-inverted)]"
+                      : "mr-auto max-w-[78%] rounded-[10px] bg-[var(--color-card)] px-4 py-3 text-sm leading-6 text-[var(--color-charcoal-primary)] shadow-[var(--shadow-subtle)]"
+                  }
+                >
+                  {message.content || copy.writing}
+                </div>
+              );
+            })}
           </div>
         )}
       </div>

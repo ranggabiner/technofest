@@ -2,11 +2,12 @@
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { AlertCircle, ArrowRight, Badge, FileText, Loader2, RotateCcw, Upload } from "lucide-react";
+import { AlertCircle, ArrowRight, Badge, FileText, RotateCcw, Upload } from "lucide-react";
 
 import { KycDocumentPreview, type KycDocumentPreviewLabels } from "@/components/kyc-document-preview";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/form";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import type { KycDocumentSummary } from "@/lib/kyc/summaries";
 import type { KycDocumentType } from "@/lib/kyc/service";
@@ -143,9 +144,14 @@ export function DoctorDocumentUploadForm({
           onClick={continueToReview}
           className="min-h-12 w-full rounded-full bg-[var(--color-midnight)] px-12 py-3 text-[15px] font-medium leading-[1.47] tracking-[-0.2px] text-[var(--color-inverted)] hover:bg-[var(--color-charcoal-primary)] hover:text-[var(--color-warm-canvas)]"
         >
-          {isContinuing ? <Loader2 size={18} className="animate-spin" aria-hidden="true" /> : null}
-          {copy.next}
-          {!isContinuing ? <ArrowRight size={18} aria-hidden="true" /> : null}
+          {isContinuing ? (
+            <Skeleton className="h-4 w-32 bg-[color-mix(in_srgb,var(--color-inverted)_34%,transparent)]" />
+          ) : (
+            <>
+              {copy.next}
+              <ArrowRight size={18} aria-hidden="true" />
+            </>
+          )}
         </Button>
       </div>
     </div>
@@ -204,63 +210,66 @@ function DocumentUploadField({
         {description}
       </p>
 
-      {previewUrl ? (
+      {isUploading ? (
+        <div className={cn(previewUrl ? "mt-4" : "")}>
+          <Skeleton className="min-h-[140px] w-full rounded-lg" />
+        </div>
+      ) : previewUrl ? (
         <KycDocumentPreview
           document={document}
           title={title}
           previewUrl={previewUrl}
           labels={labels}
-          className={isUploading ? "opacity-60" : undefined}
         />
       ) : null}
 
-      <div className={cn(previewUrl ? "mt-4" : "")}>
-        <input
-          ref={inputRef}
-          id={`${document.documentType}-file`}
-          name={`${document.documentType}-file`}
-          type="file"
-          accept="application/pdf,image/jpeg,image/png"
-          className="sr-only"
-          disabled={disabled}
-          onChange={(event) => {
-            const file = event.currentTarget.files?.[0];
-            event.currentTarget.value = "";
-            if (file) onUpload(document.documentType, file);
-          }}
-        />
-        <button
-          type="button"
-          disabled={disabled}
-          onClick={chooseFile}
-          className={cn(
-            "group flex min-h-[140px] w-full cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed border-[var(--color-stone-surface)] bg-[var(--color-warm-canvas)] p-6 text-center transition hover:bg-[var(--color-parchment-card)] disabled:cursor-not-allowed disabled:opacity-60",
-            previewUrl && "min-h-12 flex-row gap-3 border-solid py-3",
-          )}
-        >
-          <span className="flex size-10 items-center justify-center rounded-full bg-[var(--color-stone-surface)] text-[var(--color-ash)] transition group-hover:scale-105">
-            {isUploading ? (
-              <Loader2 size={22} className="animate-spin" aria-hidden="true" />
-            ) : document.uploaded ? (
-              <RotateCcw size={20} aria-hidden="true" />
-            ) : document.documentType === "ktp" ? (
-              <Badge size={22} aria-hidden="true" />
-            ) : document.documentType === "sip" ? (
-              <FileText size={22} aria-hidden="true" />
-            ) : (
-              <Upload size={22} aria-hidden="true" />
+      {!isUploading ? (
+        <div className={cn(previewUrl ? "mt-4" : "")}>
+          <input
+            ref={inputRef}
+            id={`${document.documentType}-file`}
+            name={`${document.documentType}-file`}
+            type="file"
+            accept="application/pdf,image/jpeg,image/png"
+            className="sr-only"
+            disabled={disabled}
+            onChange={(event) => {
+              const file = event.currentTarget.files?.[0];
+              event.currentTarget.value = "";
+              if (file) onUpload(document.documentType, file);
+            }}
+          />
+          <button
+            type="button"
+            disabled={disabled}
+            onClick={chooseFile}
+            className={cn(
+              "group flex min-h-[140px] w-full cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed border-[var(--color-stone-surface)] bg-[var(--color-warm-canvas)] p-6 text-center transition hover:bg-[var(--color-parchment-card)] disabled:cursor-not-allowed disabled:opacity-60",
+              previewUrl && "min-h-12 flex-row gap-3 border-solid py-3",
             )}
-          </span>
-          <span className="text-[15px] font-medium leading-[1.47] tracking-[-0.2px] text-[var(--color-midnight)]">
-            {isUploading ? labels.uploading : document.uploaded ? labels.replace : uploadLabel}
-          </span>
-          {!previewUrl ? (
-            <span className="mt-1 text-[11px] leading-[1.5] text-[var(--color-ash)]">
-              {uploadHint}
+          >
+            <span className="flex size-10 items-center justify-center rounded-full bg-[var(--color-stone-surface)] text-[var(--color-ash)] transition group-hover:scale-105">
+              {document.uploaded ? (
+                <RotateCcw size={20} aria-hidden="true" />
+              ) : document.documentType === "ktp" ? (
+                <Badge size={22} aria-hidden="true" />
+              ) : document.documentType === "sip" ? (
+                <FileText size={22} aria-hidden="true" />
+              ) : (
+                <Upload size={22} aria-hidden="true" />
+              )}
             </span>
-          ) : null}
-        </button>
-      </div>
+            <span className="text-[15px] font-medium leading-[1.47] tracking-[-0.2px] text-[var(--color-midnight)]">
+              {document.uploaded ? labels.replace : uploadLabel}
+            </span>
+            {!previewUrl ? (
+              <span className="mt-1 text-[11px] leading-[1.5] text-[var(--color-ash)]">
+                {uploadHint}
+              </span>
+            ) : null}
+          </button>
+        </div>
+      ) : null}
 
       {error ? (
         <div className="mt-3 flex flex-col gap-3 rounded-lg border border-[var(--color-error-red)] bg-[var(--color-error-surface)] p-3 text-[12px] leading-[1.58] tracking-[-0.14px] text-[var(--color-error-red)] sm:flex-row sm:items-center sm:justify-between">

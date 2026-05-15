@@ -123,6 +123,7 @@ Before editing implementation code, read:
 - Build application screens directly, not a marketing landing page.
 - Use restrained dashboard/product UI, not decorative landing-page styling.
 - Use existing shadcn/ui and Tailwind patterns once scaffold exists.
+- Use skeleton loading for loading states, shaped to match the final content layout instead of generic spinners where practical.
 - Every clickable UI element must visually use the pointer cursor. Buttons, links, clickable cards, icon controls, tabs, dropdown triggers, menu items, and custom interactive elements must show `cursor: pointer`; disabled or inactive controls must keep an appropriate disabled cursor/state instead.
 - Required states include loading, empty, unauthorized, expired access, revoked access, pending doctor approval, rejected doctor account, upload failure, AI failure, blockchain pending, blockchain failed, and integrity mismatch.
 - Do not redesign unrelated screens or add future-scope screens.

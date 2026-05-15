@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Bot, Send } from "lucide-react";
 
+import { RagAnswerSkeleton } from "@/components/loading-skeletons";
 import { Button } from "@/components/ui/button";
 import { Field, Label, Textarea } from "@/components/ui/form";
 import { DOCTOR_RAG_DISCLAIMER } from "@/lib/doctor-records/rag";
@@ -77,7 +78,9 @@ export function DoctorRagClient({
         {isLoading ? <Bot size={16} /> : <Send size={16} />}
         {isLoading ? copy.processing : copy.ask}
       </Button>
-      {answer ? (
+      {isLoading ? (
+        <RagAnswerSkeleton />
+      ) : answer ? (
         <div className="whitespace-pre-wrap rounded-[10px] bg-[var(--color-parchment-card)] p-4 text-sm leading-6 text-[var(--color-charcoal-primary)]">
           {answer}
         </div>
