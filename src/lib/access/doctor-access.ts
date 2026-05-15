@@ -33,6 +33,8 @@ type AccessGrantRow = {
   revoked_at: string | null;
   replaced_by_grant_id: string | null;
   blockchain_status: string;
+  blockchain_tx_hash: string | null;
+  created_at: string;
 };
 
 type AuditLogRow = {
@@ -44,6 +46,7 @@ type AuditLogRow = {
   doctor_id: string | null;
   reason: string | null;
   blockchain_status: string;
+  blockchain_tx_hash: string | null;
   created_at: string;
 };
 
@@ -69,6 +72,7 @@ export type PatientAccessGrantView = {
   grantedAt: string;
   expiresAt: string;
   blockchainStatus: string;
+  blockchainTxHash: string | null;
 };
 
 export type PatientAccessHistoryItem = {
@@ -79,6 +83,7 @@ export type PatientAccessHistoryItem = {
   doctorName: string | null;
   reason: string | null;
   blockchainStatus: string;
+  blockchainTxHash: string | null;
   createdAt: string;
 };
 
@@ -96,7 +101,7 @@ export async function loadPatientAccessState(role: ResolvedRole): Promise<Patien
     admin
       .from("access_grants")
       .select(
-        "grant_id,doctor_id,can_view_scope1,can_view_scope2_mental,can_view_scope2_physical,can_download_attachments,granted_at,expires_at,is_revoked,revoked_at,replaced_by_grant_id,blockchain_status",
+        "grant_id,doctor_id,can_view_scope1,can_view_scope2_mental,can_view_scope2_physical,can_download_attachments,granted_at,expires_at,is_revoked,revoked_at,replaced_by_grant_id,blockchain_status,blockchain_tx_hash,created_at",
       )
       .eq("patient_id", patientId)
       .eq("is_revoked", false)
@@ -105,7 +110,7 @@ export async function loadPatientAccessState(role: ResolvedRole): Promise<Patien
     admin
       .from("audit_logs")
       .select(
-        "log_id,action,access_status,target_type,target_id,doctor_id,reason,blockchain_status,created_at",
+        "log_id,action,access_status,target_type,target_id,doctor_id,reason,blockchain_status,blockchain_tx_hash,created_at",
       )
       .eq("patient_id", patientId)
       .in("action", [
@@ -115,8 +120,10 @@ export async function loadPatientAccessState(role: ResolvedRole): Promise<Patien
         "patient_grant_revoked",
         "doctor_patient_view_allowed",
         "doctor_patient_view_denied",
-        "doctor_rag_answer_generated",
-        "integrity_mismatch_detected",
+        "scope1_record_created",
+        "scope1_record_amended",
+        "doctor_rag_requested",
+        "blockchain_verification_mismatch",
       ])
       .order("created_at", { ascending: false })
       .limit(30),
@@ -143,6 +150,7 @@ export async function loadPatientAccessState(role: ResolvedRole): Promise<Patien
       grantedAt: grant.granted_at,
       expiresAt: grant.expires_at,
       blockchainStatus: grant.blockchain_status,
+      blockchainTxHash: grant.blockchain_tx_hash,
     })),
     history: history.map((item) => ({
       id: item.log_id,
@@ -152,6 +160,7 @@ export async function loadPatientAccessState(role: ResolvedRole): Promise<Patien
       doctorName: item.doctor_id ? (doctorMap.get(item.doctor_id)?.full_name ?? "Dokter") : null,
       reason: item.reason,
       blockchainStatus: item.blockchain_status,
+      blockchainTxHash: item.blockchain_tx_hash,
       createdAt: item.created_at,
     })),
   };
@@ -237,6 +246,7 @@ export async function createOrReplaceDoctorGrant(
     isRevoked: false,
     revokedAt: null,
     replacedByGrantId: null,
+    createdAt: mutationAt,
   }).hash;
   const priorReplacementConsentHash = existingGrant
     ? buildAccessGrantProof({
@@ -253,6 +263,7 @@ export async function createOrReplaceDoctorGrant(
         isRevoked: true,
         revokedAt: mutationAt,
         replacedByGrantId: grantId,
+        createdAt: existingGrant.created_at,
       }).hash
     : null;
   const action = existingGrant ? "patient_grant_replaced" : "patient_grant_created";
@@ -318,6 +329,7 @@ export async function revokeDoctorGrant(
     isRevoked: true,
     revokedAt,
     replacedByGrantId: null,
+    createdAt: existingGrant.created_at,
   }).hash;
   const auditEventHash = buildAuditEventHash({
     hashPepper: env.data.HASH_PEPPER,
@@ -418,7 +430,7 @@ async function loadActiveGrant(patientId: string, doctorId: string): Promise<Acc
   const { data, error } = await admin
     .from("access_grants")
     .select(
-      "grant_id,doctor_id,can_view_scope1,can_view_scope2_mental,can_view_scope2_physical,can_download_attachments,granted_at,expires_at,is_revoked,revoked_at,replaced_by_grant_id,blockchain_status",
+      "grant_id,doctor_id,can_view_scope1,can_view_scope2_mental,can_view_scope2_physical,can_download_attachments,granted_at,expires_at,is_revoked,revoked_at,replaced_by_grant_id,blockchain_status,blockchain_tx_hash,created_at",
     )
     .eq("patient_id", patientId)
     .eq("doctor_id", doctorId)
@@ -437,7 +449,7 @@ async function loadActiveGrantById(patientId: string, grantId: string): Promise<
   const { data, error } = await admin
     .from("access_grants")
     .select(
-      "grant_id,doctor_id,can_view_scope1,can_view_scope2_mental,can_view_scope2_physical,can_download_attachments,granted_at,expires_at,is_revoked,revoked_at,replaced_by_grant_id,blockchain_status",
+      "grant_id,doctor_id,can_view_scope1,can_view_scope2_mental,can_view_scope2_physical,can_download_attachments,granted_at,expires_at,is_revoked,revoked_at,replaced_by_grant_id,blockchain_status,blockchain_tx_hash,created_at",
     )
     .eq("patient_id", patientId)
     .eq("grant_id", grantId)
@@ -521,8 +533,10 @@ function describeAuditAction(action: string) {
   if (action === "doctor_access_code_lookup_failed") return "Pencarian kode dokter gagal";
   if (action === "doctor_patient_view_allowed") return "Dokter melihat data";
   if (action === "doctor_patient_view_denied") return "Akses dokter ditolak";
-  if (action === "doctor_rag_answer_generated") return "Tanya jawab dokter dibuat";
-  if (action === "integrity_mismatch_detected") return "Mismatch integritas terdeteksi";
+  if (action === "scope1_record_created") return "Rekam medis dibuat";
+  if (action === "scope1_record_amended") return "Rekam medis diamendemen";
+  if (action === "doctor_rag_requested") return "Tanya jawab dokter dibuat";
+  if (action === "blockchain_verification_mismatch") return "Mismatch integritas terdeteksi";
   return action;
 }
 

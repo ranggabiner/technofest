@@ -14,18 +14,45 @@ export type AuditAction =
   | "doctor_access_code_lookup_failed"
   | "patient_grant_created"
   | "patient_grant_replaced"
-  | "patient_grant_revoked";
+  | "patient_grant_revoked"
+  | "doctor_patient_view_allowed"
+  | "doctor_patient_view_denied"
+  | "scope1_record_created"
+  | "scope1_record_amended"
+  | "doctor_rag_requested"
+  | "blockchain_verification_mismatch";
 
 export type AuditStatus =
   | "accepted"
   | "approved"
   | "rejected"
+  | "allowed"
+  | "denied"
   | "created"
+  | "amended"
   | "replaced"
   | "revoked"
-  | "failed";
+  | "failed"
+  | "mismatch";
 
 export function buildAuditEventHash(input: {
+  hashPepper: string;
+  logId: string;
+  actorAuthUserId: string;
+  actorRole: "medical_admin" | "doctor" | "patient";
+  action: AuditAction;
+  accessStatus: AuditStatus;
+  targetType?: string | null;
+  targetId?: string | null;
+  patientId?: string | null;
+  doctorId?: string | null;
+  reason?: string | null;
+  createdAt: string;
+}) {
+  return buildAuditEventProof(input).hash;
+}
+
+export function buildAuditEventProof(input: {
   hashPepper: string;
   logId: string;
   actorAuthUserId: string;
@@ -54,8 +81,12 @@ export function buildAuditEventHash(input: {
     reason_code: input.reason ?? null,
     created_at: input.createdAt,
   };
+  const canonicalPayload = canonicalJson(payload);
 
-  return sha256Hex(canonicalJson(payload));
+  return {
+    hash: sha256Hex(canonicalPayload),
+    canonicalPayload,
+  };
 }
 
 export async function writeAuditLog(input: {

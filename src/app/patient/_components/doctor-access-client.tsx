@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Camera, Search, ShieldCheck, StopCircle, Trash2 } from "lucide-react";
 
+import { ProofStatus } from "@/components/proof-status";
 import { StatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Label } from "@/components/ui/form";
@@ -19,7 +20,13 @@ type BarcodeDetectorConstructor = new (options?: {
   detect(source: HTMLVideoElement): Promise<Array<{ rawValue: string }>>;
 };
 
-export function DoctorAccessClient({ state }: { state: PatientAccessState }) {
+export function DoctorAccessClient({
+  state,
+  showHistory = false,
+}: {
+  state: PatientAccessState;
+  showHistory?: boolean;
+}) {
   const [lookupValue, setLookupValue] = useState("");
   const [doctor, setDoctor] = useState<DoctorLookupResult | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -171,7 +178,7 @@ export function DoctorAccessClient({ state }: { state: PatientAccessState }) {
             disabled={!cameraSupported && !isScanning}
           >
             {isScanning ? <StopCircle size={16} /> : <Camera size={16} />}
-            {isScanning ? "Stop" : "Scan"}
+            {isScanning ? "Berhenti" : "Pindai"}
           </Button>
         </div>
 
@@ -271,7 +278,7 @@ export function DoctorAccessClient({ state }: { state: PatientAccessState }) {
                     {grant.doctorName}
                   </h4>
                   <StatusBadge tone={proofTone(grant.blockchainStatus)}>
-                    Proof {grant.blockchainStatus}
+                    Proof {proofLabel(grant.blockchainStatus)}
                   </StatusBadge>
                 </div>
                 <p className="mt-1 text-sm text-[var(--color-ash)]">
@@ -282,6 +289,14 @@ export function DoctorAccessClient({ state }: { state: PatientAccessState }) {
                   {grant.scopes.join(", ")}
                   {grant.canDownloadAttachments ? " · lampiran dapat diunduh" : ""}
                 </p>
+                <div className="mt-3">
+                  <ProofStatus
+                    proofType="access_grant"
+                    id={grant.grantId}
+                    blockchainStatus={grant.blockchainStatus}
+                    txHash={grant.blockchainTxHash}
+                  />
+                </div>
               </div>
               <form action={revokeDoctorAccessAction} className="self-start">
                 <input type="hidden" name="grant_id" value={grant.grantId} />
@@ -299,38 +314,52 @@ export function DoctorAccessClient({ state }: { state: PatientAccessState }) {
         )}
       </div>
 
-      <div className="grid gap-3">
-        <h3 className="text-base font-semibold text-[var(--color-midnight)]">Riwayat akses</h3>
-        {state.history.length > 0 ? (
-          <div className="grid gap-2">
-            {state.history.map((item) => (
-              <div
-                key={item.id}
-                className="grid gap-2 rounded-[10px] bg-[var(--color-parchment-card)] p-3 text-sm sm:grid-cols-[1fr_auto]"
-              >
-                <div>
-                  <p className="font-semibold text-[var(--color-charcoal-primary)]">
-                    {item.label}
-                  </p>
-                  <p className="text-[var(--color-ash)]">
-                    {item.doctorName ?? "Tanpa dokter"} · {formatDateTime(item.createdAt)}
-                  </p>
-                </div>
-                <div className="flex flex-wrap items-center gap-2 sm:justify-end">
-                  <StatusBadge tone={statusTone(item.status)}>{item.status}</StatusBadge>
-                  <StatusBadge tone={proofTone(item.blockchainStatus)}>
-                    {item.blockchainStatus}
-                  </StatusBadge>
-                </div>
+      {showHistory ? <AccessHistoryList history={state.history} /> : null}
+    </div>
+  );
+}
+
+export function AccessHistoryList({ history }: { history: PatientAccessState["history"] }) {
+  return (
+    <div className="grid gap-3">
+      {history.length > 0 ? (
+        <div className="grid gap-2">
+          {history.map((item) => (
+            <div
+              key={item.id}
+              className="grid gap-2 rounded-[10px] bg-[var(--color-parchment-card)] p-3 text-sm sm:grid-cols-[1fr_auto]"
+            >
+              <div>
+                <p className="font-semibold text-[var(--color-charcoal-primary)]">
+                  {item.label}
+                </p>
+                <p className="text-[var(--color-ash)]">
+                  {item.doctorName ?? "Tanpa dokter"} · {formatDateTime(item.createdAt)}
+                </p>
+                {item.reason ? <p className="mt-1 text-xs text-[var(--color-ash)]">{item.reason}</p> : null}
               </div>
-            ))}
-          </div>
-        ) : (
-          <p className="rounded-[10px] bg-[var(--color-stone-surface)] p-4 text-sm text-[var(--color-ash)]">
-            Riwayat akses belum tersedia.
-          </p>
-        )}
-      </div>
+              <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+                <StatusBadge tone={statusTone(item.status)}>{statusLabel(item.status)}</StatusBadge>
+                <StatusBadge tone={proofTone(item.blockchainStatus)}>
+                  Proof {proofLabel(item.blockchainStatus)}
+                </StatusBadge>
+              </div>
+              <div className="sm:col-span-2">
+                <ProofStatus
+                  proofType="audit_log"
+                  id={item.id}
+                  blockchainStatus={item.blockchainStatus}
+                  txHash={item.blockchainTxHash}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="rounded-[10px] bg-[var(--color-stone-surface)] p-4 text-sm text-[var(--color-ash)]">
+          Riwayat akses belum tersedia.
+        </p>
+      )}
     </div>
   );
 }
@@ -386,10 +415,34 @@ function proofTone(status: string): "approved" | "failed" | "pending" | "neutral
   return "neutral";
 }
 
+function proofLabel(status: string) {
+  if (status === "confirmed") return "terkonfirmasi";
+  if (status === "failed") return "gagal";
+  if (status === "pending") return "pending";
+  return "belum tersedia";
+}
+
 function statusTone(status: string): "approved" | "failed" | "pending" | "neutral" {
-  if (["created", "replaced", "revoked", "allowed", "accepted", "approved"].includes(status)) {
+  if (["created", "replaced", "revoked", "allowed", "accepted", "approved", "amended"].includes(status)) {
     return "approved";
   }
   if (["failed", "denied", "rejected", "mismatch"].includes(status)) return "failed";
+  if (status === "pending") return "pending";
   return "neutral";
+}
+
+function statusLabel(status: string) {
+  if (status === "created") return "dibuat";
+  if (status === "replaced") return "diganti";
+  if (status === "revoked") return "dicabut";
+  if (status === "allowed") return "diizinkan";
+  if (status === "accepted") return "diterima";
+  if (status === "approved") return "disetujui";
+  if (status === "amended") return "diamendemen";
+  if (status === "failed") return "gagal";
+  if (status === "denied") return "ditolak";
+  if (status === "rejected") return "ditolak";
+  if (status === "mismatch") return "mismatch";
+  if (status === "pending") return "pending";
+  return status;
 }

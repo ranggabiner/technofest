@@ -840,6 +840,25 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      claim_blockchain_proofs: {
+        Args: {
+          batch_limit?: number
+          target_proof_type: string
+        }
+        Returns: {
+          action: string | null
+          actor_auth_user_id: string | null
+          blockchain_tx_hash: string | null
+          doctor_id: string | null
+          expires_at: string | null
+          id: string
+          is_revoked: boolean | null
+          patient_id: string | null
+          proof_hash: string
+          proof_type: string
+          target_id: string | null
+        }[]
+      }
       replace_active_access_grant: {
         Args: {
           allow_download_attachments: boolean

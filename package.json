@@ -2,6 +2,7 @@
   "name": "medproof",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -9,7 +10,8 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "validate:privacy": "node scripts/validate-privacy.mjs"
   },
   "dependencies": {
     "@ai-sdk/openai": "^3.0.63",

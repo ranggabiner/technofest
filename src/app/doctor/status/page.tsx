@@ -2,15 +2,23 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { AppShell } from "@/components/app-shell";
+import { ForbiddenState } from "@/components/state-panel";
 import { StatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { requireDoctorRole } from "@/lib/auth/session";
+import { requireRole } from "@/lib/auth/session";
 
 export const dynamic = "force-dynamic";
 
 export default async function DoctorStatusPage() {
-  const role = await requireDoctorRole();
+  const role = await requireRole();
+  if (role.kind !== "doctor") {
+    return (
+      <AppShell title="Status Dokter" nav={[]}>
+        <ForbiddenState role={role} />
+      </AppShell>
+    );
+  }
   if (role.status === "approved") redirect("/doctor");
 
   return (

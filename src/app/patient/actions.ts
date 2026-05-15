@@ -21,6 +21,7 @@ export async function acceptAiConsentAction() {
   const role = await requireRole();
   await acceptAiConsent(role);
   revalidatePath("/patient");
+  revalidatePath("/patient/chat");
 }
 
 export async function saveProfilingAction(formData: FormData) {
@@ -36,6 +37,7 @@ export async function saveProfilingAction(formData: FormData) {
   });
 
   revalidatePath("/patient");
+  revalidatePath("/patient/chat");
 }
 
 export async function finishAiSessionAction() {
@@ -44,11 +46,12 @@ export async function finishAiSessionAction() {
   try {
     await finalizeActiveAiSession(role, "manual_end");
   } catch {
-    redirect("/patient?ai_error=finalize_failed");
+    redirect("/patient/chat?ai_error=finalize_failed");
   }
 
   revalidatePath("/patient");
-  redirect("/patient");
+  revalidatePath("/patient/chat");
+  redirect("/patient/chat?ai_status=finalized");
 }
 
 export async function grantDoctorAccessAction(formData: FormData) {
@@ -75,11 +78,13 @@ export async function grantDoctorAccessAction(formData: FormData) {
       getRequestIp(headerList),
     );
   } catch (error) {
-    redirect(`/patient?access_error=${encodeURIComponent(readErrorMessage(error))}`);
+    redirect(`/patient/access?access_error=${encodeURIComponent(readErrorMessage(error))}`);
   }
 
   revalidatePath("/patient");
-  redirect("/patient?access_status=granted");
+  revalidatePath("/patient/access");
+  revalidatePath("/patient/access-history");
+  redirect("/patient/access?access_status=granted");
 }
 
 export async function revokeDoctorAccessAction(formData: FormData) {
@@ -95,11 +100,13 @@ export async function revokeDoctorAccessAction(formData: FormData) {
       getRequestIp(headerList),
     );
   } catch (error) {
-    redirect(`/patient?access_error=${encodeURIComponent(readErrorMessage(error))}`);
+    redirect(`/patient/access?access_error=${encodeURIComponent(readErrorMessage(error))}`);
   }
 
   revalidatePath("/patient");
-  redirect("/patient?access_status=revoked");
+  revalidatePath("/patient/access");
+  revalidatePath("/patient/access-history");
+  redirect("/patient/access?access_status=revoked");
 }
 
 function readText(formData: FormData, key: string) {

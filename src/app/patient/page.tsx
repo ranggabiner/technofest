@@ -1,226 +1,188 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
-import { AlertTriangle, Bot, CheckCircle2, KeyRound, LockKeyhole } from "lucide-react";
+import { Bot, Clock, History, KeyRound, LockKeyhole, ShieldCheck } from "lucide-react";
 
-import { loadPatientAccessState } from "@/lib/access/doctor-access";
 import { AppShell } from "@/components/app-shell";
+import { ProofStatus } from "@/components/proof-status";
+import { EmptyState, ForbiddenState } from "@/components/state-panel";
 import { StatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Field, Input, Label, Textarea } from "@/components/ui/form";
+import { loadPatientAccessState } from "@/lib/access/doctor-access";
 import { requireRole } from "@/lib/auth/session";
 import { roleHomePath } from "@/lib/auth/roles";
 import { loadPatientJournalState } from "@/lib/ai/journal-service";
+import { loadPatientDashboardState } from "@/lib/patient/dashboard";
 
-import { acceptAiConsentAction, saveProfilingAction } from "./actions";
-import { AiJournalClient } from "./_components/ai-journal-client";
-import { DoctorAccessClient } from "./_components/doctor-access-client";
+import { patientNav } from "./_components/nav";
 
 export const dynamic = "force-dynamic";
 
-export default async function PatientPage({
-  searchParams,
-}: {
-  searchParams?: Promise<{ ai_error?: string; access_error?: string; access_status?: string }>;
-}) {
+export default async function PatientDashboardPage() {
   const role = await requireRole();
-  if (role.kind !== "patient") redirect(roleHomePath(role));
-  const params = (await searchParams) ?? {};
-  const [state, accessState] = await Promise.all([
+  if (role.kind !== "patient") {
+    return (
+      <AppShell title="Dashboard Pasien" nav={[]}>
+        <ForbiddenState role={role} />
+      </AppShell>
+    );
+  }
+  if (!role.patientId) redirect(roleHomePath(role));
+
+  const [journalState, accessState, dashboardState] = await Promise.all([
     loadPatientJournalState(role),
     loadPatientAccessState(role),
+    loadPatientDashboardState(role),
   ]);
+  const latestHistory = accessState.history.slice(0, 3);
 
   return (
-    <AppShell
-      title="Dashboard Pasien"
-      nav={[
-        { href: "/patient", label: "Jurnal AI" },
-        { href: "/patient#akses-dokter", label: "Akses Dokter" },
-      ]}
-    >
+    <AppShell title="Dashboard Pasien" nav={patientNav("/patient")}>
       <div className="grid gap-5">
-        {params.ai_error === "finalize_failed" ? (
-          <div className="flex items-start gap-3 rounded-[10px] border border-[var(--color-error-red)] bg-red-50 p-4 text-sm text-[var(--color-error-red)]">
-            <AlertTriangle className="mt-0.5 size-4 shrink-0" />
-            Sesi gagal diringkas. Coba akhiri sesi lagi setelah koneksi AI stabil.
-          </div>
-        ) : null}
-
-        {params.access_error ? (
-          <div className="flex items-start gap-3 rounded-[10px] border border-[var(--color-error-red)] bg-red-50 p-4 text-sm text-[var(--color-error-red)]">
-            <AlertTriangle className="mt-0.5 size-4 shrink-0" />
-            {params.access_error}
-          </div>
-        ) : null}
-
-        {params.access_status === "granted" || params.access_status === "revoked" ? (
-          <div className="flex items-start gap-3 rounded-[10px] border border-teal-200 bg-teal-50 p-4 text-sm text-teal-800">
-            <CheckCircle2 className="mt-0.5 size-4 shrink-0" />
-            {params.access_status === "granted"
-              ? "Akses dokter tersimpan dengan proof pending."
-              : "Akses dokter dicabut dengan proof pending."}
-          </div>
-        ) : null}
-
         <Card>
           <CardHeader>
             <CardTitle>Halo, {role.fullName}</CardTitle>
             <CardDescription>
-              Gunakan jurnal AI untuk mencatat kondisi harian dengan data demo/test saja.
+              Pantau jurnal, rekam medis, akses dokter, dan status Proof untuk data demo/test.
             </CardDescription>
           </CardHeader>
-          <div className="grid gap-3 rounded-[10px] bg-[var(--color-teal-muted)] p-4 text-sm text-[var(--color-charcoal-primary)] sm:grid-cols-4">
-            <StatusLine icon={<LockKeyhole size={16} />} label="Data jurnal" value="Terenkripsi server" />
-            <StatusLine icon={<Bot size={16} />} label="Model AI" value="DeepSeek live" />
-            <StatusLine
-              icon={<CheckCircle2 size={16} />}
-              label="Proof consent"
-              value={state.consentBlockchainStatus ?? "Belum ada"}
-            />
-            <StatusLine
-              icon={<KeyRound size={16} />}
-              label="Akses dokter"
-              value={`${accessState.activeGrants.length} aktif`}
-            />
+          <div className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-center">
+            <div className="grid gap-3 rounded-[10px] bg-[var(--color-teal-muted)] p-4 text-sm text-[var(--color-charcoal-primary)] sm:grid-cols-3">
+              <StatusLine icon={<LockKeyhole size={16} />} label="Data jurnal" value="Terenkripsi server" />
+              <StatusLine
+                icon={<KeyRound size={16} />}
+                label="Akses dokter aktif"
+                value={`${accessState.activeGrants.length} grant`}
+              />
+              <StatusLine
+                icon={<ShieldCheck size={16} />}
+                label="Proof pending"
+                value={`${dashboardState.proofCounts.pending} item`}
+              />
+            </div>
+            <Button asChild>
+              <Link href="/patient/chat">
+                <Bot size={16} />
+                Buka Jurnal AI
+              </Link>
+            </Button>
           </div>
         </Card>
 
-        {!state.consentAccepted ? (
+        <div className="grid gap-5 lg:grid-cols-2">
           <Card>
             <CardHeader>
-              <CardTitle>Persetujuan pemrosesan AI</CardTitle>
-              <CardDescription>
-                DeepSeek akan memproses isi jurnal untuk membantu percakapan dan ekstraksi Scope 2.
-              </CardDescription>
+              <CardTitle>Rekam medis Scope 1 terbaru</CardTitle>
+              <CardDescription>Ringkasan rekam medis dari dokter yang sudah diotorisasi.</CardDescription>
             </CardHeader>
-            <div className="grid gap-3 text-sm leading-6 text-[var(--color-charcoal-primary)]">
-              <p>
-                MedProof Sprint 1 hanya untuk demo/test. Jangan masukkan data klinis produksi,
-                identitas pasien asli, diagnosis, resep, atau dokumen medis nyata.
-              </p>
-              <p>
-                AI tidak memberi diagnosis atau saran terapi. Untuk tanda bahaya, cari bantuan
-                medis darurat setempat.
-              </p>
-              <form action={acceptAiConsentAction}>
-                <Button type="submit">Saya setuju memakai AI</Button>
-              </form>
+            <div className="grid gap-3">
+              {dashboardState.recentScope1Records.length > 0 ? (
+                dashboardState.recentScope1Records.map((record) => (
+                  <div key={record.recordId} className="grid gap-3 rounded-[10px] bg-[var(--color-parchment-card)] p-4">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <StatusBadge tone="neutral">{record.recordType}</StatusBadge>
+                      <StatusBadge tone={proofTone(record.blockchainStatus)}>
+                        Proof {proofLabel(record.blockchainStatus)}
+                      </StatusBadge>
+                    </div>
+                    <p className="font-semibold text-[var(--color-midnight)]">{record.title}</p>
+                    <p className="text-xs text-[var(--color-ash)]">{formatDateTime(record.createdAt)}</p>
+                    <ProofStatus
+                      proofType="scope1_record"
+                      id={record.recordId}
+                      blockchainStatus={record.blockchainStatus}
+                      txHash={record.blockchainTxHash}
+                    />
+                  </div>
+                ))
+              ) : (
+                <EmptyState message="Belum ada rekam medis Scope 1." />
+              )}
             </div>
           </Card>
-        ) : null}
 
-        {state.consentAccepted && !state.profilingComplete ? (
           <Card>
             <CardHeader>
-              <CardTitle>Profil awal pasien</CardTitle>
-              <CardDescription>
-                Jawaban disimpan terenkripsi untuk konteks percakapan AI.
-              </CardDescription>
+              <CardTitle>Ringkasan jurnal Scope 2</CardTitle>
+              <CardDescription>Ringkasan muncul setelah sesi AI diakhiri dan ekstraksi selesai.</CardDescription>
             </CardHeader>
-            <form action={saveProfilingAction} className="grid gap-4">
-              <Field>
-                <Label htmlFor="discovered_from">Dari mana tahu MedProof?</Label>
-                <Input id="discovered_from" name="discovered_from" placeholder="Contoh: demo kampus" />
-              </Field>
-              <Field>
-                <Label htmlFor="age_or_birth_date">Usia atau tanggal lahir</Label>
-                <Input id="age_or_birth_date" name="age_or_birth_date" placeholder="Contoh: 24 tahun" />
-              </Field>
-              <Field>
-                <Label htmlFor="current_condition">Kondisi yang sedang dirasakan</Label>
-                <Textarea
-                  id="current_condition"
-                  name="current_condition"
-                  placeholder="Contoh: akhir-akhir ini sering lelah dan tidur kurang"
-                  required
-                />
-              </Field>
-              <Field>
-                <Label htmlFor="daily_activity">Aktivitas utama</Label>
-                <Textarea
-                  id="daily_activity"
-                  name="daily_activity"
-                  placeholder="Contoh: kuliah, bekerja di depan laptop, olahraga ringan"
-                />
-              </Field>
-              <Field>
-                <Label htmlFor="lifestyle_context">Gaya hidup dan lingkungan</Label>
-                <Textarea
-                  id="lifestyle_context"
-                  name="lifestyle_context"
-                  placeholder="Contoh: pola tidur, makan, aktivitas fisik, lingkungan rumah"
-                />
-              </Field>
-              <Field>
-                <Label htmlFor="known_history">Riwayat yang ingin dibagikan</Label>
-                <Textarea
-                  id="known_history"
-                  name="known_history"
-                  placeholder="Boleh dikosongkan jika tidak ingin menjawab"
-                />
-              </Field>
-              <Button type="submit">Simpan profil terenkripsi</Button>
-            </form>
+            {journalState.latestSummary ? (
+              <p className="rounded-[10px] bg-[var(--color-parchment-card)] p-4 text-sm leading-6 text-[var(--color-charcoal-primary)]">
+                {journalState.latestSummary}
+              </p>
+            ) : (
+              <EmptyState message={journalState.consentAccepted ? "Belum ada ringkasan jurnal." : "Persetujuan AI belum diberikan."} />
+            )}
           </Card>
-        ) : null}
-
-        {state.consentAccepted && state.profilingComplete ? (
-          <Card>
-            <CardHeader>
-              <div className="mb-2 flex gap-2">
-                <StatusBadge tone="approved">AI aktif</StatusBadge>
-                <StatusBadge tone={state.latestSummaryStatus === "generated" ? "approved" : "pending"}>
-                  {state.latestSummaryStatus === "generated"
-                    ? "Ringkasan siap"
-                    : state.activeSessionId
-                      ? "Sesi berjalan"
-                      : "Belum ada sesi"}
-                </StatusBadge>
-              </div>
-              <CardTitle>Jurnal kesehatan AI</CardTitle>
-              <CardDescription>
-                Chat disimpan terenkripsi. Akhiri sesi untuk membuat ekstraksi Scope 2.
-              </CardDescription>
-            </CardHeader>
-            <AiJournalClient
-              initialSessionId={state.activeSessionId}
-              initialMessages={state.messages}
-              initialPatientMessageCount={state.activePatientMessageCount}
-            />
-          </Card>
-        ) : null}
+        </div>
 
         <Card>
-          <CardHeader>
-            <CardTitle>Ringkasan Scope 2</CardTitle>
-            <CardDescription>
-              Ringkasan muncul setelah sesi AI diakhiri dan ekstraksi selesai.
-            </CardDescription>
-          </CardHeader>
-          {state.latestSummary ? (
-            <p className="rounded-[10px] bg-[var(--color-parchment-card)] p-4 text-sm leading-6 text-[var(--color-charcoal-primary)]">
-              {state.latestSummary}
-            </p>
-          ) : (
-            <p className="rounded-[10px] bg-[var(--color-stone-surface)] p-4 text-sm text-[var(--color-ash)]">
-              Belum ada ringkasan jurnal.
-            </p>
-          )}
-        </Card>
-
-        <Card id="akses-dokter">
           <CardHeader>
             <div className="mb-2">
               <StatusBadge tone={accessState.activeGrants.length > 0 ? "approved" : "neutral"}>
                 {accessState.activeGrants.length} akses aktif
               </StatusBadge>
             </div>
-            <CardTitle>Kelola akses dokter</CardTitle>
-            <CardDescription>
-              Berikan akses berbatas waktu lewat QR dokter atau kode manual.
-            </CardDescription>
+            <CardTitle>Akses dokter aktif</CardTitle>
+            <CardDescription>Setiap akses memiliki batas waktu dan cakupan yang ditentukan pasien.</CardDescription>
           </CardHeader>
-          <DoctorAccessClient state={accessState} />
+          <div className="grid gap-3">
+            {accessState.activeGrants.length > 0 ? (
+              accessState.activeGrants.map((grant) => (
+                <div key={grant.grantId} className="grid gap-2 rounded-[10px] bg-[var(--color-parchment-card)] p-4">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <p className="font-semibold text-[var(--color-midnight)]">{grant.doctorName}</p>
+                    <StatusBadge tone={proofTone(grant.blockchainStatus)}>
+                      Proof {proofLabel(grant.blockchainStatus)}
+                    </StatusBadge>
+                  </div>
+                  <p className="flex items-center gap-2 text-sm text-[var(--color-ash)]">
+                    <Clock size={15} />
+                    Sampai {formatDateTime(grant.expiresAt)}
+                  </p>
+                  <p className="text-sm text-[var(--color-charcoal-primary)]">{grant.scopes.join(", ")}</p>
+                </div>
+              ))
+            ) : (
+              <EmptyState message="Belum ada akses dokter aktif." />
+            )}
+            <Button asChild variant="ghost" className="w-fit">
+              <Link href="/patient/access">Kelola akses dokter</Link>
+            </Button>
+          </div>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Riwayat akses</CardTitle>
+            <CardDescription>Aktivitas grant, revoke, akses dokter, RAG, dan status Proof.</CardDescription>
+          </CardHeader>
+          <div className="grid gap-3">
+            {latestHistory.length > 0 ? (
+              latestHistory.map((item) => (
+                <div key={item.id} className="grid gap-1 rounded-[10px] bg-[var(--color-parchment-card)] p-4 text-sm">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <StatusBadge tone={statusTone(item.status)}>{statusLabel(item.status)}</StatusBadge>
+                    <StatusBadge tone={proofTone(item.blockchainStatus)}>
+                      Proof {proofLabel(item.blockchainStatus)}
+                    </StatusBadge>
+                  </div>
+                  <p className="font-semibold text-[var(--color-midnight)]">{item.label}</p>
+                  <p className="text-[var(--color-ash)]">
+                    {item.doctorName ?? "Tanpa dokter"} · {formatDateTime(item.createdAt)}
+                  </p>
+                </div>
+              ))
+            ) : (
+              <EmptyState message="Riwayat akses belum tersedia." />
+            )}
+            <Button asChild variant="ghost" className="w-fit">
+              <Link href="/patient/access-history">
+                <History size={16} />
+                Lihat semua riwayat
+              </Link>
+            </Button>
+          </div>
         </Card>
       </div>
     </AppShell>
@@ -245,4 +207,47 @@ function StatusLine({
       </span>
     </div>
   );
+}
+
+function formatDateTime(value: string) {
+  return new Intl.DateTimeFormat("id-ID", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(new Date(value));
+}
+
+function proofTone(status: string): "approved" | "failed" | "pending" | "neutral" {
+  if (status === "confirmed") return "approved";
+  if (status === "failed") return "failed";
+  if (status === "pending") return "pending";
+  return "neutral";
+}
+
+function proofLabel(status: string) {
+  if (status === "confirmed") return "terkonfirmasi";
+  if (status === "failed") return "gagal";
+  if (status === "pending") return "pending";
+  return "belum tersedia";
+}
+
+function statusTone(status: string): "approved" | "failed" | "pending" | "neutral" {
+  if (["created", "replaced", "revoked", "allowed", "accepted", "approved", "amended"].includes(status)) {
+    return "approved";
+  }
+  if (["failed", "denied", "rejected", "mismatch"].includes(status)) return "failed";
+  if (status === "pending") return "pending";
+  return "neutral";
+}
+
+function statusLabel(status: string) {
+  if (status === "created") return "dibuat";
+  if (status === "replaced") return "diganti";
+  if (status === "revoked") return "dicabut";
+  if (status === "allowed") return "diizinkan";
+  if (status === "denied") return "ditolak";
+  if (status === "failed") return "gagal";
+  if (status === "mismatch") return "mismatch";
+  if (status === "accepted") return "diterima";
+  if (status === "amended") return "diamendemen";
+  return status;
 }

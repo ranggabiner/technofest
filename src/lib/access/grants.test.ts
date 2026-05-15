@@ -79,6 +79,7 @@ describe("access grant proof hashing", () => {
     isRevoked: false,
     revokedAt: null,
     replacedByGrantId: null,
+    createdAt: "2026-05-15T12:00:00.000Z",
   };
 
   it("creates deterministic privacy-preserving consent hashes", () => {
@@ -101,5 +102,33 @@ describe("access grant proof hashing", () => {
     });
 
     expect(revoked.hash).not.toEqual(active.hash);
+  });
+
+  it("uses the exact Feature 06 consent proof payload keys", () => {
+    const proof = buildAccessGrantProof(baseInput);
+    const payload = JSON.parse(proof.canonicalPayload) as Record<string, unknown>;
+
+    expect(Object.keys(payload).sort()).toEqual([
+      "can_download_attachments",
+      "can_view_scope1",
+      "can_view_scope2_mental",
+      "can_view_scope2_physical",
+      "created_at",
+      "doctor_hash",
+      "expires_at",
+      "grant_ref_hash",
+      "granted_at",
+      "is_revoked",
+      "patient_hash",
+      "proof_type",
+      "replaced_by_grant_ref_hash",
+      "revoked_at",
+      "schema_version",
+    ]);
+    expect(payload.patient_hash).toMatch(/^[a-f0-9]{64}$/);
+    expect(payload.doctor_hash).toMatch(/^[a-f0-9]{64}$/);
+    expect(payload.created_at).toBe(baseInput.createdAt);
+    expect(payload).not.toHaveProperty("patient_ref_hash");
+    expect(payload).not.toHaveProperty("doctor_ref_hash");
   });
 });

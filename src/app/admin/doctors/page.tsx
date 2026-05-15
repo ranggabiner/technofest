@@ -1,11 +1,13 @@
 import Link from "next/link";
 
 import { AppShell } from "@/components/app-shell";
+import { BlockchainRetryButton } from "@/components/blockchain-retry-button";
+import { ForbiddenState } from "@/components/state-panel";
 import { StatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, Input, Label, Select } from "@/components/ui/form";
-import { requireAdminRole } from "@/lib/auth/session";
+import { requireRole } from "@/lib/auth/session";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
@@ -15,7 +17,14 @@ export default async function AdminDoctorsPage({
 }: {
   searchParams?: Promise<{ status?: string; specialization?: string; date?: string }>;
 }) {
-  await requireAdminRole();
+  const role = await requireRole();
+  if (role.kind !== "medical_admin") {
+    return (
+      <AppShell title="Admin Medis" nav={[]}>
+        <ForbiddenState role={role} />
+      </AppShell>
+    );
+  }
   const params = (await searchParams) ?? {};
   const status = ["pending", "approved", "rejected"].includes(params.status ?? "")
     ? params.status
@@ -50,6 +59,9 @@ export default async function AdminDoctorsPage({
           <CardTitle>Antrean verifikasi dokter</CardTitle>
           <CardDescription>Admin hanya melihat data KYC dokter, bukan data medis pasien.</CardDescription>
         </CardHeader>
+        <div className="mb-5">
+          <BlockchainRetryButton />
+        </div>
 
         <form className="mb-5 grid gap-3 rounded-[10px] bg-[var(--color-stone-surface)] p-4 md:grid-cols-[1fr_1fr_1fr_auto_auto] md:items-end">
           <Field>

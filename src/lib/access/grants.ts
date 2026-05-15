@@ -89,6 +89,7 @@ export type AccessGrantProofInput = {
   isRevoked: boolean;
   revokedAt: string | null;
   replacedByGrantId: string | null;
+  createdAt: string;
 };
 
 export function buildAccessGrantProof(input: AccessGrantProofInput): {
@@ -99,8 +100,8 @@ export function buildAccessGrantProof(input: AccessGrantProofInput): {
     proof_type: "access_grant_consent",
     schema_version: "v1",
     grant_ref_hash: hmacSha256Hex(input.pepper, input.grantId),
-    patient_ref_hash: hmacSha256Hex(input.pepper, input.patientId),
-    doctor_ref_hash: hmacSha256Hex(input.pepper, input.doctorId),
+    patient_hash: hmacSha256Hex(input.pepper, input.patientId),
+    doctor_hash: hmacSha256Hex(input.pepper, input.doctorId),
     can_view_scope1: input.canViewScope1,
     can_view_scope2_mental: input.canViewScope2Mental,
     can_view_scope2_physical: input.canViewScope2Physical,
@@ -112,6 +113,7 @@ export function buildAccessGrantProof(input: AccessGrantProofInput): {
     replaced_by_grant_ref_hash: input.replacedByGrantId
       ? hmacSha256Hex(input.pepper, input.replacedByGrantId)
       : null,
+    created_at: input.createdAt,
   };
   const canonicalPayload = canonicalJson(payload);
 
