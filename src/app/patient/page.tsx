@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
-import { AlertTriangle, Bot, CheckCircle2, LockKeyhole } from "lucide-react";
+import { AlertTriangle, Bot, CheckCircle2, KeyRound, LockKeyhole } from "lucide-react";
 
+import { loadPatientAccessState } from "@/lib/access/doctor-access";
 import { AppShell } from "@/components/app-shell";
 import { StatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
@@ -12,24 +13,29 @@ import { loadPatientJournalState } from "@/lib/ai/journal-service";
 
 import { acceptAiConsentAction, saveProfilingAction } from "./actions";
 import { AiJournalClient } from "./_components/ai-journal-client";
+import { DoctorAccessClient } from "./_components/doctor-access-client";
 
 export const dynamic = "force-dynamic";
 
 export default async function PatientPage({
   searchParams,
 }: {
-  searchParams?: Promise<{ ai_error?: string }>;
+  searchParams?: Promise<{ ai_error?: string; access_error?: string; access_status?: string }>;
 }) {
   const role = await requireRole();
   if (role.kind !== "patient") redirect(roleHomePath(role));
   const params = (await searchParams) ?? {};
-  const state = await loadPatientJournalState(role);
+  const [state, accessState] = await Promise.all([
+    loadPatientJournalState(role),
+    loadPatientAccessState(role),
+  ]);
 
   return (
     <AppShell
       title="Dashboard Pasien"
       nav={[
         { href: "/patient", label: "Jurnal AI" },
+        { href: "/patient#akses-dokter", label: "Akses Dokter" },
       ]}
     >
       <div className="grid gap-5">
@@ -40,6 +46,22 @@ export default async function PatientPage({
           </div>
         ) : null}
 
+        {params.access_error ? (
+          <div className="flex items-start gap-3 rounded-[10px] border border-[var(--color-error-red)] bg-red-50 p-4 text-sm text-[var(--color-error-red)]">
+            <AlertTriangle className="mt-0.5 size-4 shrink-0" />
+            {params.access_error}
+          </div>
+        ) : null}
+
+        {params.access_status === "granted" || params.access_status === "revoked" ? (
+          <div className="flex items-start gap-3 rounded-[10px] border border-teal-200 bg-teal-50 p-4 text-sm text-teal-800">
+            <CheckCircle2 className="mt-0.5 size-4 shrink-0" />
+            {params.access_status === "granted"
+              ? "Akses dokter tersimpan dengan proof pending."
+              : "Akses dokter dicabut dengan proof pending."}
+          </div>
+        ) : null}
+
         <Card>
           <CardHeader>
             <CardTitle>Halo, {role.fullName}</CardTitle>
@@ -47,13 +69,18 @@ export default async function PatientPage({
               Gunakan jurnal AI untuk mencatat kondisi harian dengan data demo/test saja.
             </CardDescription>
           </CardHeader>
-          <div className="grid gap-3 rounded-[10px] bg-[var(--color-teal-muted)] p-4 text-sm text-[var(--color-charcoal-primary)] sm:grid-cols-3">
+          <div className="grid gap-3 rounded-[10px] bg-[var(--color-teal-muted)] p-4 text-sm text-[var(--color-charcoal-primary)] sm:grid-cols-4">
             <StatusLine icon={<LockKeyhole size={16} />} label="Data jurnal" value="Terenkripsi server" />
             <StatusLine icon={<Bot size={16} />} label="Model AI" value="DeepSeek live" />
             <StatusLine
               icon={<CheckCircle2 size={16} />}
               label="Proof consent"
               value={state.consentBlockchainStatus ?? "Belum ada"}
+            />
+            <StatusLine
+              icon={<KeyRound size={16} />}
+              label="Akses dokter"
+              value={`${accessState.activeGrants.length} aktif`}
             />
           </div>
         </Card>
@@ -179,6 +206,21 @@ export default async function PatientPage({
               Belum ada ringkasan jurnal.
             </p>
           )}
+        </Card>
+
+        <Card id="akses-dokter">
+          <CardHeader>
+            <div className="mb-2">
+              <StatusBadge tone={accessState.activeGrants.length > 0 ? "approved" : "neutral"}>
+                {accessState.activeGrants.length} akses aktif
+              </StatusBadge>
+            </div>
+            <CardTitle>Kelola akses dokter</CardTitle>
+            <CardDescription>
+              Berikan akses berbatas waktu lewat QR dokter atau kode manual.
+            </CardDescription>
+          </CardHeader>
+          <DoctorAccessClient state={accessState} />
         </Card>
       </div>
     </AppShell>

@@ -877,6 +877,85 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      replace_active_access_grant_v2: {
+        Args: {
+          allow_download_attachments: boolean
+          allow_scope1: boolean
+          allow_scope2_mental: boolean
+          allow_scope2_physical: boolean
+          prior_replacement_consent_hash: string | null
+          target_audit_event_hash: string
+          target_audit_log_id: string
+          target_consent_hash: string
+          target_doctor_id: string
+          target_expires_at: string
+          target_grant_id: string
+          target_granted_at: string
+          target_ip_address?: unknown | null
+          target_patient_id: string
+        }
+        Returns: {
+          blockchain_last_error: string | null
+          blockchain_status: string
+          blockchain_tx_hash: string | null
+          can_download_attachments: boolean
+          can_view_scope1: boolean
+          can_view_scope2_mental: boolean
+          can_view_scope2_physical: boolean
+          consent_hash: string
+          created_at: string
+          doctor_id: string
+          expires_at: string
+          grant_id: string
+          granted_at: string
+          is_revoked: boolean
+          patient_id: string
+          replaced_by_grant_id: string | null
+          revoked_at: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "access_grants"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      revoke_active_access_grant: {
+        Args: {
+          target_audit_event_hash: string
+          target_audit_log_id: string
+          target_consent_hash: string
+          target_grant_id: string
+          target_ip_address?: unknown | null
+          target_patient_id: string
+          target_revoked_at: string
+        }
+        Returns: {
+          blockchain_last_error: string | null
+          blockchain_status: string
+          blockchain_tx_hash: string | null
+          can_download_attachments: boolean
+          can_view_scope1: boolean
+          can_view_scope2_mental: boolean
+          can_view_scope2_physical: boolean
+          consent_hash: string
+          created_at: string
+          doctor_id: string
+          expires_at: string
+          grant_id: string
+          granted_at: string
+          is_revoked: boolean
+          patient_id: string
+          replaced_by_grant_id: string | null
+          revoked_at: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "access_grants"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
     }
     Enums: {
       [_ in never]: never
@@ -1009,4 +1088,3 @@ export const Constants = {
     Enums: {},
   },
 } as const
-
