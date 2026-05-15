@@ -9,9 +9,10 @@ import { createAdminClient } from "@/lib/supabase/admin";
 export type AuditAction =
   | "admin_doctor_approved"
   | "admin_doctor_rejected"
-  | "doctor_kyc_email_notification_failed";
+  | "doctor_kyc_email_notification_failed"
+  | "ai_processing_consent_accepted";
 
-export type AuditStatus = "approved" | "rejected" | "failed";
+export type AuditStatus = "accepted" | "approved" | "rejected" | "failed";
 
 export async function writeAuditLog(input: {
   actorAuthUserId: string;
