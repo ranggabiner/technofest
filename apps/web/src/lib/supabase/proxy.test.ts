@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   isSupabaseAuthCookieName,
   isSupabaseRefreshTokenMissingError,
+  isSupabaseStaleSessionError,
 } from "./proxy";
 
 describe("Supabase SSR proxy helpers", () => {
@@ -17,5 +18,12 @@ describe("Supabase SSR proxy helpers", () => {
     expect(isSupabaseRefreshTokenMissingError({ code: "refresh_token_not_found" })).toBe(true);
     expect(isSupabaseRefreshTokenMissingError({ code: "other_auth_error" })).toBe(false);
     expect(isSupabaseRefreshTokenMissingError(null)).toBe(false);
+  });
+
+  it("detects stale sessions after local database resets", () => {
+    expect(isSupabaseStaleSessionError({ code: "refresh_token_not_found" })).toBe(true);
+    expect(isSupabaseStaleSessionError({ code: "user_not_found" })).toBe(true);
+    expect(isSupabaseStaleSessionError({ code: "other_auth_error" })).toBe(false);
+    expect(isSupabaseStaleSessionError(null)).toBe(false);
   });
 });

@@ -115,7 +115,7 @@ describe("patient chat Stitch redesign contract", () => {
     expect(source).toContain('data-chat-back-menu="patient-navigation"');
     expect(source).toContain('href="/patient"');
     expect(source).toContain('href="/patient/access"');
-    expect(source).toContain('href="/patient/access-history"');
+    expect(source).not.toContain('href="/patient/access-history"');
     expect(source).toContain('event.key === "Escape"');
     expect(source).toContain("contains(event.target as Node)");
   });
@@ -136,7 +136,7 @@ describe("patient chat Stitch redesign contract", () => {
     expect(source).toContain("navigationCopy");
     expect(source).toContain("copy.patient.nav.dashboard");
     expect(source).toContain("copy.patient.nav.access");
-    expect(source).toContain("copy.patient.nav.history");
+    expect(source).not.toContain("copy.patient.nav.history");
   });
 
   it("keeps Stitch chat strings in Indonesian and English dictionaries", () => {

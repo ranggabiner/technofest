@@ -1,61 +1,7 @@
--- Local Supabase seed data for MedProof demo/admin access.
+-- Local Supabase seed data for MedProof demo access.
 -- This file is loaded by the Supabase CLI after migrations during local reset.
-
-with existing_admin_user as (
-  select id
-  from auth.users
-  where lower(email) = 'ranggabiner@gmail.com'
-  limit 1
-),
-inserted_admin_user as (
-  insert into auth.users (
-    id,
-    aud,
-    role,
-    email,
-    email_confirmed_at,
-    raw_app_meta_data,
-    raw_user_meta_data,
-    created_at,
-    updated_at
-  )
-  select
-    '00000000-0000-0000-0000-000000000901',
-    'authenticated',
-    'authenticated',
-    'ranggabiner@gmail.com',
-    now(),
-    '{"provider":"google","providers":["google"]}'::jsonb,
-    '{"full_name":"Rangga Biner"}'::jsonb,
-    now(),
-    now()
-  where not exists (select 1 from existing_admin_user)
-  returning id
-),
-admin_user as (
-  select id from existing_admin_user
-  union all
-  select id from inserted_admin_user
-)
-update public.medical_admins
-set
-  auth_user_id = (select id from admin_user limit 1),
-  full_name = 'Rangga Biner'
-where lower(email) = 'ranggabiner@gmail.com';
-
-with admin_user as (
-  select id
-  from auth.users
-  where lower(email) = 'ranggabiner@gmail.com'
-  limit 1
-)
-insert into public.medical_admins (auth_user_id, full_name, email)
-select id, 'Rangga Biner', 'ranggabiner@gmail.com'
-from admin_user
-on conflict (auth_user_id) do update
-set
-  full_name = excluded.full_name,
-  email = excluded.email;
+-- Real Google OAuth admin users are intentionally not seeded in auth.users.
+-- They are created by Supabase Auth on login, then linked through ADMIN_EMAIL_ALLOWLIST.
 
 -- Demo patient dashboard data.
 -- Encrypted medical and AI text values below are generated for the local ENCRYPTION_MASTER_KEY.
@@ -123,6 +69,17 @@ values
     now(),
     '{"provider":"google","providers":["google"]}'::jsonb,
     '{"full_name":"Dr. Budi Santoso"}'::jsonb,
+    now(),
+    now()
+  ),
+  (
+    '00000000-0000-0000-0000-000000000205',
+    'authenticated',
+    'authenticated',
+    'sari.wijaya@medproof.test',
+    now(),
+    '{"provider":"google","providers":["google"]}'::jsonb,
+    '{"full_name":"Dr. Sari Wijaya"}'::jsonb,
     now(),
     now()
   )
@@ -230,6 +187,20 @@ values
     'complete',
     now() - interval '9 days',
     now() - interval '9 days',
+    now() - interval '1 day'
+  ),
+  (
+    '00000000-0000-0000-0000-000000000305',
+    '00000000-0000-0000-0000-000000000205',
+    'Dr. Sari Wijaya',
+    'sari.wijaya@medproof.test',
+    'Spesialis Rehabilitasi Medik',
+    'approved',
+    'seed-doctor-qr-sari',
+    '110005',
+    'complete',
+    now() - interval '8 days',
+    now() - interval '8 days',
     now() - interval '1 day'
   )
 on conflict (doctor_id) do update
@@ -532,7 +503,8 @@ seed_rows (
     ('00000000-0000-0000-0000-000000000411'::uuid, '00000000-0000-0000-0000-000000000301'::uuid, true, true, true, false, now() - interval '1 day', now() + interval '6 days', false, null::timestamptz, 'seed_developer_consent_hash_411', 'confirmed', '0xseed_dev_grant_411', now() - interval '1 day'),
     ('00000000-0000-0000-0000-000000000412'::uuid, '00000000-0000-0000-0000-000000000302'::uuid, true, false, true, true, now() - interval '2 days', now() + interval '5 days', false, null::timestamptz, 'seed_developer_consent_hash_412', 'pending', null, now() - interval '2 days'),
     ('00000000-0000-0000-0000-000000000413'::uuid, '00000000-0000-0000-0000-000000000303'::uuid, false, true, false, false, now() - interval '4 days', now() + interval '4 days', true, now() - interval '2 days', 'seed_developer_consent_hash_413', 'confirmed', '0xseed_dev_grant_413', now() - interval '4 days'),
-    ('00000000-0000-0000-0000-000000000414'::uuid, '00000000-0000-0000-0000-000000000304'::uuid, true, false, false, false, now() - interval '7 days', now() - interval '1 day', false, null::timestamptz, 'seed_developer_consent_hash_414', 'failed', null, now() - interval '7 days')
+    ('00000000-0000-0000-0000-000000000414'::uuid, '00000000-0000-0000-0000-000000000304'::uuid, true, false, false, false, now() - interval '7 days', now() - interval '1 day', false, null::timestamptz, 'seed_developer_consent_hash_414', 'failed', null, now() - interval '7 days'),
+    ('00000000-0000-0000-0000-000000000415'::uuid, '00000000-0000-0000-0000-000000000305'::uuid, false, true, true, false, now() - interval '8 days', now() + interval '7 days', false, null::timestamptz, 'seed_developer_consent_hash_415', 'confirmed', '0xseed_dev_grant_415', now() - interval '8 days')
 )
 insert into public.access_grants (
   grant_id,
@@ -611,7 +583,8 @@ seed_rows (
     ('00000000-0000-0000-0000-000000000711'::uuid, null::uuid, 'patient', 'ai_processing_consent_accepted', 'patient', null::uuid, null::uuid, 'accepted', null::text, 'seed_developer_audit_hash_711', 'confirmed', '0xseed_dev_audit_711', now() - interval '10 days'),
     ('00000000-0000-0000-0000-000000000712'::uuid, '00000000-0000-0000-0000-000000000201'::uuid, 'doctor', 'doctor_patient_view_allowed', 'access_grant', '00000000-0000-0000-0000-000000000411'::uuid, '00000000-0000-0000-0000-000000000301'::uuid, 'allowed', null::text, 'seed_developer_audit_hash_712', 'confirmed', '0xseed_dev_audit_712', now() - interval '1 day'),
     ('00000000-0000-0000-0000-000000000713'::uuid, '00000000-0000-0000-0000-000000000202'::uuid, 'doctor', 'doctor_rag_requested', 'access_grant', '00000000-0000-0000-0000-000000000412'::uuid, '00000000-0000-0000-0000-000000000302'::uuid, 'allowed', null::text, 'seed_developer_audit_hash_713', 'pending', null, now() - interval '2 days'),
-    ('00000000-0000-0000-0000-000000000714'::uuid, null::uuid, 'patient', 'patient_grant_revoked', 'access_grant', '00000000-0000-0000-0000-000000000413'::uuid, '00000000-0000-0000-0000-000000000303'::uuid, 'revoked', null::text, 'seed_developer_audit_hash_714', 'confirmed', '0xseed_dev_audit_714', now() - interval '2 days')
+    ('00000000-0000-0000-0000-000000000714'::uuid, null::uuid, 'patient', 'patient_grant_revoked', 'access_grant', '00000000-0000-0000-0000-000000000413'::uuid, '00000000-0000-0000-0000-000000000303'::uuid, 'revoked', null::text, 'seed_developer_audit_hash_714', 'confirmed', '0xseed_dev_audit_714', now() - interval '2 days'),
+    ('00000000-0000-0000-0000-000000000715'::uuid, '00000000-0000-0000-0000-000000000205'::uuid, 'doctor', 'doctor_patient_view_allowed', 'access_grant', '00000000-0000-0000-0000-000000000415'::uuid, '00000000-0000-0000-0000-000000000305'::uuid, 'allowed', null::text, 'seed_developer_audit_hash_715', 'failed', null, now() - interval '12 hours')
 )
 insert into public.audit_logs (
   log_id,
@@ -685,7 +658,8 @@ seed_rows (
   ('00000000-0000-0000-0000-000000000511'::uuid, '00000000-0000-0000-0000-000000000301'::uuid, '256g', 'FKKVxPEgOTAMx4BC', 'k+ur4Gth2rPDUnDdfOgPNQ==', 'vCI9k22SKmeHIj2inu3ydVE=', '0gSZfxCcg6EPYsXh', 'FPxUxJ/yQe6ITRxHSlRHUw==', 'IChJlqyiaK39G6RZ6BHdsJM3ZR+ro/agLYWpKH2KkTWPcNAp2MUkgHuq0J/BDUY=', 'eHbUsE/nBXBZNgFc', 'hJsyQ9n+PZ2hKRj5tUlyLQ==', 'seed_developer_scope1_hash_00000000-0000-0000-0000-000000000511', 'confirmed', '0xseed_dev_scope1_511', 'v1', now() - interval '4 days'),
   ('00000000-0000-0000-0000-000000000512'::uuid, '00000000-0000-0000-0000-000000000302'::uuid, 'irw8vi6tEPIW', 'uK2QWOlGRtIZCWTS', '5O8Vqd5eA/qa4r4sy1Kxlg==', '2CrI2CgfaKa/+L6y6nOZ+AuHtvsbVl03lA==', 'uZzr4fj1xnCCte5y', 'Mk0Jh+y79ph2k1PFDxO7ow==', 'yMYVdP4ujpDiIeBGtltZiy1ai+NYULyL/fxlqoTd8O4DTqltJOg9EGQkFGU/GqWEs2gqKgG89IJTqyEV', 'jUbTWVM2AWJh7ZSN', 'dbIqMqkI5nqTZXPhuv4Rwg==', 'seed_developer_scope1_hash_00000000-0000-0000-0000-000000000512', 'pending', null, 'v1', now() - interval '3 days'),
   ('00000000-0000-0000-0000-000000000513'::uuid, '00000000-0000-0000-0000-000000000303'::uuid, '/L5cR7940r8czRAa', '01AzrP7mmZS5J4W5', '4ZtJxIqXgLbNNfaX3G48xg==', 'adiTYZ7r89izaal4e5b75AsZ6/HoBw==', '0S1nBONJcblKuR3p', 'Ki/AHIgNtwjLr5kW6dy9tw==', 'mEkui3YofhP7ORzlOVQBHZFPoeNB2HlOOkJfI93tEHL0IAPAIg/8VaZjE5ESOt9kBW3dHZ0o', '9LwORweT1ecEw0l/', 'jdSQ1ag8CXcthoEG6yK/3Q==', 'seed_developer_scope1_hash_00000000-0000-0000-0000-000000000513', 'failed', null, 'v1', now() - interval '2 days'),
-  ('00000000-0000-0000-0000-000000000514'::uuid, '00000000-0000-0000-0000-000000000304'::uuid, 'cMSihQ==', 'nX1OP3dtyhCn5Dkn', 'uy5j5mu4ogIFdqPB+PUeQg==', 'nnYF50Sw2XCFVx607UZmGIlYPJrBL/CFOGk=', '+DdBrRlBIXYdKvRn', '81dusYfCZzAB4IJngpMD6Q==', 'YH66JswmDc0CSIqNNhnEO581umDpoCRfVnpHx0l2DHhKOyAS+Bc9hrWCN/4xjpsafxsV2kL4Qw==', 'q/REgZwyczJ+Fq/B', 'fTN6ofkYUpdP0TKXDILAug==', 'seed_developer_scope1_hash_00000000-0000-0000-0000-000000000514', 'confirmed', '0xseed_dev_scope1_514', 'v1', now() - interval '1 days')
+  ('00000000-0000-0000-0000-000000000514'::uuid, '00000000-0000-0000-0000-000000000304'::uuid, 'cMSihQ==', 'nX1OP3dtyhCn5Dkn', 'uy5j5mu4ogIFdqPB+PUeQg==', 'nnYF50Sw2XCFVx607UZmGIlYPJrBL/CFOGk=', '+DdBrRlBIXYdKvRn', '81dusYfCZzAB4IJngpMD6Q==', 'YH66JswmDc0CSIqNNhnEO581umDpoCRfVnpHx0l2DHhKOyAS+Bc9hrWCN/4xjpsafxsV2kL4Qw==', 'q/REgZwyczJ+Fq/B', 'fTN6ofkYUpdP0TKXDILAug==', 'seed_developer_scope1_hash_00000000-0000-0000-0000-000000000514', 'confirmed', '0xseed_dev_scope1_514', 'v1', now() - interval '1 days'),
+  ('00000000-0000-0000-0000-000000000515'::uuid, '00000000-0000-0000-0000-000000000305'::uuid, 'NvZpzRUAJoQ1aA==', 'pfKeuFp9JWktviEZ', 'cEGgn5Hf5gg6wy+BTZRNIQ==', '41y69s+Md8YzOPzvHF/AF8o2UA==', '78sUrg+7e0qRMGtH', 'uxLmjYUFc46SYZhBFkK1Cg==', 'JMUTmsJF7ZhFlXfvl17WQLLvTx0QQVc8dCHj7ffq5kJC+OTMtru/URFUfYBPdLcfVNI8', 'OjnKFEOykqRgVdpf', 'euzVcXFo/pr+75Vk5JoCyA==', 'seed_developer_scope1_hash_00000000-0000-0000-0000-000000000515', 'pending', null, 'v1', now() - interval '12 hours')
 )
 insert into public.scope_1_medical_records (
   record_id,
@@ -819,3 +793,16 @@ set
   summary_generated_at = excluded.summary_generated_at,
   summary_generation_status = excluded.summary_generation_status,
   updated_at = excluded.updated_at;
+
+-- Supabase Auth expects manually seeded OAuth token fields to be non-null strings.
+update auth.users
+set
+  confirmation_token = coalesce(confirmation_token, ''),
+  recovery_token = coalesce(recovery_token, ''),
+  email_change_token_new = coalesce(email_change_token_new, ''),
+  email_change = coalesce(email_change, '')
+where
+  confirmation_token is null
+  or recovery_token is null
+  or email_change_token_new is null
+  or email_change is null;

@@ -69,7 +69,6 @@ export default async function PatientChatPage({
           navigationCopy={{
             dashboard: copy.patient.nav.dashboard,
             access: copy.patient.nav.access,
-            history: copy.patient.nav.history,
           }}
         />
       </section>

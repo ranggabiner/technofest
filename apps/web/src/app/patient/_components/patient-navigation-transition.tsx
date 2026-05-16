@@ -14,7 +14,6 @@ import {
 } from "react";
 
 import {
-  PatientAccessHistorySkeleton,
   PatientAccessSkeleton,
   PatientDashboardSkeleton,
 } from "@/components/loading-skeletons";
@@ -116,7 +115,6 @@ function renderPendingSkeleton(path: string) {
 
   if (key === "dashboard") return <PatientDashboardSkeleton />;
   if (key === "access") return <PatientAccessSkeleton />;
-  if (key === "history") return <PatientAccessHistorySkeleton />;
   return null;
 }
 

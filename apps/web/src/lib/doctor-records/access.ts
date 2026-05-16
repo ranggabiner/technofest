@@ -1,3 +1,5 @@
+import type { Scope2GrantFilter } from "@/lib/access/granular-grants";
+
 export type DoctorGrantScope = "scope1" | "scope2_mental" | "scope2_physical" | "attachments";
 
 export type GrantAccessInput = {
@@ -7,6 +9,9 @@ export type GrantAccessInput = {
   canViewScope2Mental: boolean;
   canViewScope2Physical: boolean;
   canDownloadAttachments: boolean;
+  attachmentRecordIds?: string[];
+  scope2MentalFilter?: Scope2GrantFilter | null;
+  scope2PhysicalFilter?: Scope2GrantFilter | null;
 };
 
 export type GrantAccessResult =
@@ -46,4 +51,30 @@ export function describeDoctorGrantScopes(grant: GrantAccessInput) {
   if (grant.canViewScope2Physical) scopes.push("Fisik");
   if (grant.canDownloadAttachments) scopes.push("Unduh lampiran");
   return scopes;
+}
+
+export function canDownloadAttachmentRecord(
+  grant: Pick<GrantAccessInput, "canViewScope1" | "canDownloadAttachments" | "attachmentRecordIds">,
+  recordId: string,
+) {
+  if (!grant.canViewScope1 || !grant.canDownloadAttachments) return false;
+  if (!grant.attachmentRecordIds) return true;
+  return grant.attachmentRecordIds.includes(recordId);
+}
+
+export function scope2RowMatchesFilter(
+  row: { logDate: string; sessionId: string },
+  filter: Scope2GrantFilter | null | undefined,
+  now = new Date(),
+) {
+  if (!filter) return true;
+  if (filter.mode === "selected_session") return row.sessionId === filter.sessionId;
+
+  const rowMs = Date.parse(`${row.logDate}T00:00:00.000Z`);
+  if (!Number.isFinite(rowMs)) return false;
+
+  const cutoff = new Date(now);
+  cutoff.setUTCDate(cutoff.getUTCDate() - filter.windowDays);
+  cutoff.setUTCHours(0, 0, 0, 0);
+  return rowMs >= cutoff.getTime();
 }

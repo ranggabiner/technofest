@@ -8,7 +8,6 @@ import {
   ChevronLeft,
   Grid2X2,
   HeartPulse,
-  History,
   Plus,
   Search,
   Square,
@@ -94,7 +93,6 @@ type ChatCopy = {
 type ChatNavigationCopy = {
   dashboard: string;
   access: string;
-  history: string;
 };
 
 export function AiJournalClient({
@@ -934,12 +932,6 @@ function BackNavigationMenu({
               href="/patient/access"
               icon={<Stethoscope size={18} aria-hidden="true" />}
               label={navigationCopy.access}
-              onSelect={() => setIsOpen(false)}
-            />
-            <BackNavigationMenuItem
-              href="/patient/access-history"
-              icon={<History size={18} aria-hidden="true" />}
-              label={navigationCopy.history}
               onSelect={() => setIsOpen(false)}
             />
           </div>

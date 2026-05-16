@@ -65,6 +65,8 @@ describe("i18n locale contracts", () => {
 
     expect(idLogin.authErrors).toMatchObject({
       oauth_missing_code: expect.any(String),
+      oauth_provider_denied: expect.any(String),
+      oauth_provider_failed: expect.any(String),
       oauth_exchange_failed: expect.any(String),
       oauth_user_missing: expect.any(String),
       oauth_start_failed: expect.any(String),
@@ -74,6 +76,8 @@ describe("i18n locale contracts", () => {
     });
     expect(enLogin.authErrors).toMatchObject({
       oauth_missing_code: expect.any(String),
+      oauth_provider_denied: expect.any(String),
+      oauth_provider_failed: expect.any(String),
       oauth_exchange_failed: expect.any(String),
       oauth_user_missing: expect.any(String),
       oauth_start_failed: expect.any(String),

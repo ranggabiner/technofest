@@ -9,7 +9,6 @@ import {
   LoadingCard,
   LoadingList,
   PatientChatSkeleton,
-  PatientAccessHistorySkeleton,
   PatientDashboardSkeleton,
 } from "./loading-skeletons";
 import { Skeleton } from "./ui/skeleton";
@@ -56,16 +55,6 @@ describe("loading skeleton components", () => {
     expect(grantHtml.match(/data-skeleton-card/g)?.length).toBeGreaterThanOrEqual(4);
   });
 
-  it("renders patient access history as a reusable content-only skeleton", () => {
-    const html = renderToStaticMarkup(
-      React.createElement(PatientAccessHistorySkeleton),
-    );
-
-    expect(html).toContain('data-loading-pattern="patient-access-history"');
-    expect(html).not.toContain("data-patient-sidebar");
-    expect(html.match(/data-skeleton-card/g)).toHaveLength(2);
-  });
-
   it("keeps patient chat loading header grouped around back navigation", () => {
     const html = renderToStaticMarkup(
       React.createElement(PatientChatSkeleton),
@@ -92,7 +81,6 @@ describe("route loading skeletons", () => {
     "patient/(portal)/loading.tsx",
     "patient/chat/loading.tsx",
     "patient/(portal)/access/loading.tsx",
-    "patient/(portal)/access-history/loading.tsx",
     "patient/onboarding/step-1/loading.tsx",
     "patient/onboarding/step-2/loading.tsx",
     "patient/onboarding/step-3/loading.tsx",

@@ -2,7 +2,7 @@ create extension if not exists pgtap with schema extensions;
 
 begin;
 
-select plan(12);
+select plan(13);
 
 select is(
   (
@@ -23,6 +23,8 @@ select is(
         'scope_2_physical',
         'scope_1_medical_records',
         'access_grants',
+        'access_grant_attachment_permissions',
+        'access_grant_scope2_filters',
         'audit_logs'
       )
       and c.relrowsecurity = false
@@ -47,6 +49,8 @@ select is(
         ('scope_2_physical'),
         ('scope_1_medical_records'),
         ('access_grants'),
+        ('access_grant_attachment_permissions'),
+        ('access_grant_scope2_filters'),
         ('audit_logs')
     ) as t(table_name)
     where has_table_privilege('anon', format('public.%I', table_name), 'select')
@@ -74,12 +78,28 @@ select is(
         ('scope_2_physical'),
         ('scope_1_medical_records'),
         ('access_grants'),
+        ('access_grant_attachment_permissions'),
+        ('access_grant_scope2_filters'),
         ('audit_logs')
     ) as t(table_name)
     where not has_table_privilege('authenticated', format('public.%I', table_name), 'select')
   ),
   0,
   'authenticated has explicit select grants only where RLS remains authoritative'
+);
+
+select is(
+  (
+    select count(*)::int
+    from (
+      values
+        ('access_grant_attachment_permissions'),
+        ('access_grant_scope2_filters')
+    ) as t(table_name)
+    where not has_table_privilege('service_role', format('public.%I', table_name), 'select')
+  ),
+  0,
+  'service_role has explicit select grants for granular server-side Data API reads'
 );
 
 select is(

@@ -19,8 +19,10 @@ import {
   type MedicalAttachmentFileLike,
 } from "./attachments";
 import {
+  canDownloadAttachmentRecord,
   describeDoctorGrantScopes,
   evaluateGrantAccess,
+  scope2RowMatchesFilter,
   type DoctorGrantScope,
   type GrantAccessInput,
 } from "./access";
@@ -168,6 +170,13 @@ type Scope2PhysicalRow = Pick<
   | "created_at"
 >;
 
+type GrantScope2FilterRow = {
+  scope_kind: string;
+  mode: string;
+  window_days: number | null;
+  session_id: string | null;
+};
+
 export type DoctorDashboardGrant = {
   grantId: string;
   patientName: string;
@@ -197,6 +206,9 @@ export type AuthorizedDoctorGrant = {
   canViewScope2Mental: boolean;
   canViewScope2Physical: boolean;
   canDownloadAttachments: boolean;
+  attachmentRecordIds: string[];
+  scope2MentalFilter: GrantAccessInput["scope2MentalFilter"];
+  scope2PhysicalFilter: GrantAccessInput["scope2PhysicalFilter"];
 };
 
 export type Scope1RecordView = {
@@ -321,8 +333,8 @@ export async function loadDoctorGrantPageState(
   const grant = await authorizeDoctorGrant(role, grantId, null, { auditAllowedView: true });
   const [scope1Records, mentalRows, physicalRows] = await Promise.all([
     grant.canViewScope1 ? loadScope1Records(grant) : Promise.resolve([]),
-    grant.canViewScope2Mental ? loadScope2Mental(grant.patientId) : Promise.resolve([]),
-    grant.canViewScope2Physical ? loadScope2Physical(grant.patientId) : Promise.resolve([]),
+    grant.canViewScope2Mental ? loadScope2Mental(grant.patientId, grant.scope2MentalFilter) : Promise.resolve([]),
+    grant.canViewScope2Physical ? loadScope2Physical(grant.patientId, grant.scope2PhysicalFilter) : Promise.resolve([]),
   ]);
 
   return {
@@ -424,9 +436,6 @@ export async function loadMedicalAttachment(input: {
   requireDownload: boolean;
 }) {
   const grant = await authorizeDoctorGrant(input.role, input.grantId, "scope1");
-  if (input.requireDownload && !grant.canDownloadAttachments) {
-    throw new DoctorAccessError("Unduhan lampiran tidak diizinkan pasien", "missing_scope");
-  }
 
   const admin = createAdminClient();
   const { data, error } = await admin
@@ -441,6 +450,10 @@ export async function loadMedicalAttachment(input: {
   if (error) throw error;
   if (!data?.attachment_file_id) {
     throw new DoctorAccessError("Lampiran tidak ditemukan", "not_found");
+  }
+
+  if (input.requireDownload && !canDownloadAttachmentRecord(grant, data.record_id)) {
+    throw new DoctorAccessError("Unduhan lampiran tidak diizinkan pasien", "missing_scope");
   }
 
   const file = normalizeSecureFileJoin(data.secure_files as SecureFileRow | SecureFileRow[] | null);
@@ -488,8 +501,8 @@ export async function answerDoctorRag(input: {
   }
 
   const [mentalRows, physicalRows] = await Promise.all([
-    grant.canViewScope2Mental ? loadScope2MentalRagRows(grant.patientId) : Promise.resolve([]),
-    grant.canViewScope2Physical ? loadScope2PhysicalRagRows(grant.patientId) : Promise.resolve([]),
+    grant.canViewScope2Mental ? loadScope2MentalRagRows(grant.patientId, grant.scope2MentalFilter) : Promise.resolve([]),
+    grant.canViewScope2Physical ? loadScope2PhysicalRagRows(grant.patientId, grant.scope2PhysicalFilter) : Promise.resolve([]),
   ]);
   const rows = selectAuthorizedRagRows(mentalRows, physicalRows, {
     canViewScope2Mental: grant.canViewScope2Mental,
@@ -564,6 +577,7 @@ async function authorizeDoctorGrant(
   }
 
   const patient = normalizePatientJoin(grant.patients);
+  const granularPermissions = await loadGrantGranularPermissions(grant.grant_id);
   return {
     grantId: grant.grant_id,
     patientId: grant.patient_id,
@@ -578,6 +592,9 @@ async function authorizeDoctorGrant(
     canViewScope2Mental: grant.can_view_scope2_mental,
     canViewScope2Physical: grant.can_view_scope2_physical,
     canDownloadAttachments: grant.can_download_attachments,
+    attachmentRecordIds: granularPermissions.attachmentRecordIds,
+    scope2MentalFilter: granularPermissions.scope2MentalFilter,
+    scope2PhysicalFilter: granularPermissions.scope2PhysicalFilter,
   };
 }
 
@@ -605,7 +622,7 @@ async function loadScope1Records(grant: AuthorizedDoctorGrant): Promise<Scope1Re
       attachmentFileId: row.attachment_file_id,
       attachmentFilename: file ? decryptFilename(file, encryptionKey) : null,
       attachmentMimeType: file?.mime_type ?? null,
-      attachmentCanDownload: grant.canDownloadAttachments,
+      attachmentCanDownload: canDownloadAttachmentRecord(grant, row.record_id),
       recordHash: row.record_hash,
       blockchainStatus: row.blockchain_status,
       blockchainTxHash: row.blockchain_tx_hash,
@@ -615,8 +632,58 @@ async function loadScope1Records(grant: AuthorizedDoctorGrant): Promise<Scope1Re
   });
 }
 
-async function loadScope2Mental(patientId: string): Promise<Scope2MentalView[]> {
-  const rows = await loadScope2MentalRows(patientId);
+async function loadGrantGranularPermissions(grantId: string): Promise<{
+  attachmentRecordIds: string[];
+  scope2MentalFilter: GrantAccessInput["scope2MentalFilter"];
+  scope2PhysicalFilter: GrantAccessInput["scope2PhysicalFilter"];
+}> {
+  const admin = createAdminClient();
+  const [attachmentsResult, filtersResult] = await Promise.all([
+    admin
+      .from("access_grant_attachment_permissions")
+      .select("record_id")
+      .eq("grant_id", grantId),
+    admin
+      .from("access_grant_scope2_filters")
+      .select("scope_kind,mode,window_days,session_id")
+      .eq("grant_id", grantId),
+  ]);
+
+  if (attachmentsResult.error) throw attachmentsResult.error;
+  if (filtersResult.error) throw filtersResult.error;
+
+  const filters = (filtersResult.data ?? []) as GrantScope2FilterRow[];
+  return {
+    attachmentRecordIds: (attachmentsResult.data ?? []).map((row) => row.record_id),
+    scope2MentalFilter: toScope2GrantFilter(filters.find((row) => row.scope_kind === "mental")),
+    scope2PhysicalFilter: toScope2GrantFilter(filters.find((row) => row.scope_kind === "physical")),
+  };
+}
+
+function toScope2GrantFilter(row: GrantScope2FilterRow | undefined): GrantAccessInput["scope2MentalFilter"] {
+  if (!row) return null;
+  if (row.mode === "last_n_days" && typeof row.window_days === "number" && row.window_days > 0) {
+    return {
+      mode: "last_n_days",
+      windowDays: row.window_days,
+      sessionId: null,
+    };
+  }
+  if (row.mode === "selected_session" && row.session_id) {
+    return {
+      mode: "selected_session",
+      windowDays: null,
+      sessionId: row.session_id,
+    };
+  }
+  return null;
+}
+
+async function loadScope2Mental(
+  patientId: string,
+  filter: GrantAccessInput["scope2MentalFilter"],
+): Promise<Scope2MentalView[]> {
+  const rows = await loadScope2MentalRows(patientId, filter);
   const encryptionKey = requireEnv(["core"]).data.ENCRYPTION_MASTER_KEY;
   return rows.map((row) => ({
     logId: row.log_id,
@@ -635,8 +702,11 @@ async function loadScope2Mental(patientId: string): Promise<Scope2MentalView[]> 
   }));
 }
 
-async function loadScope2Physical(patientId: string): Promise<Scope2PhysicalView[]> {
-  const rows = await loadScope2PhysicalRows(patientId);
+async function loadScope2Physical(
+  patientId: string,
+  filter: GrantAccessInput["scope2PhysicalFilter"],
+): Promise<Scope2PhysicalView[]> {
+  const rows = await loadScope2PhysicalRows(patientId, filter);
   const encryptionKey = requireEnv(["core"]).data.ENCRYPTION_MASTER_KEY;
   return rows.map((row) => ({
     logId: row.log_id,
@@ -655,8 +725,11 @@ async function loadScope2Physical(patientId: string): Promise<Scope2PhysicalView
   }));
 }
 
-async function loadScope2MentalRagRows(patientId: string): Promise<DoctorRagRow[]> {
-  const rows = await loadScope2MentalRows(patientId);
+async function loadScope2MentalRagRows(
+  patientId: string,
+  filter: GrantAccessInput["scope2MentalFilter"],
+): Promise<DoctorRagRow[]> {
+  const rows = await loadScope2MentalRows(patientId, filter);
   const encryptionKey = requireEnv(["core"]).data.ENCRYPTION_MASTER_KEY;
   return rows.map((row) => ({
     category: "mental",
@@ -675,8 +748,11 @@ async function loadScope2MentalRagRows(patientId: string): Promise<DoctorRagRow[
   }));
 }
 
-async function loadScope2PhysicalRagRows(patientId: string): Promise<DoctorRagRow[]> {
-  const rows = await loadScope2PhysicalRows(patientId);
+async function loadScope2PhysicalRagRows(
+  patientId: string,
+  filter: GrantAccessInput["scope2PhysicalFilter"],
+): Promise<DoctorRagRow[]> {
+  const rows = await loadScope2PhysicalRows(patientId, filter);
   const encryptionKey = requireEnv(["core"]).data.ENCRYPTION_MASTER_KEY;
   return rows.map((row) => ({
     category: "physical",
@@ -695,34 +771,54 @@ async function loadScope2PhysicalRagRows(patientId: string): Promise<DoctorRagRo
   }));
 }
 
-async function loadScope2MentalRows(patientId: string): Promise<Scope2MentalRow[]> {
+async function loadScope2MentalRows(
+  patientId: string,
+  filter: GrantAccessInput["scope2MentalFilter"] = null,
+): Promise<Scope2MentalRow[]> {
   const admin = createAdminClient();
-  const { data, error } = await admin
+  let query = admin
     .from("scope_2_mental")
     .select(
       "log_id,session_id,log_date,mood_score_ciphertext,mood_score_iv,mood_score_tag,anxiety_level_ciphertext,anxiety_level_iv,anxiety_level_tag,sleep_hours_ciphertext,sleep_hours_iv,sleep_hours_tag,trigger_notes_ciphertext,trigger_notes_iv,trigger_notes_tag,raw_quote_ciphertext,raw_quote_iv,raw_quote_tag,is_emergency_flagged_ciphertext,is_emergency_flagged_iv,is_emergency_flagged_tag,extraction_confidence_ciphertext,extraction_confidence_iv,extraction_confidence_tag,ai_model,schema_version,key_version,created_at",
     )
-    .eq("patient_id", patientId)
+    .eq("patient_id", patientId);
+
+  if (filter?.mode === "selected_session") query = query.eq("session_id", filter.sessionId);
+  if (filter?.mode === "last_n_days") query = query.gte("log_date", scope2FilterCutoffDate(filter.windowDays));
+
+  const { data, error } = await query
     .order("log_date", { ascending: false })
     .limit(20);
 
   if (error) throw error;
-  return (data ?? []) as Scope2MentalRow[];
+  return ((data ?? []) as Scope2MentalRow[]).filter((row) =>
+    scope2RowMatchesFilter({ logDate: row.log_date, sessionId: row.session_id }, filter),
+  );
 }
 
-async function loadScope2PhysicalRows(patientId: string): Promise<Scope2PhysicalRow[]> {
+async function loadScope2PhysicalRows(
+  patientId: string,
+  filter: GrantAccessInput["scope2PhysicalFilter"] = null,
+): Promise<Scope2PhysicalRow[]> {
   const admin = createAdminClient();
-  const { data, error } = await admin
+  let query = admin
     .from("scope_2_physical")
     .select(
       "log_id,session_id,log_date,symptom_type_ciphertext,symptom_type_iv,symptom_type_tag,severity_ciphertext,severity_iv,severity_tag,body_location_ciphertext,body_location_iv,body_location_tag,duration_note_ciphertext,duration_note_iv,duration_note_tag,raw_quote_ciphertext,raw_quote_iv,raw_quote_tag,is_emergency_flagged_ciphertext,is_emergency_flagged_iv,is_emergency_flagged_tag,extraction_confidence_ciphertext,extraction_confidence_iv,extraction_confidence_tag,ai_model,schema_version,key_version,created_at",
     )
-    .eq("patient_id", patientId)
+    .eq("patient_id", patientId);
+
+  if (filter?.mode === "selected_session") query = query.eq("session_id", filter.sessionId);
+  if (filter?.mode === "last_n_days") query = query.gte("log_date", scope2FilterCutoffDate(filter.windowDays));
+
+  const { data, error } = await query
     .order("log_date", { ascending: false })
     .limit(20);
 
   if (error) throw error;
-  return (data ?? []) as Scope2PhysicalRow[];
+  return ((data ?? []) as Scope2PhysicalRow[]).filter((row) =>
+    scope2RowMatchesFilter({ logDate: row.log_date, sessionId: row.session_id }, filter),
+  );
 }
 
 async function storeEncryptedMedicalAttachment(input: {
@@ -903,4 +999,10 @@ function compactDetails(items: Array<[string, string | null]>) {
   return items
     .filter(([, value]) => value != null && value !== "")
     .map(([label, value]) => `${label}: ${value}`);
+}
+
+function scope2FilterCutoffDate(windowDays: number) {
+  const cutoff = new Date();
+  cutoff.setUTCDate(cutoff.getUTCDate() - windowDays);
+  return cutoff.toISOString().slice(0, 10);
 }

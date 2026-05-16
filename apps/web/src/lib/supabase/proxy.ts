@@ -30,7 +30,7 @@ export async function updateSession(request: NextRequest) {
     error,
   }));
 
-  if (isSupabaseRefreshTokenMissingError(authResult.error)) {
+  if (isSupabaseStaleSessionError(authResult.error)) {
     response = clearSupabaseAuthCookies(request, response);
   }
 
@@ -38,11 +38,22 @@ export async function updateSession(request: NextRequest) {
 }
 
 export function isSupabaseRefreshTokenMissingError(error: unknown) {
+  return isSupabaseAuthErrorCode(error, "refresh_token_not_found");
+}
+
+export function isSupabaseStaleSessionError(error: unknown) {
+  return (
+    isSupabaseAuthErrorCode(error, "refresh_token_not_found")
+    || isSupabaseAuthErrorCode(error, "user_not_found")
+  );
+}
+
+function isSupabaseAuthErrorCode(error: unknown, code: string) {
   return (
     typeof error === "object"
     && error !== null
     && "code" in error
-    && error.code === "refresh_token_not_found"
+    && error.code === code
   );
 }
 

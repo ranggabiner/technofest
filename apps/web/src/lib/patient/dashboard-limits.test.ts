@@ -26,6 +26,16 @@ describe("patient dashboard preview limits", () => {
     expect(pageSource).not.toContain("copy.patient.dashboard.openAiJournal");
   });
 
+  it("keeps access history and doctor data-view logs off the patient dashboard", () => {
+    const pageSource = readFileSync(new URL("../../app/patient/(portal)/page.tsx", import.meta.url), "utf8");
+
+    expect(pageSource).not.toContain("loadPatientAccessState");
+    expect(pageSource).not.toContain("DoctorAccessStatusLog");
+    expect(pageSource).not.toContain("AccessHistoryList");
+    expect(pageSource).not.toContain("/patient/access-history");
+    expect(pageSource).not.toContain("copy.patient.dashboard.accessLogTitle");
+  });
+
   it("uses a simple circle marker for medical record history", () => {
     const pageSource = readFileSync(new URL("../../app/patient/(portal)/page.tsx", import.meta.url), "utf8");
 
@@ -62,7 +72,7 @@ describe("patient dashboard preview limits", () => {
     expect(seedSource).toContain("seed_patient_dashboard_access_log");
   });
 
-  it("seeds four dashboard examples for developer@binerlabs.com", () => {
+  it("seeds developer@binerlabs.com access history and proof examples", () => {
     const seedSource = readFileSync(
       new URL("../../../../supabase/supabase/seed.sql", import.meta.url),
       "utf8",
@@ -78,12 +88,24 @@ describe("patient dashboard preview limits", () => {
       "00000000-0000-0000-0000-000000000412",
       "00000000-0000-0000-0000-000000000413",
       "00000000-0000-0000-0000-000000000414",
+      "00000000-0000-0000-0000-000000000415",
+    ]);
+    expect(seedSource).toContain(
+      "'00000000-0000-0000-0000-000000000415'::uuid, '00000000-0000-0000-0000-000000000305'::uuid, false, true, true, false, now() - interval '8 days', now() + interval '7 days'",
+    );
+    expectSeedIds(seedSource, [
+      "00000000-0000-0000-0000-000000000711",
+      "00000000-0000-0000-0000-000000000712",
+      "00000000-0000-0000-0000-000000000713",
+      "00000000-0000-0000-0000-000000000714",
+      "00000000-0000-0000-0000-000000000715",
     ]);
     expectSeedIds(seedSource, [
       "00000000-0000-0000-0000-000000000511",
       "00000000-0000-0000-0000-000000000512",
       "00000000-0000-0000-0000-000000000513",
       "00000000-0000-0000-0000-000000000514",
+      "00000000-0000-0000-0000-000000000515",
     ]);
     expectSeedIds(seedSource, [
       "00000000-0000-0000-0000-000000000611",
@@ -95,7 +117,6 @@ describe("patient dashboard preview limits", () => {
 });
 
 function expectSeedIds(seedSource: string, ids: string[]) {
-  expect(ids).toHaveLength(4);
   for (const id of ids) {
     expect(seedSource).toContain(id);
   }

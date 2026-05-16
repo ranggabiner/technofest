@@ -155,7 +155,7 @@ export async function loadKycDocumentSummaries(doctorId: string) {
   const { data, error } = await admin
     .from("doctor_kyc_documents")
     .select(
-      "document_id,document_type,secure_files(original_filename_ciphertext,original_filename_iv,original_filename_tag,mime_type,file_size_bytes,key_version)",
+      "document_id,document_type,secure_files(file_id,original_filename_ciphertext,original_filename_iv,original_filename_tag,mime_type,file_size_bytes,key_version)",
     )
     .eq("doctor_id", doctorId);
 
@@ -168,6 +168,7 @@ export async function loadKycDocumentSummaries(doctorId: string) {
       return {
         documentType: row.document_type as KycDocumentType,
         documentId: row.document_id,
+        fileId: file?.file_id ?? null,
         filename: file
           ? decryptString(
               {

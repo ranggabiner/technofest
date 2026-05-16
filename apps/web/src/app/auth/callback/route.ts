@@ -1,21 +1,21 @@
 import { NextResponse } from "next/server";
 
+import {
+  getAuthCallbackError,
+  getAuthCallbackErrorReason,
+  type AuthCallbackError,
+} from "@/lib/auth/callback";
 import { resolveRoleForUser } from "@/lib/auth/session";
 import { roleEntryPath } from "@/lib/auth/roles";
 import { createClient } from "@/lib/supabase/server";
 
-type AuthCallbackError =
-  | "oauth_missing_code"
-  | "oauth_exchange_failed"
-  | "oauth_user_missing"
-  | "oauth_callback_failed";
-
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
-  const code = requestUrl.searchParams.get("code");
+  const code = requestUrl.searchParams.get("code") ?? "";
+  const callbackError = getAuthCallbackError(requestUrl);
 
-  if (!code) {
-    return redirectToLoginError(request, "oauth_missing_code");
+  if (callbackError) {
+    return redirectToLoginError(request, callbackError, getAuthCallbackErrorReason(requestUrl));
   }
 
   try {
@@ -44,8 +44,9 @@ export async function GET(request: Request) {
   }
 }
 
-function redirectToLoginError(request: Request, error: AuthCallbackError) {
+function redirectToLoginError(request: Request, error: AuthCallbackError, reason?: string | null) {
   const loginUrl = new URL("/login", request.url);
   loginUrl.searchParams.set("error", error);
+  if (reason) loginUrl.searchParams.set("reason", reason);
   return NextResponse.redirect(loginUrl);
 }

@@ -10,6 +10,8 @@ import {
   isLongExpiry,
   revokeDoctorGrant,
 } from "@/lib/access/doctor-access";
+import { isActiveDoctorAccessSessionError } from "@/lib/access/grants";
+import { parseScope2FilterValue } from "@/lib/access/granular-grants";
 import { requireRole } from "@/lib/auth/session";
 import {
   acceptAiConsent,
@@ -85,18 +87,22 @@ export async function grantDoctorAccessAction(formData: FormData) {
         canViewScope1: readCheckbox(formData, "can_view_scope1"),
         canViewScope2Mental: readCheckbox(formData, "can_view_scope2_mental"),
         canViewScope2Physical: readCheckbox(formData, "can_view_scope2_physical"),
-        canDownloadAttachments: readCheckbox(formData, "can_download_attachments"),
+        attachmentRecordIds: readAllText(formData, "attachment_record_ids"),
+        scope2MentalFilter: parseScope2FilterValue(readText(formData, "scope2_mental_filter")),
+        scope2PhysicalFilter: parseScope2FilterValue(readText(formData, "scope2_physical_filter")),
         expiresAt,
       },
       getRequestIp(headerList),
     );
   } catch (error) {
-    redirect(`/patient/access?access_error=${encodeURIComponent(readErrorMessage(error, copy.patient.access.actionFailed))}`);
+    const message = isActiveDoctorAccessSessionError(error)
+      ? copy.patient.access.activeSessionAlreadyExists
+      : readErrorMessage(error, copy.patient.access.actionFailed);
+    redirect(`/patient/access?access_error=${encodeURIComponent(message)}`);
   }
 
   revalidatePath("/patient");
   revalidatePath("/patient/access");
-  revalidatePath("/patient/access-history");
   redirect("/patient/access?access_status=granted");
 }
 
@@ -119,7 +125,6 @@ export async function revokeDoctorAccessAction(formData: FormData) {
 
   revalidatePath("/patient");
   revalidatePath("/patient/access");
-  revalidatePath("/patient/access-history");
   redirect("/patient/access?access_status=revoked");
 }
 
@@ -130,6 +135,10 @@ function readText(formData: FormData, key: string) {
 function readCheckbox(formData: FormData, key: string) {
   const value = formData.get(key);
   return value === "on" || value === "true";
+}
+
+function readAllText(formData: FormData, key: string) {
+  return formData.getAll(key).map((value) => String(value).trim()).filter(Boolean);
 }
 
 function readErrorMessage(error: unknown, fallback: string) {

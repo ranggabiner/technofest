@@ -12,6 +12,17 @@ export function getKycPreviewKind(mimeType: string | null): KycPreviewKind {
   return "fallback";
 }
 
+export function getKycDocumentPreviewUrl(document: {
+  documentId: string | null;
+  fileId: string | null;
+}) {
+  if (!document.documentId || !document.fileId) return null;
+
+  const documentId = encodeURIComponent(document.documentId);
+  const fileId = encodeURIComponent(document.fileId);
+  return `/doctor/onboarding/documents/${documentId}?v=${fileId}`;
+}
+
 export function formatFileSize(bytes: number | null) {
   if (bytes === null || !Number.isFinite(bytes)) return "-";
   if (bytes === 0) return "0 B";

@@ -293,30 +293,45 @@ export function PatientChatSkeleton() {
 
 export function PatientAccessSkeleton() {
   return (
-    <div className="grid gap-5" data-loading-pattern="patient-access">
-      <Card>
+    <div className="grid gap-8" data-loading-pattern="patient-access">
+      <section className="border-b border-[var(--color-stone-surface)] pb-5">
+        <Skeleton className="mb-3 h-4 w-28" />
+        <Skeleton className="h-12 w-full max-w-[520px]" />
+        <Skeleton className="mt-4 h-5 w-full max-w-2xl" />
+      </section>
+      <Card className="grid gap-8 p-6 md:p-8">
         <div className="space-y-2">
           <Skeleton className="h-8 w-56" />
-          <Skeleton className="h-4 w-full max-w-md" />
+          <Skeleton className="h-4 w-full max-w-lg" />
         </div>
-        <div className="mt-5">
-          <DoctorLookupSkeleton />
-        </div>
-        <div className="mt-5">
-          <Skeleton className="mb-3 h-5 w-36" />
-          <LoadingList rows={2} />
+        <div className="grid gap-6 lg:grid-cols-2">
+          <div className="grid gap-4 rounded-[10px] bg-[var(--color-stone-surface)] p-5">
+            <Skeleton className="h-7 w-44" />
+            <Skeleton className="h-4 w-full max-w-sm" />
+            <Skeleton className="h-11 w-full" />
+            <Skeleton className="h-10 w-full rounded-full" />
+          </div>
+          <div className="grid gap-4 rounded-[10px] border border-[var(--color-stone-surface)] p-5">
+            <Skeleton className="h-7 w-36" />
+            <Skeleton className="h-4 w-full max-w-sm" />
+            <Skeleton className="min-h-[178px] w-full rounded-xl" />
+          </div>
         </div>
       </Card>
-      <Skeleton className="h-10 w-44 rounded-full" />
-    </div>
-  );
-}
-
-export function PatientAccessHistorySkeleton() {
-  return (
-    <div className="grid gap-5" data-loading-pattern="patient-access-history">
-      <LoadingCard lines={4} />
-      <LoadingCard lines={5} />
+      <section className="grid gap-5">
+        <div className="space-y-2">
+          <Skeleton className="h-8 w-52" />
+          <Skeleton className="h-4 w-full max-w-md" />
+        </div>
+        <Card className="grid gap-4 p-6">
+          <Skeleton className="h-6 w-36" />
+          <LoadingList rows={2} />
+        </Card>
+        <div className="grid gap-5 xl:grid-cols-2">
+          <LoadingCard lines={4} />
+          <LoadingCard lines={5} />
+        </div>
+      </section>
     </div>
   );
 }
