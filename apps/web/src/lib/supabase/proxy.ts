@@ -25,6 +25,44 @@ export async function updateSession(request: NextRequest) {
     },
   });
 
-  await supabase.auth.getClaims();
+  const authResult = await supabase.auth.getUser().catch((error: unknown) => ({
+    data: { user: null },
+    error,
+  }));
+
+  if (isSupabaseRefreshTokenMissingError(authResult.error)) {
+    response = clearSupabaseAuthCookies(request, response);
+  }
+
   return response;
+}
+
+export function isSupabaseRefreshTokenMissingError(error: unknown) {
+  return (
+    typeof error === "object"
+    && error !== null
+    && "code" in error
+    && error.code === "refresh_token_not_found"
+  );
+}
+
+export function isSupabaseAuthCookieName(name: string) {
+  return name.startsWith("sb-") && /-auth-token(?:\.\d+)?$/.test(name);
+}
+
+function clearSupabaseAuthCookies(request: NextRequest, response: NextResponse) {
+  const authCookies = request.cookies.getAll().filter((cookie) => isSupabaseAuthCookieName(cookie.name));
+  if (authCookies.length === 0) return response;
+
+  authCookies.forEach(({ name }) => request.cookies.delete(name));
+  const clearedResponse = NextResponse.next({ request });
+  authCookies.forEach(({ name }) => {
+    clearedResponse.cookies.set(name, "", {
+      path: "/",
+      sameSite: "lax",
+      maxAge: 0,
+    });
+  });
+
+  return clearedResponse;
 }

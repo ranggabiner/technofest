@@ -6,36 +6,24 @@ import {
   ArrowUp,
   BrainCircuit,
   ChevronLeft,
-  FileText,
   Grid2X2,
   HeartPulse,
   History,
-  Loader2,
-  Paperclip,
   Plus,
   Search,
   Square,
   Stethoscope,
-  X,
 } from "lucide-react";
 
 import { AssistantBubbleSkeleton } from "@/components/loading-skeletons";
 import { Skeleton } from "@/components/ui/skeleton";
 import type {
-  JournalMessageAttachmentView,
   JournalMessageView,
   JournalSessionDetailView,
   JournalSessionHistoryItem,
   JournalSessionSummaryView,
   SummaryGenerationStatus,
 } from "@/lib/ai/journal-service";
-import {
-  CHAT_ATTACHMENT_ACCEPT,
-  patientChatAttachmentErrorMessage,
-  validatePatientChatAttachmentList,
-  type PatientChatAttachmentErrorMessages,
-} from "@/lib/ai/patient-chat-attachment-rules";
-import { formatFileSize, getFileTypeLabel } from "@/lib/kyc/preview";
 import { cn } from "@/lib/utils";
 import { finishAiSessionAction, retryAiSessionSummaryAction } from "../actions";
 import { AssistantMarkdown } from "./assistant-markdown";
@@ -45,14 +33,6 @@ type ChatMessage = JournalMessageView | {
   role: "user" | "assistant";
   content: string;
   createdAt: string;
-  attachment: JournalMessageAttachmentView | null;
-};
-
-type SelectedAttachment = {
-  file: File;
-  name: string;
-  type: string;
-  size: number;
 };
 
 type ChatCopy = {
@@ -84,16 +64,6 @@ type ChatCopy = {
   emotionalGuidanceDescription: string;
   bodyGuidanceTitle: string;
   bodyGuidanceDescription: string;
-  attachTitle: string;
-  attachmentDropTitle: string;
-  attachmentDropDescription: string;
-  attachmentSelectedTitle: string;
-  attachmentRemove: string;
-  attachmentProcessing: string;
-  attachmentReady: string;
-  attachmentOnlyMessage: string;
-  attachmentFallbackName: string;
-  attachmentErrors: PatientChatAttachmentErrorMessages;
   bottomDisclosure: string;
   clientTitle: string;
   finishTitle: string;
@@ -127,23 +97,6 @@ type ChatNavigationCopy = {
   history: string;
 };
 
-function hasFileDrag(event: DragEvent | React.DragEvent) {
-  return Array.from(event.dataTransfer?.types ?? []).includes("Files");
-}
-
-function selectedAttachmentFromFile(file: File): SelectedAttachment {
-  return {
-    file,
-    name: file.name,
-    type: file.type,
-    size: file.size,
-  };
-}
-
-function formatAttachmentOnlyMessage(template: string, fileName: string, fallbackName: string) {
-  return template.replace("{name}", fileName.trim() || fallbackName);
-}
-
 export function AiJournalClient({
   initialSessionId,
   initialHistory,
@@ -175,29 +128,22 @@ export function AiJournalClient({
   const [isCreatingNewChat, setIsCreatingNewChat] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [confirmNewChatOpen, setConfirmNewChatOpen] = useState(false);
-  const [selectedAttachment, setSelectedAttachment] = useState<SelectedAttachment | null>(null);
-  const [isAttachmentDragOver, setIsAttachmentDragOver] = useState(false);
-  const [isAttachmentProcessing, setIsAttachmentProcessing] = useState(false);
   const [selectedSessionIsClosed, setSelectedSessionIsClosed] = useState(initialSessionClosed);
   const [sessionSummary, setSessionSummary] = useState(latestSummary);
   const [summaryStatus, setSummaryStatus] = useState<SummaryGenerationStatus>(initialSummaryGenerationStatus);
   const [isFinishing, startFinishTransition] = useTransition();
   const [isRetryingSummary, startSummaryRetryTransition] = useTransition();
   const inputRef = useRef<HTMLInputElement>(null);
-  const attachmentInputRef = useRef<HTMLInputElement>(null);
-  const dragDepthRef = useRef(0);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const hasMessages = messages.length > 0;
   const showFinishAction = hasMessages && !selectedSessionIsClosed && !isSessionLoading;
-  const attachmentDisabled = selectedSessionIsClosed || isStreaming || isSessionLoading || isAttachmentProcessing;
 
   const canSend = useMemo(
     () =>
-      (input.trim().length > 0 || Boolean(selectedAttachment)) &&
+      input.trim().length > 0 &&
       !isStreaming &&
-      !selectedSessionIsClosed &&
-      !isAttachmentProcessing,
-    [input, isAttachmentProcessing, isStreaming, selectedAttachment, selectedSessionIsClosed],
+      !selectedSessionIsClosed,
+    [input, isStreaming, selectedSessionIsClosed],
   );
 
   const loadHistory = useCallback(async (nextQuery: string) => {
@@ -251,84 +197,11 @@ export function AiJournalClient({
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [closeSearchOverlay, isSearchOpen]);
 
-  useEffect(() => {
-    function preventBrowserFileOpen(event: DragEvent) {
-      if (!hasFileDrag(event)) return;
-      event.preventDefault();
-    }
-
-    window.addEventListener("dragover", preventBrowserFileOpen);
-    window.addEventListener("drop", preventBrowserFileOpen);
-
-    return () => {
-      window.removeEventListener("dragover", preventBrowserFileOpen);
-      window.removeEventListener("drop", preventBrowserFileOpen);
-    };
-  }, []);
-
-  const handleAttachmentFiles = useCallback((files: FileList | File[]) => {
-    if (selectedSessionIsClosed) return;
-
-    const validation = validatePatientChatAttachmentList(files);
-    if (!validation.ok) {
-      setError(patientChatAttachmentErrorMessage(validation.reason, copy.attachmentErrors));
-      setSelectedAttachment(null);
-      return;
-    }
-
-    setError(null);
-    setSelectedAttachment(selectedAttachmentFromFile(validation.file));
-    window.setTimeout(() => inputRef.current?.focus(), 0);
-  }, [copy.attachmentErrors, selectedSessionIsClosed]);
-
-  function openAttachmentPicker() {
-    if (attachmentDisabled) return;
-    attachmentInputRef.current?.click();
-  }
-
-  function removeSelectedAttachment() {
-    if (isAttachmentProcessing) return;
-    setSelectedAttachment(null);
-    if (attachmentInputRef.current) attachmentInputRef.current.value = "";
-  }
-
-  function handleConversationDragEnter(event: React.DragEvent<HTMLDivElement>) {
-    if (!hasFileDrag(event)) return;
-    event.preventDefault();
-    if (attachmentDisabled) return;
-    dragDepthRef.current += 1;
-    setIsAttachmentDragOver(true);
-  }
-
-  function handleConversationDragOver(event: React.DragEvent<HTMLDivElement>) {
-    if (!hasFileDrag(event)) return;
-    event.preventDefault();
-    event.dataTransfer.dropEffect = attachmentDisabled ? "none" : "copy";
-  }
-
-  function handleConversationDragLeave(event: React.DragEvent<HTMLDivElement>) {
-    if (!hasFileDrag(event)) return;
-    event.preventDefault();
-    dragDepthRef.current = Math.max(0, dragDepthRef.current - 1);
-    if (dragDepthRef.current === 0) setIsAttachmentDragOver(false);
-  }
-
-  function handleConversationDrop(event: React.DragEvent<HTMLDivElement>) {
-    if (!hasFileDrag(event)) return;
-    event.preventDefault();
-    dragDepthRef.current = 0;
-    setIsAttachmentDragOver(false);
-    if (attachmentDisabled) return;
-    handleAttachmentFiles(event.dataTransfer.files);
-  }
-
   async function sendMessage() {
     const text = input.trim();
-    const attachment = selectedAttachment;
-    if ((!text && !attachment) || isStreaming || selectedSessionIsClosed || isAttachmentProcessing) return;
+    if (!text || isStreaming || selectedSessionIsClosed) return;
 
     setError(null);
-    if (attachment) setIsAttachmentProcessing(true);
     setIsStreaming(true);
     setSessionSummary(null);
     setInput("");
@@ -336,45 +209,23 @@ export function AiJournalClient({
     const userMessage: ChatMessage = {
       id: `local-user-${Date.now()}`,
       role: "user",
-      content: text || formatAttachmentOnlyMessage(
-        copy.attachmentOnlyMessage,
-        attachment?.name ?? "",
-        copy.attachmentFallbackName,
-      ),
+      content: text,
       createdAt: new Date().toISOString(),
-      attachment: attachment
-        ? {
-          id: `local-attachment-${Date.now()}`,
-          fileName: attachment.name,
-          fileType: attachment.type,
-          fileSizeBytes: attachment.size,
-        }
-        : null,
     };
     const assistantMessage: ChatMessage = {
       id: `local-ai-${Date.now()}`,
       role: "assistant",
       content: "",
       createdAt: new Date().toISOString(),
-      attachment: null,
     };
 
     setMessages((current) => [...current, userMessage, assistantMessage]);
 
     try {
-      const body = attachment ? new FormData() : JSON.stringify({ message: text, sessionId });
-      const headers = attachment ? undefined : { "Content-Type": "application/json" };
-
-      if (attachment && body instanceof FormData) {
-        body.set("message", text);
-        if (sessionId) body.set("sessionId", sessionId);
-        body.set("attachment", attachment.file);
-      }
-
       const response = await fetch("/api/patient/ai/chat", {
         method: "POST",
-        headers,
-        body,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: text, sessionId }),
       });
 
       const responseSessionId = response.headers.get("X-MedProof-Session-Id");
@@ -400,14 +251,11 @@ export function AiJournalClient({
           ),
         );
       }
-      setSelectedAttachment(null);
-      if (attachmentInputRef.current) attachmentInputRef.current.value = "";
     } catch (err) {
       setMessages((current) => current.filter((message) => message.id !== assistantMessage.id));
       setError(err instanceof Error ? err.message : copy.aiContactFailed);
     } finally {
       setIsStreaming(false);
-      setIsAttachmentProcessing(false);
       void loadHistory(searchQuery);
     }
   }
@@ -463,7 +311,6 @@ export function AiJournalClient({
       if (!response.ok || !body) throw new Error(body?.error ?? copy.newChatFailed);
       applySessionDetail(body);
       setInput("");
-      setSelectedAttachment(null);
       void loadHistory(searchQuery);
       window.setTimeout(() => inputRef.current?.focus(), 0);
     } catch (newChatError) {
@@ -489,10 +336,6 @@ export function AiJournalClient({
     setSelectedSessionIsClosed(detail.isClosed);
     setSessionSummary(detail.latestSummary);
     setSummaryStatus(detail.summaryGenerationStatus);
-    setSelectedAttachment(null);
-    setIsAttachmentDragOver(false);
-    dragDepthRef.current = 0;
-    if (attachmentInputRef.current) attachmentInputRef.current.value = "";
   }
 
   function retrySummaryGeneration() {
@@ -604,17 +447,11 @@ export function AiJournalClient({
         ) : null}
 
         <div
-          data-chat-dropzone="conversation"
-          onDragEnter={handleConversationDragEnter}
-          onDragOver={handleConversationDragOver}
-          onDragLeave={handleConversationDragLeave}
-          onDrop={handleConversationDrop}
           className={cn(
             "relative min-h-0 flex-1 overflow-y-auto px-5 py-8 md:px-10",
             hasMessages ? "custom-scrollbar" : "grid place-items-center",
           )}
         >
-          {isAttachmentDragOver ? <AttachmentDropOverlay copy={copy} /> : null}
           {isSessionLoading ? (
             <div className="mx-auto grid w-full max-w-[760px] gap-3 pb-3">
               <AssistantBubbleSkeleton />
@@ -668,14 +505,6 @@ export function AiJournalClient({
                   >
                     {message.role === "assistant" ? (
                       <AssistantMarkdown content={message.content || copy.writing} />
-                    ) : message.attachment ? (
-                      <div className="grid gap-3">
-                        {message.content ? <span>{message.content}</span> : null}
-                        <SentAttachmentChip
-                          attachment={message.attachment}
-                          fallbackName={copy.attachmentFallbackName}
-                        />
-                      </div>
                     ) : (
                       message.content || copy.writing
                     )}
@@ -716,36 +545,7 @@ export function AiJournalClient({
               {copy.messageLabel}
             </label>
             <div className="mx-auto w-full max-w-[800px]">
-              <input
-                ref={attachmentInputRef}
-                type="file"
-                accept={CHAT_ATTACHMENT_ACCEPT}
-                className="sr-only"
-                disabled={attachmentDisabled}
-                onChange={(event) => {
-                  handleAttachmentFiles(event.currentTarget.files ?? []);
-                  event.currentTarget.value = "";
-                }}
-              />
-              {selectedAttachment ? (
-                <AttachmentPreview
-                  attachment={selectedAttachment}
-                  isProcessing={isAttachmentProcessing}
-                  copy={copy}
-                  onRemove={removeSelectedAttachment}
-                />
-              ) : null}
               <div className="flex items-center gap-1 rounded-full border border-[var(--color-stone-surface)] bg-[var(--color-card)] p-1.5 shadow-[var(--shadow-subtle)] transition focus-within:border-[var(--color-midnight)] focus-within:shadow-[0_0_0_4px_color-mix(in_srgb,var(--color-midnight)_5%,transparent)]">
-                <button
-                  type="button"
-                  title={copy.attachTitle}
-                  aria-label={copy.attachTitle}
-                  onClick={openAttachmentPicker}
-                  disabled={attachmentDisabled}
-                  className="inline-flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-full text-[var(--color-graphite)] transition hover:bg-[var(--color-stone-surface)] hover:text-[var(--color-midnight)] disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  <Paperclip size={20} aria-hidden="true" />
-                </button>
                 <input
                   ref={inputRef}
                   id="ai-message"
@@ -758,7 +558,7 @@ export function AiJournalClient({
                     }
                   }}
                   maxLength={2000}
-                  disabled={isStreaming || isAttachmentProcessing}
+                  disabled={isStreaming}
                   className="min-h-11 min-w-0 flex-1 bg-transparent px-3 text-sm text-[var(--color-charcoal-primary)] outline-none placeholder:text-[var(--color-ash)] disabled:text-[var(--color-ash)]"
                   placeholder={copy.messagePlaceholder}
                 />
@@ -887,110 +687,6 @@ function EmptyGuidanceCard({
         </p>
       </div>
     </article>
-  );
-}
-
-function AttachmentDropOverlay({
-  copy,
-}: {
-  copy: Pick<ChatCopy, "attachmentDropTitle" | "attachmentDropDescription">;
-}) {
-  return (
-    <div
-      data-chat-drop-overlay="attachment"
-      className="pointer-events-none absolute inset-4 z-20 grid place-items-center rounded-2xl border-2 border-dashed border-[var(--color-teal-primary)] bg-[color-mix(in_srgb,var(--color-card)_88%,var(--color-teal-surface))] text-center shadow-[var(--shadow-elevated)]"
-    >
-      <div className="grid max-w-xs justify-items-center gap-3 px-5">
-        <span className="grid size-12 place-items-center rounded-full bg-[var(--color-teal-primary)] text-[var(--color-inverted)]">
-          <Paperclip size={22} aria-hidden="true" />
-        </span>
-        <span className="grid gap-1">
-          <span className="text-base font-semibold text-[var(--color-midnight)]">
-            {copy.attachmentDropTitle}
-          </span>
-          <span className="text-sm leading-6 text-[var(--color-graphite)]">
-            {copy.attachmentDropDescription}
-          </span>
-        </span>
-      </div>
-    </div>
-  );
-}
-
-function AttachmentPreview({
-  attachment,
-  isProcessing,
-  copy,
-  onRemove,
-}: {
-  attachment: SelectedAttachment;
-  isProcessing: boolean;
-  copy: Pick<
-    ChatCopy,
-    "attachmentSelectedTitle" | "attachmentProcessing" | "attachmentReady" | "attachmentRemove"
-  >;
-  onRemove: () => void;
-}) {
-  return (
-    <div
-      data-chat-attachment-preview="selected"
-      className="mb-2 flex items-center gap-3 rounded-2xl border border-[var(--color-stone-surface)] bg-[var(--color-card)] px-4 py-3 text-left shadow-[var(--shadow-subtle)]"
-    >
-      <span className="grid size-10 shrink-0 place-items-center rounded-full bg-[var(--color-stone-surface)] text-[var(--color-midnight)]">
-        {isProcessing ? (
-          <Loader2 size={18} aria-hidden="true" className="animate-spin" />
-        ) : (
-          <FileText size={18} aria-hidden="true" />
-        )}
-      </span>
-      <span className="grid min-w-0 flex-1 gap-0.5">
-        <span className="text-xs font-semibold uppercase leading-4 tracking-[0.08em] text-[var(--color-ash)]">
-          {copy.attachmentSelectedTitle}
-        </span>
-        <span className="truncate text-sm font-semibold text-[var(--color-midnight)]">
-          {attachment.name}
-        </span>
-        <span className="text-xs leading-5 text-[var(--color-graphite)]">
-          {getFileTypeLabel(attachment.type, attachment.name)} · {formatFileSize(attachment.size)}
-        </span>
-        <span className="text-xs leading-5 text-[var(--color-ash)]">
-          {isProcessing ? copy.attachmentProcessing : copy.attachmentReady}
-        </span>
-      </span>
-      <button
-        type="button"
-        data-chat-attachment-remove="selected"
-        title={copy.attachmentRemove}
-        aria-label={copy.attachmentRemove}
-        onClick={onRemove}
-        disabled={isProcessing}
-        className="inline-flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-full text-[var(--color-graphite)] transition hover:bg-[var(--color-stone-surface)] hover:text-[var(--color-midnight)] disabled:cursor-not-allowed disabled:opacity-50"
-      >
-        <X size={18} aria-hidden="true" />
-      </button>
-    </div>
-  );
-}
-
-function SentAttachmentChip({
-  attachment,
-  fallbackName,
-}: {
-  attachment: JournalMessageAttachmentView;
-  fallbackName: string;
-}) {
-  return (
-    <div className="flex min-w-0 items-center gap-2 rounded-2xl bg-white/10 px-3 py-2 text-xs leading-5 text-[var(--color-inverted)]">
-      <FileText size={16} aria-hidden="true" className="shrink-0" />
-      <span className="min-w-0 flex-1 truncate">
-        {attachment.fileName ?? fallbackName}
-      </span>
-      <span className="shrink-0 opacity-80">
-        {getFileTypeLabel(attachment.fileType, attachment.fileName)}
-        {" · "}
-        {formatFileSize(attachment.fileSizeBytes)}
-      </span>
-    </div>
   );
 }
 

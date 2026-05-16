@@ -410,39 +410,45 @@ describe("patient chat Stitch redesign contract", () => {
     );
   });
 
-  it("wires patient chat attachment picker, dropzone, preview, and multipart send", () => {
+  it("keeps patient chat text-only without attachment upload affordances", () => {
     const source = clientSource();
     const idChat = dictionary.id.patient.chat;
     const enChat = dictionary.en.patient.chat;
 
-    expect(source).toContain("attachmentInputRef");
-    expect(source).toContain('type="file"');
-    expect(source).toContain("accept={CHAT_ATTACHMENT_ACCEPT}");
-    expect(source).toContain("handleAttachmentFiles");
-    expect(source).toContain("event.dataTransfer.files");
-    expect(source).toContain('data-chat-dropzone="conversation"');
-    expect(source).toContain('data-chat-drop-overlay="attachment"');
-    expect(source).toContain('data-chat-attachment-preview="selected"');
-    expect(source).toContain('data-chat-attachment-remove="selected"');
-    expect(source).toContain("new FormData()");
-    expect(source).toContain('body.set("attachment", attachment.file)');
-    expect(source).toContain("selectedSessionIsClosed");
-    expect(source).toContain("preventDefault()");
+    expect(source).not.toContain("attachmentInputRef");
+    expect(source).not.toContain('type="file"');
+    expect(source).not.toContain("CHAT_ATTACHMENT_ACCEPT");
+    expect(source).not.toContain("handleAttachmentFiles");
+    expect(source).not.toContain("event.dataTransfer.files");
+    expect(source).not.toContain('data-chat-dropzone="conversation"');
+    expect(source).not.toContain('data-chat-drop-overlay="attachment"');
+    expect(source).not.toContain('data-chat-attachment-preview="selected"');
+    expect(source).not.toContain('data-chat-attachment-remove="selected"');
+    expect(source).not.toContain("new FormData()");
+    expect(source).not.toContain('body.set("attachment", attachment.file)');
+    expect(source).not.toContain("Paperclip");
+    expect(source).toContain('body: JSON.stringify({ message: text, sessionId })');
 
-    expect(idChat.attachmentDropTitle).toBe("Lepaskan lampiran di sini");
-    expect(idChat.attachmentSelectedTitle).toBe("Lampiran siap dikirim");
-    expect(idChat.attachmentRemove).toBe("Hapus lampiran");
-    expect(idChat.attachmentProcessing).toBe("Memproses lampiran...");
-    expect(idChat.attachmentErrors.unsupported_type).toContain("PDF, JPG, atau PNG");
-    expect(idChat.attachmentErrors.file_too_large).toContain("10 MB");
-    expect(idChat.attachmentErrors.no_readable_text).toContain("teks terbaca");
+    expect(idChat).not.toHaveProperty("attachTitle");
+    expect(idChat).not.toHaveProperty("attachmentDropTitle");
+    expect(idChat).not.toHaveProperty("attachmentDropDescription");
+    expect(idChat).not.toHaveProperty("attachmentSelectedTitle");
+    expect(idChat).not.toHaveProperty("attachmentRemove");
+    expect(idChat).not.toHaveProperty("attachmentProcessing");
+    expect(idChat).not.toHaveProperty("attachmentReady");
+    expect(idChat).not.toHaveProperty("attachmentOnlyMessage");
+    expect(idChat).not.toHaveProperty("attachmentFallbackName");
+    expect(idChat).not.toHaveProperty("attachmentErrors");
 
-    expect(enChat.attachmentDropTitle).toBe("Drop attachment here");
-    expect(enChat.attachmentSelectedTitle).toBe("Attachment ready to send");
-    expect(enChat.attachmentRemove).toBe("Remove attachment");
-    expect(enChat.attachmentProcessing).toBe("Processing attachment...");
-    expect(enChat.attachmentErrors.unsupported_type).toContain("PDF, JPG, or PNG");
-    expect(enChat.attachmentErrors.file_too_large).toContain("10 MB");
-    expect(enChat.attachmentErrors.no_readable_text).toContain("readable text");
+    expect(enChat).not.toHaveProperty("attachTitle");
+    expect(enChat).not.toHaveProperty("attachmentDropTitle");
+    expect(enChat).not.toHaveProperty("attachmentDropDescription");
+    expect(enChat).not.toHaveProperty("attachmentSelectedTitle");
+    expect(enChat).not.toHaveProperty("attachmentRemove");
+    expect(enChat).not.toHaveProperty("attachmentProcessing");
+    expect(enChat).not.toHaveProperty("attachmentReady");
+    expect(enChat).not.toHaveProperty("attachmentOnlyMessage");
+    expect(enChat).not.toHaveProperty("attachmentFallbackName");
+    expect(enChat).not.toHaveProperty("attachmentErrors");
   });
 });
