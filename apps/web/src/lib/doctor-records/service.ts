@@ -13,6 +13,7 @@ import { createDeepSeekChatModel } from "@/lib/ai/deepseek";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { Database } from "@/lib/supabase/database.types";
 
+import type { DoctorDashboardSession } from "./dashboard-model";
 import {
   medicalAttachmentValidationMessage,
   validateMedicalAttachmentFile,
@@ -168,15 +169,7 @@ type Scope2PhysicalRow = Pick<
   | "created_at"
 >;
 
-export type DoctorDashboardGrant = {
-  grantId: string;
-  patientName: string;
-  patientEmail: string;
-  scopes: string[];
-  expiresAt: string;
-  blockchainStatus: string;
-  blockchainTxHash: string | null;
-};
+export type DoctorDashboardGrant = DoctorDashboardSession;
 
 export type DoctorDashboardState = {
   doctor: DoctorRow;
@@ -289,7 +282,7 @@ export async function loadDoctorDashboardState(role: ResolvedRole): Promise<Doct
       .eq("doctor_id", doctorId)
       .eq("is_revoked", false)
       .gt("expires_at", now)
-      .order("expires_at", { ascending: true }),
+      .order("granted_at", { ascending: false }),
   ]);
 
   if (doctorResult.error) throw doctorResult.error;
@@ -304,8 +297,15 @@ export async function loadDoctorDashboardState(role: ResolvedRole): Promise<Doct
           grantId: grant.grant_id,
           patientName: patient?.full_name ?? "Pasien",
           patientEmail: patient?.email ?? "Email tidak tersedia",
+          grantedAt: grant.granted_at,
           scopes: describeDoctorGrantScopes(toAccessInput(grant)),
           expiresAt: grant.expires_at,
+          isRevoked: grant.is_revoked,
+          revokedAt: grant.revoked_at,
+          canViewScope1: grant.can_view_scope1,
+          canViewScope2Mental: grant.can_view_scope2_mental,
+          canViewScope2Physical: grant.can_view_scope2_physical,
+          canDownloadAttachments: grant.can_download_attachments,
           blockchainStatus: grant.blockchain_status,
           blockchainTxHash: grant.blockchain_tx_hash,
         };
