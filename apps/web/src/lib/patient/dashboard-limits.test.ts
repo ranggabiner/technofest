@@ -22,6 +22,8 @@ describe("patient dashboard preview limits", () => {
     const pageSource = readFileSync(new URL("../../app/patient/(portal)/page.tsx", import.meta.url), "utf8");
     expect(pageSource).toContain("journalState.recentSummaries.map");
     expect(pageSource).toContain("copy.patient.dashboard.moreDetails");
+    expect(pageSource).toContain('href="/patient/health-history#records"');
+    expect(pageSource).toContain('href="/patient/health-history#journal"');
     expect(pageSource).not.toContain("copy.patient.dashboard.viewAllHistory");
     expect(pageSource).not.toContain("copy.patient.dashboard.openAiJournal");
   });

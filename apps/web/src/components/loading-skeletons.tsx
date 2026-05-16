@@ -336,6 +336,31 @@ export function PatientAccessSkeleton() {
   );
 }
 
+export function PatientHealthHistorySkeleton() {
+  return (
+    <div className="grid gap-8" data-loading-pattern="patient-health-history">
+      <section className="border-b border-[var(--color-stone-surface)] pb-5">
+        <Skeleton className="mb-3 h-4 w-32" />
+        <Skeleton className="h-12 w-full max-w-[520px]" />
+        <Skeleton className="mt-4 h-5 w-full max-w-2xl" />
+      </section>
+      <section className="grid gap-5 lg:grid-cols-2">
+        <LoadingCard lines={3} />
+        <LoadingCard lines={3} />
+      </section>
+      <section className="grid gap-5 sm:grid-cols-3">
+        <Skeleton className="h-28 rounded-xl" />
+        <Skeleton className="h-28 rounded-xl" />
+        <Skeleton className="h-28 rounded-xl" />
+      </section>
+      <section className="grid gap-6 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
+        <TimelineSkeleton />
+        <LoadingCard className="min-h-[420px]" lines={7} />
+      </section>
+    </div>
+  );
+}
+
 export function DoctorDashboardSkeleton() {
   return (
     <AppShellSkeleton navItems={1}>

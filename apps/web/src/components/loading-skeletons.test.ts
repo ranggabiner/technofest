@@ -81,6 +81,8 @@ describe("route loading skeletons", () => {
     "patient/(portal)/loading.tsx",
     "patient/chat/loading.tsx",
     "patient/(portal)/access/loading.tsx",
+    "patient/(portal)/health-history/loading.tsx",
+    "patient/(portal)/health-history/records/loading.tsx",
     "patient/onboarding/step-1/loading.tsx",
     "patient/onboarding/step-2/loading.tsx",
     "patient/onboarding/step-3/loading.tsx",

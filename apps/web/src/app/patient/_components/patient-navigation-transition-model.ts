@@ -1,4 +1,4 @@
-export type PatientPendingSkeletonKey = "dashboard" | "access";
+export type PatientPendingSkeletonKey = "dashboard" | "access" | "health-history";
 
 const SAME_ORIGIN_BASE = "https://medproof.local";
 
@@ -8,6 +8,8 @@ const PATIENT_PORTAL_TARGETS: Array<{
   matchNested: boolean;
 }> = [
   { href: "/patient/access", skeleton: "access", matchNested: true },
+  { href: "/patient/health-history/records", skeleton: "health-history", matchNested: false },
+  { href: "/patient/health-history", skeleton: "health-history", matchNested: false },
   { href: "/patient", skeleton: "dashboard", matchNested: false },
 ];
 

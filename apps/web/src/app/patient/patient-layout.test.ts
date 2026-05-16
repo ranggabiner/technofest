@@ -16,10 +16,14 @@ describe("patient layout shell", () => {
   const patientRouteFiles = [
     "(portal)/page.tsx",
     "(portal)/access/page.tsx",
+    "(portal)/health-history/page.tsx",
+    "(portal)/health-history/records/page.tsx",
   ];
   const patientLoadingFiles = [
     "(portal)/loading.tsx",
     "(portal)/access/loading.tsx",
+    "(portal)/health-history/loading.tsx",
+    "(portal)/health-history/records/loading.tsx",
   ];
 
   it("mounts the shared patient shell in the persistent portal layout", () => {
@@ -84,6 +88,7 @@ describe("patient layout shell", () => {
     expect(dashboardHtml).toContain("Dashboard");
     expect(dashboardHtml).toContain("Jurnal AI");
     expect(dashboardHtml).toContain("Akses Dokter");
+    expect(dashboardHtml).toContain("Riwayat Kesehatan");
     expect(dashboardHtml).toContain("Keluar akun");
     expect(dashboardHtml).not.toContain("Riwayat Akses");
   });
@@ -98,6 +103,8 @@ describe("patient layout shell", () => {
   it("resolves only patient portal navigation targets for optimistic loading", () => {
     expect(resolvePatientNavigationPath("/patient/chat", "/patient")).toBeNull();
     expect(resolvePatientNavigationPath("/patient/access?access_status=granted", "/patient/chat")).toBe("/patient/access");
+    expect(resolvePatientNavigationPath("/patient/health-history", "/patient")).toBe("/patient/health-history");
+    expect(resolvePatientNavigationPath("/patient/health-history/records", "/patient/health-history")).toBe("/patient/health-history/records");
     expect(resolvePatientNavigationPath("/patient/access-history", "/patient/access")).toBeNull();
     expect(resolvePatientNavigationPath("/patient", "/patient")).toBeNull();
     expect(resolvePatientNavigationPath("/doctor", "/patient")).toBeNull();
@@ -108,6 +115,9 @@ describe("patient layout shell", () => {
     expect(patientPendingSkeletonKey("/patient")).toBe("dashboard");
     expect(patientPendingSkeletonKey("/patient/chat")).toBeNull();
     expect(patientPendingSkeletonKey("/patient/access")).toBe("access");
+    expect(patientPendingSkeletonKey("/patient/health-history")).toBe("health-history");
+    expect(patientPendingSkeletonKey("/patient/health-history/records")).toBe("health-history");
+    expect(patientPendingSkeletonKey("/patient/health-history/detail")).toBeNull();
     expect(patientPendingSkeletonKey("/patient/access-history")).toBeNull();
     expect(patientPendingSkeletonKey("/patient/access-history/detail")).toBeNull();
     expect(patientPendingSkeletonKey("/patient/unknown")).toBeNull();

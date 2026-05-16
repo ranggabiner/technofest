@@ -90,7 +90,7 @@ export default async function PatientDashboardPage() {
                   </p>
                 </div>
                 <PatientTransitionLink
-                  href="/patient/access"
+                  href="/patient/health-history#records"
                   className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-[0.12em] text-[var(--color-teal-deep)] hover:underline"
                 >
                   {copy.patient.dashboard.moreDetails}
@@ -152,7 +152,7 @@ export default async function PatientDashboardPage() {
                   </p>
                 </div>
                 <PatientTransitionLink
-                  href="/patient/chat"
+                  href="/patient/health-history#journal"
                   className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-[0.12em] text-[var(--color-teal-deep)] hover:underline"
                 >
                   {copy.patient.dashboard.moreDetails}
