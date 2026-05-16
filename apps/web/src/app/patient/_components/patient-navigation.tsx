@@ -1,16 +1,17 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import type { Dictionary } from "@/lib/i18n/dictionary";
 import { cn } from "@/lib/utils";
 
 import { patientNavItems } from "./patient-nav-model";
+import { PatientTransitionLink, usePatientNavigationTransition } from "./patient-navigation-transition";
 
 export function PatientDesktopNavigation({ copy }: { copy: Dictionary }) {
   const pathname = usePathname() ?? "/patient";
-  const navItems = patientNavItems(pathname, copy);
+  const { pendingPath } = usePatientNavigationTransition();
+  const navItems = patientNavItems(pendingPath ?? pathname, copy);
 
   return (
     <nav className="flex flex-col gap-1" aria-label={copy.appShell.mainNavLabel}>
@@ -18,7 +19,7 @@ export function PatientDesktopNavigation({ copy }: { copy: Dictionary }) {
         {copy.patient.dashboard.sidebarSection}
       </span>
       {navItems.map((item) => (
-        <Link
+        <PatientTransitionLink
           key={item.href}
           href={item.href}
           aria-current={item.active ? "page" : undefined}
@@ -29,7 +30,7 @@ export function PatientDesktopNavigation({ copy }: { copy: Dictionary }) {
         >
           <item.icon size={20} aria-hidden="true" />
           {item.label}
-        </Link>
+        </PatientTransitionLink>
       ))}
     </nav>
   );
@@ -37,7 +38,8 @@ export function PatientDesktopNavigation({ copy }: { copy: Dictionary }) {
 
 export function PatientMobileNavigation({ copy }: { copy: Dictionary }) {
   const pathname = usePathname() ?? "/patient";
-  const navItems = patientNavItems(pathname, copy);
+  const { pendingPath } = usePatientNavigationTransition();
+  const navItems = patientNavItems(pendingPath ?? pathname, copy);
 
   return (
     <nav
@@ -46,7 +48,7 @@ export function PatientMobileNavigation({ copy }: { copy: Dictionary }) {
       data-patient-sidebar="mobile-navigation"
     >
       {navItems.map((item) => (
-        <Link
+        <PatientTransitionLink
           key={item.href}
           href={item.href}
           aria-current={item.active ? "page" : undefined}
@@ -57,7 +59,7 @@ export function PatientMobileNavigation({ copy }: { copy: Dictionary }) {
         >
           <item.icon size={18} aria-hidden="true" />
           {item.label}
-        </Link>
+        </PatientTransitionLink>
       ))}
     </nav>
   );

@@ -1,15 +1,24 @@
+import { existsSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
-import { assertCanSendPatientMessage, MAX_PATIENT_MESSAGES_PER_SESSION } from "./session-limits";
+describe("patient AI chat message limit removal", () => {
+  it("removes the session-limit module and all runtime imports", () => {
+    expect(existsSync(new URL("./session-limits.ts", import.meta.url))).toBe(false);
 
-describe("AI session message limits", () => {
-  it("allows the fifth patient chat message in a manual DeepSeek test session", () => {
-    expect(() => assertCanSendPatientMessage(MAX_PATIENT_MESSAGES_PER_SESSION - 1)).not.toThrow();
-  });
-
-  it("blocks patient chat messages after the configured manual DeepSeek limit", () => {
-    expect(() => assertCanSendPatientMessage(MAX_PATIENT_MESSAGES_PER_SESSION)).toThrow(
-      "Sesi uji AI dibatasi 5 pesan pasien",
+    const serviceSource = readFileSync(new URL("./journal-service.ts", import.meta.url), "utf8");
+    const routeSource = readFileSync(
+      new URL("../../app/api/patient/ai/chat/route.ts", import.meta.url),
+      "utf8",
     );
+    const clientSource = readFileSync(
+      new URL("../../app/patient/_components/ai-journal-client.tsx", import.meta.url),
+      "utf8",
+    );
+    const source = `${serviceSource}\n${routeSource}\n${clientSource}`;
+
+    expect(source).not.toContain("MAX_PATIENT_MESSAGES_PER_SESSION");
+    expect(source).not.toContain("assertCanSendPatientMessage");
+    expect(routeSource).not.toContain("5 pesan");
+    expect(clientSource).not.toContain("limitReached");
   });
 });

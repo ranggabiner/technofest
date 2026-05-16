@@ -8,7 +8,11 @@ import {
 } from "../health/validators";
 
 export const aiExtractionSchema = z.object({
-  summary: z.string().trim().min(1),
+  summary: z.object({
+    general: z.string().trim().min(1),
+    mental: z.string().trim().min(1),
+    physical: z.string().trim().min(1),
+  }),
   mental: z
     .object({
       moodScore: z.number().int().nullable(),
@@ -190,7 +194,7 @@ export function buildScope2PersistencePayload(input: {
     key_version: "v1",
   }));
 
-  const sessionSummary = encryptString(parsed.summary, input.encryptionKey);
+  const sessionSummary = encryptString(JSON.stringify(parsed.summary), input.encryptionKey);
 
   return {
     sessionSummary: {

@@ -10,7 +10,11 @@ describe("Scope 2 AI extraction persistence payload", () => {
   it("encrypts extracted values and stores hashes for raw quotes", () => {
     const payload = buildScope2PersistencePayload({
       extraction: {
-        summary: "Pasien tidur lebih baik, namun masih nyeri kepala ringan.",
+        summary: {
+          general: "Pasien tidur lebih baik, namun masih nyeri kepala ringan.",
+          mental: "Pasien mencatat kecemasan ringan yang masih dapat dikelola.",
+          physical: "Pasien menyebut nyeri kepala ringan sejak pagi.",
+        },
         mental: {
           moodScore: 7,
           anxietyLevel: 3,
@@ -40,9 +44,11 @@ describe("Scope 2 AI extraction persistence payload", () => {
     });
 
     expect(payload.sessionSummary.summary_text_ciphertext).not.toContain("tidur");
-    expect(decryptString(payload.sessionSummary, key)).toBe(
-      "Pasien tidur lebih baik, namun masih nyeri kepala ringan.",
-    );
+    expect(JSON.parse(decryptString(payload.sessionSummary, key))).toEqual({
+      general: "Pasien tidur lebih baik, namun masih nyeri kepala ringan.",
+      mental: "Pasien mencatat kecemasan ringan yang masih dapat dikelola.",
+      physical: "Pasien menyebut nyeri kepala ringan sejak pagi.",
+    });
 
     expect(payload.mentalRow?.raw_quote_hash).toHaveLength(64);
     expect(payload.mentalRow?.raw_quote_ciphertext).not.toContain("cemas");
@@ -55,7 +61,11 @@ describe("Scope 2 AI extraction persistence payload", () => {
     expect(() =>
       buildScope2PersistencePayload({
         extraction: {
-          summary: "Ringkasan",
+          summary: {
+            general: "Ringkasan umum.",
+            mental: "Ringkasan mental.",
+            physical: "Ringkasan fisik.",
+          },
           mental: {
             moodScore: 11,
             anxietyLevel: null,

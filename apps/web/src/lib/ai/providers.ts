@@ -17,7 +17,11 @@ export function createFakeJournalAiProvider(): JournalAiProvider {
         "Tidak ada kutipan pasien dalam sesi uji.";
 
       return {
-        summary: "Ringkasan uji dari provider palsu.",
+        summary: {
+          general: "Ringkasan umum uji dari provider palsu.",
+          mental: "Ringkasan mental uji dari provider palsu.",
+          physical: "Ringkasan fisik uji dari provider palsu.",
+        },
         mental: {
           moodScore: 7,
           anxietyLevel: 3,

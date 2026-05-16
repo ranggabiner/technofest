@@ -1,6 +1,7 @@
 import "server-only";
 
 import type { ModelMessage } from "ai";
+import { after } from "next/server";
 
 import { writeAuditLog } from "@/lib/audit/audit";
 import type { ResolvedRole } from "@/lib/auth/roles";
@@ -14,18 +15,65 @@ import { DEEPSEEK_MODEL, createDeepSeekJournalAiProvider } from "./deepseek";
 import { buildScope2PersistencePayload, encryptedColumns } from "./extraction";
 import { buildChatModelMessages } from "./prompts";
 import type { JournalAiMessage, JournalAiProvider } from "./providers";
-import { assertCanSendPatientMessage } from "./session-limits";
+import { buildSessionTitleFromMessage, filterChatHistory } from "./chat-history";
+import {
+  attachPatientChatAttachmentToMessage,
+  buildAttachmentContextForAi,
+  preparePatientChatAttachment,
+  type PreparedPatientChatAttachment,
+} from "./patient-chat-attachments";
 
 type PatientRow = Database["public"]["Tables"]["patients"]["Row"];
 type PatientUpdate = Database["public"]["Tables"]["patients"]["Update"];
+type AiSessionRow = Database["public"]["Tables"]["ai_sessions"]["Row"];
 type AiMessageRow = Database["public"]["Tables"]["ai_messages"]["Row"];
+type AiMessageAttachmentRow = Database["public"]["Tables"]["ai_message_attachments"]["Row"];
+type SecureFileRow = Pick<
+  Database["public"]["Tables"]["secure_files"]["Row"],
+  | "file_id"
+  | "file_size_bytes"
+  | "key_version"
+  | "mime_type"
+  | "original_filename_ciphertext"
+  | "original_filename_iv"
+  | "original_filename_tag"
+>;
+type AiMessageAttachmentWithFile = AiMessageAttachmentRow & {
+  secure_files: SecureFileRow | SecureFileRow[] | null;
+};
+type JournalMessageAttachmentForModel = JournalMessageAttachmentView & {
+  extractedText: string;
+  extractedTextTruncated: boolean;
+  extractionMethod: "pdf_text" | "image_ocr";
+};
+type AttachmentMaps = {
+  viewByMessageId: Map<string, JournalMessageAttachmentView>;
+  modelByMessageId: Map<string, JournalMessageAttachmentForModel>;
+};
 type PatientProfilePatch = Record<string, unknown>;
+
+export type SummaryGenerationStatus = "pending" | "generating" | "completed" | "failed";
+
+const AI_SESSION_COLUMNS =
+  "session_id,patient_id,session_title_ciphertext,session_title_iv,session_title_tag,summary_text_ciphertext,summary_text_iv,summary_text_tag,ended_at,end_reason,summary_generated_at,summary_generation_status,key_version,created_at,updated_at";
+const AI_MESSAGE_COLUMNS =
+  "message_id,session_id,patient_id,sender_role,message_text_ciphertext,message_text_iv,message_text_tag,key_version,created_at";
+const AI_MESSAGE_ATTACHMENT_COLUMNS =
+  "attachment_id,message_id,session_id,patient_id,file_id,file_size_bytes,extracted_text_ciphertext,extracted_text_iv,extracted_text_tag,extracted_text_truncated,extraction_method,key_version,created_at,secure_files(file_id,original_filename_ciphertext,original_filename_iv,original_filename_tag,mime_type,file_size_bytes,key_version)";
+
+export type JournalMessageAttachmentView = {
+  id: string;
+  fileName: string | null;
+  fileType: string | null;
+  fileSizeBytes: number | null;
+};
 
 export type JournalMessageView = {
   id: string;
   role: "user" | "assistant";
   content: string;
   createdAt: string;
+  attachment: JournalMessageAttachmentView | null;
 };
 
 export type JournalSummaryView = {
@@ -35,16 +83,47 @@ export type JournalSummaryView = {
   summaryGeneratedAt: string;
 };
 
+export type JournalSessionSummaryView = {
+  general: string | null;
+  mental: string | null;
+  physical: string | null;
+};
+
+export type JournalSessionHistoryItem = {
+  id: string;
+  title: string | null;
+  preview: string | null;
+  createdAt: string;
+  updatedAt: string;
+  endedAt: string | null;
+  isActive: boolean;
+  isClosed: boolean;
+  messageCount: number;
+};
+
+export type JournalSessionDetailView = {
+  sessionId: string;
+  title: string | null;
+  messages: JournalMessageView[];
+  patientMessageCount: number;
+  latestSummary: JournalSessionSummaryView | null;
+  summaryGenerationStatus: SummaryGenerationStatus;
+  endedAt: string | null;
+  isClosed: boolean;
+};
+
 export type PatientJournalState = {
   consentAccepted: boolean;
   consentBlockchainStatus: string | null;
   profilingComplete: boolean;
   activeSessionId: string | null;
+  activeSessionClosed: boolean;
   activePatientMessageCount: number;
   messages: JournalMessageView[];
-  latestSummary: string | null;
+  latestSummary: JournalSessionSummaryView | null;
   recentSummaries: JournalSummaryView[];
-  latestSummaryStatus: "none" | "pending" | "generated";
+  chatHistory: JournalSessionHistoryItem[];
+  latestSummaryStatus: SummaryGenerationStatus;
 };
 
 export async function loadPatientJournalState(role: ResolvedRole): Promise<PatientJournalState> {
@@ -72,7 +151,7 @@ export async function loadPatientJournalState(role: ResolvedRole): Promise<Patie
       .maybeSingle(),
     admin
       .from("ai_sessions")
-      .select("*")
+      .select(AI_SESSION_COLUMNS)
       .eq("patient_id", patientId)
       .is("ended_at", null)
       .order("created_at", { ascending: false })
@@ -81,7 +160,7 @@ export async function loadPatientJournalState(role: ResolvedRole): Promise<Patie
     admin
       .from("ai_sessions")
       .select(
-        "session_id,session_title_ciphertext,session_title_iv,session_title_tag,summary_text_ciphertext,summary_text_iv,summary_text_tag,key_version,summary_generated_at",
+        "session_id,session_title_ciphertext,session_title_iv,session_title_tag,summary_text_ciphertext,summary_text_iv,summary_text_tag,key_version,summary_generated_at,summary_generation_status",
       )
       .eq("patient_id", patientId)
       .not("summary_generated_at", "is", null)
@@ -94,35 +173,56 @@ export async function loadPatientJournalState(role: ResolvedRole): Promise<Patie
   if (sessionResult.error) throw sessionResult.error;
   if (summaryResult.error) throw summaryResult.error;
 
-  const activeSession = sessionResult.data;
-  const messages = activeSession ? await loadDecryptedMessages(activeSession.session_id) : [];
   const recentSummaries = (summaryResult.data ?? []).flatMap((row) => {
-    const summary = decryptFromColumns(row, "summary_text");
-    if (!summary || !row.summary_generated_at) return [];
+    const summary = parseJournalSessionSummary(decryptFromColumns(row, "summary_text"));
+    const summaryText = sessionSummaryPreview(summary);
+    if (!summaryText || !row.summary_generated_at) return [];
 
     return [{
       id: row.session_id,
       title: decryptFromColumns(row, "session_title"),
-      summary,
+      summary: summaryText,
       summaryGeneratedAt: row.summary_generated_at,
     }];
   });
+  const chatHistory = await loadPatientChatHistory(role);
+  const activeSession = sessionResult.data;
+  const selectedSession =
+    activeSession ?? (chatHistory[0] ? await loadPatientSessionRow(patientId, chatHistory[0].id) : null);
+  const messages = selectedSession
+    ? await loadDecryptedMessages(selectedSession.session_id, patientId)
+    : [];
+  const selectedSummary = selectedSession
+    ? parseJournalSessionSummary(decryptFromColumns(selectedSession, "summary_text"))
+    : null;
+  const selectedSummaryStatus = selectedSession
+    ? resolveSummaryGenerationStatus(selectedSession, selectedSummary)
+    : recentSummaries.length > 0
+      ? "completed"
+      : "pending";
 
   return {
     consentAccepted: Boolean(consentResult.data),
     consentBlockchainStatus: consentResult.data?.blockchain_status ?? null,
     profilingComplete: hasEncryptedProfile(patientResult.data),
-    activeSessionId: activeSession?.session_id ?? null,
+    activeSessionId: selectedSession?.session_id ?? null,
+    activeSessionClosed: Boolean(selectedSession?.ended_at),
     activePatientMessageCount: messages.filter((message) => message.role === "user").length,
     messages: messages.map((message) => ({
       id: message.id,
       role: message.role,
       content: message.content,
       createdAt: message.createdAt,
+      attachment: message.attachment,
     })),
-    latestSummary: recentSummaries[0]?.summary ?? null,
+    latestSummary: selectedSession
+      ? selectedSummary
+      : recentSummaries[0]
+        ? { general: recentSummaries[0].summary, mental: null, physical: null }
+        : null,
     recentSummaries,
-    latestSummaryStatus: recentSummaries.length > 0 ? "generated" : activeSession ? "pending" : "none",
+    chatHistory,
+    latestSummaryStatus: selectedSummaryStatus,
   };
 }
 
@@ -268,6 +368,7 @@ export async function preparePatientChatTurn(input: {
   role: ResolvedRole;
   message: string;
   requestedSessionId?: string | null;
+  attachment?: File | null;
 }): Promise<{
   patientId: string;
   sessionId: string;
@@ -275,23 +376,45 @@ export async function preparePatientChatTurn(input: {
 }> {
   const patientId = requirePatientId(input.role);
   const latestMessage = input.message.trim();
-  if (!latestMessage) throw new Error("Pesan wajib diisi");
+  if (!latestMessage && !input.attachment) throw new Error("Pesan wajib diisi");
   if (latestMessage.length > 2000) throw new Error("Pesan terlalu panjang");
 
   await assertConsentAndProfileAccess(input.role.authUserId, patientId, { requireProfile: true });
   await closeInactiveSessions(patientId);
 
   const session = await getOrCreateActiveSession(patientId, input.requestedSessionId);
-  const patientMessageCount = await countPatientMessages(session.session_id);
-  assertCanSendPatientMessage(patientMessageCount);
-
-  const conversationBeforeInsert = await loadConversation(session.session_id);
-  await insertEncryptedMessage({
+  const conversationBeforeInsert = await loadConversation(session.session_id, patientId);
+  const preparedAttachment = input.attachment
+    ? await preparePatientChatAttachment({
+      authUserId: input.role.authUserId,
+      patientId,
+      file: input.attachment,
+    })
+    : null;
+  const storedMessage = latestMessage || buildAttachmentOnlyMessage(preparedAttachment);
+  const insertedMessage = await insertEncryptedMessage({
     patientId,
     sessionId: session.session_id,
     role: "patient",
-    content: latestMessage,
+    content: storedMessage,
   });
+
+  if (preparedAttachment) {
+    await attachPatientChatAttachmentToMessage({
+      patientId,
+      sessionId: session.session_id,
+      messageId: insertedMessage.message_id,
+      attachment: preparedAttachment,
+    });
+  }
+
+  if (!conversationBeforeInsert.some((message) => message.role === "user")) {
+    await updateSessionTitle({
+      patientId,
+      sessionId: session.session_id,
+      title: buildSessionTitleFromMessage(storedMessage),
+    });
+  }
 
   return {
     patientId,
@@ -299,7 +422,7 @@ export async function preparePatientChatTurn(input: {
     modelMessages: buildChatModelMessages({
       profilingContext: await loadProfilingContext(patientId),
       conversation: conversationBeforeInsert,
-      latestMessage,
+      latestMessage: buildLatestMessageForModel(storedMessage, preparedAttachment),
     }),
   };
 }
@@ -320,7 +443,29 @@ export async function storeAiAssistantMessage(input: {
   });
 }
 
-export async function finalizeActiveAiSession(
+function buildAttachmentOnlyMessage(attachment: PreparedPatientChatAttachment | null) {
+  return attachment ? `Saya mengunggah lampiran ${attachment.filename}.` : "";
+}
+
+function buildLatestMessageForModel(
+  content: string,
+  attachment: PreparedPatientChatAttachment | null,
+) {
+  if (!attachment) return content;
+
+  return [
+    content,
+    buildAttachmentContextForAi({
+      filename: attachment.filename,
+      mimeType: attachment.mimeType,
+      sizeBytes: attachment.sizeBytes,
+      extractedText: attachment.extractedText,
+      extractedTextTruncated: attachment.extractedTextTruncated,
+    }),
+  ].filter(Boolean).join("\n\n");
+}
+
+export async function finishActiveAiSession(
   role: ResolvedRole,
   endReason: "manual_end" | "new_session_started" | "inactivity_timeout" = "manual_end",
 ) {
@@ -329,7 +474,7 @@ export async function finalizeActiveAiSession(
   const admin = createAdminClient();
   const { data, error } = await admin
     .from("ai_sessions")
-    .select("*")
+    .select("session_id")
     .eq("patient_id", patientId)
     .is("ended_at", null)
     .order("created_at", { ascending: false })
@@ -339,80 +484,238 @@ export async function finalizeActiveAiSession(
   if (error) throw error;
   if (!data) return;
 
-  await finalizeAiSession({
+  const session = await markAiSessionFinished({
     patientId,
     sessionId: data.session_id,
     endReason,
-    provider: createDeepSeekJournalAiProvider(),
   });
+
+  scheduleAiSessionSummaryGeneration(session);
 }
 
-async function finalizeAiSession(input: {
+export async function loadPatientChatHistory(
+  role: ResolvedRole,
+  query = "",
+): Promise<JournalSessionHistoryItem[]> {
+  const patientId = requirePatientId(role);
+  await closeInactiveSessions(patientId);
+
+  const admin = createAdminClient();
+  const { data, error } = await admin
+    .from("ai_sessions")
+    .select(AI_SESSION_COLUMNS)
+    .eq("patient_id", patientId)
+    .order("created_at", { ascending: false })
+    .limit(50);
+
+  if (error) throw error;
+
+  const sessions = data ?? [];
+  const messagesBySession = await loadMessagesBySession(patientId, sessions.map((session) => session.session_id));
+  const searchableHistory = sessions
+    .map((session) => {
+      const messages = messagesBySession.get(session.session_id) ?? [];
+      const item = buildHistoryItem(session, messages);
+      return {
+        ...item,
+        messages: messages.map((message) => message.content),
+      };
+    })
+    .filter((item) => item.messageCount > 0);
+
+  return filterChatHistory(searchableHistory, query).map((item) => ({
+    id: item.id,
+    title: item.title,
+    preview: item.preview,
+    createdAt: item.createdAt,
+    updatedAt: item.updatedAt,
+    endedAt: item.endedAt,
+    isActive: item.isActive,
+    isClosed: item.isClosed,
+    messageCount: item.messageCount,
+  }));
+}
+
+export async function loadPatientChatSession(
+  role: ResolvedRole,
+  sessionId: string,
+): Promise<JournalSessionDetailView> {
+  const patientId = requirePatientId(role);
+  await closeInactiveSessions(patientId);
+
+  const session = await loadPatientSessionRow(patientId, sessionId);
+  if (!session) throw new Error("Sesi chat tidak ditemukan");
+
+  return buildSessionDetail(session, await loadDecryptedMessages(session.session_id, patientId));
+}
+
+export async function startNewPatientChatSession(role: ResolvedRole): Promise<JournalSessionDetailView> {
+  const patientId = requirePatientId(role);
+  await assertConsentAndProfileAccess(role.authUserId, patientId, { requireProfile: true });
+  await closeInactiveSessions(patientId);
+
+  const activeSession = await loadActiveSessionRow(patientId);
+  if (activeSession) {
+    const finishedSession = await markAiSessionFinished({
+      patientId,
+      sessionId: activeSession.session_id,
+      endReason: "new_session_started",
+    });
+    scheduleAiSessionSummaryGeneration(finishedSession);
+  }
+
+  const session = await createPatientChatSession(patientId);
+  return buildSessionDetail(session, []);
+}
+
+export async function retryAiSessionSummaryGeneration(role: ResolvedRole, sessionId: string) {
+  const patientId = requirePatientId(role);
+  await assertConsentAndProfileAccess(role.authUserId, patientId, { requireProfile: true });
+
+  const { data, error } = await createAdminClient()
+    .from("ai_sessions")
+    .update({
+      summary_generation_status: "generating",
+      updated_at: new Date().toISOString(),
+    })
+    .eq("session_id", sessionId)
+    .eq("patient_id", patientId)
+    .eq("summary_generation_status", "failed")
+    .not("ended_at", "is", null)
+    .select(AI_SESSION_COLUMNS)
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) throw new Error("Ringkasan sesi belum bisa dicoba ulang");
+
+  scheduleAiSessionSummaryGeneration(data);
+  return buildSessionDetail(data, await loadDecryptedMessages(data.session_id, patientId));
+}
+
+async function markAiSessionFinished(input: {
   patientId: string;
   sessionId: string;
   endReason: "manual_end" | "new_session_started" | "inactivity_timeout";
-  provider: JournalAiProvider;
-}) {
-  const messages = await loadConversation(input.sessionId);
+}): Promise<AiSessionRow> {
   const admin = createAdminClient();
   const now = new Date();
+  const messageCount = await countSessionMessages(input.sessionId, input.patientId);
+  const summaryGenerationStatus: SummaryGenerationStatus = messageCount > 0 ? "generating" : "completed";
 
-  if (messages.length === 0) {
-    const { error } = await admin
-      .from("ai_sessions")
-      .update({
-        ended_at: now.toISOString(),
-        end_reason: input.endReason,
-        updated_at: now.toISOString(),
-      })
-      .eq("session_id", input.sessionId)
-      .eq("patient_id", input.patientId);
-    if (error) throw error;
-    return;
-  }
-
-  const extraction = await input.provider.extractSession(messages);
-  const env = requireEnv(["core"]);
-  const payload = buildScope2PersistencePayload({
-    extraction,
-    patientId: input.patientId,
-    sessionId: input.sessionId,
-    encryptionKey: env.data.ENCRYPTION_MASTER_KEY,
-    model: DEEPSEEK_MODEL,
-    now,
-  });
-
-  const { error: sessionError } = await admin
+  const { data, error } = await admin
     .from("ai_sessions")
     .update({
       ended_at: now.toISOString(),
       end_reason: input.endReason,
-      summary_text_ciphertext: payload.sessionSummary.summary_text_ciphertext,
-      summary_text_iv: payload.sessionSummary.summary_text_iv,
-      summary_text_tag: payload.sessionSummary.summary_text_tag,
-      summary_generated_at: now.toISOString(),
-      key_version: payload.sessionSummary.keyVersion,
+      summary_generation_status: summaryGenerationStatus,
       updated_at: now.toISOString(),
     })
     .eq("session_id", input.sessionId)
-    .eq("patient_id", input.patientId);
-  if (sessionError) throw sessionError;
+    .eq("patient_id", input.patientId)
+    .is("ended_at", null)
+    .select(AI_SESSION_COLUMNS)
+    .maybeSingle();
 
-  if (payload.mentalRow) {
-    const { error } = await admin
-      .from("scope_2_mental")
-      .upsert(payload.mentalRow as TablesInsert<"scope_2_mental">, {
-        onConflict: "session_id",
-      });
-    if (error) throw error;
+  if (error) throw error;
+  if (!data) {
+    const existing = await loadPatientSessionRow(input.patientId, input.sessionId);
+    if (existing) return existing;
+    throw new Error("Sesi chat tidak ditemukan");
   }
 
-  if (payload.physicalRows.length > 0) {
+  return data;
+}
+
+function scheduleAiSessionSummaryGeneration(session: Pick<AiSessionRow, "patient_id" | "session_id" | "summary_generation_status">) {
+  if (session.summary_generation_status !== "generating") return;
+
+  after(() =>
+    runAiSessionSummaryGeneration({
+      patientId: session.patient_id,
+      sessionId: session.session_id,
+      provider: createDeepSeekJournalAiProvider(),
+    }),
+  );
+}
+
+async function runAiSessionSummaryGeneration(input: {
+  patientId: string;
+  sessionId: string;
+  provider: JournalAiProvider;
+}) {
+  const admin = createAdminClient();
+
+  try {
+    const session = await loadPatientSessionRow(input.patientId, input.sessionId);
+    if (!session?.ended_at || session.summary_generation_status === "completed") return;
+
+    const messages = await loadConversation(input.sessionId, input.patientId);
+    if (messages.length === 0) {
+      const { error } = await admin
+        .from("ai_sessions")
+        .update({
+          summary_generation_status: "completed",
+          updated_at: new Date().toISOString(),
+        })
+        .eq("session_id", input.sessionId)
+        .eq("patient_id", input.patientId);
+      if (error) throw error;
+      return;
+    }
+
+    const now = new Date();
+    const extraction = await input.provider.extractSession(messages);
+    const env = requireEnv(["core"]);
+    const payload = buildScope2PersistencePayload({
+      extraction,
+      patientId: input.patientId,
+      sessionId: input.sessionId,
+      encryptionKey: env.data.ENCRYPTION_MASTER_KEY,
+      model: DEEPSEEK_MODEL,
+      now,
+    });
+
+    if (payload.mentalRow) {
+      const { error } = await admin
+        .from("scope_2_mental")
+        .upsert(payload.mentalRow as TablesInsert<"scope_2_mental">, {
+          onConflict: "session_id",
+        });
+      if (error) throw error;
+    }
+
+    if (payload.physicalRows.length > 0) {
+      const { error } = await admin
+        .from("scope_2_physical")
+        .upsert(payload.physicalRows as TablesInsert<"scope_2_physical">[], {
+          onConflict: "session_id,raw_quote_hash",
+        });
+      if (error) throw error;
+    }
+
+    const { error: sessionError } = await admin
+      .from("ai_sessions")
+      .update({
+        summary_text_ciphertext: payload.sessionSummary.summary_text_ciphertext,
+        summary_text_iv: payload.sessionSummary.summary_text_iv,
+        summary_text_tag: payload.sessionSummary.summary_text_tag,
+        summary_generated_at: now.toISOString(),
+        summary_generation_status: "completed",
+        key_version: payload.sessionSummary.keyVersion,
+        updated_at: now.toISOString(),
+      })
+      .eq("session_id", input.sessionId)
+      .eq("patient_id", input.patientId);
+    if (sessionError) throw sessionError;
+  } catch {
     const { error } = await admin
-      .from("scope_2_physical")
-      .upsert(payload.physicalRows as TablesInsert<"scope_2_physical">[], {
-        onConflict: "session_id,raw_quote_hash",
-      });
+      .from("ai_sessions")
+      .update({
+        summary_generation_status: "failed",
+        updated_at: new Date().toISOString(),
+      })
+      .eq("session_id", input.sessionId)
+      .eq("patient_id", input.patientId);
     if (error) throw error;
   }
 }
@@ -455,34 +758,27 @@ async function hasAcceptedAiConsent(authUserId: string, patientId: string) {
   return Boolean(data);
 }
 
-async function getOrCreateActiveSession(patientId: string, requestedSessionId?: string | null) {
-  const admin = createAdminClient();
-
+async function getOrCreateActiveSession(
+  patientId: string,
+  requestedSessionId?: string | null,
+): Promise<AiSessionRow> {
   if (requestedSessionId) {
-    const { data, error } = await admin
-      .from("ai_sessions")
-      .select("*")
-      .eq("session_id", requestedSessionId)
-      .eq("patient_id", patientId)
-      .is("ended_at", null)
-      .maybeSingle();
-    if (error) throw error;
-    if (data) return data;
+    const session = await loadPatientSessionRow(patientId, requestedSessionId);
+    if (!session) throw new Error("Sesi chat tidak ditemukan");
+    if (session.ended_at) throw new Error("Sesi chat sudah ditutup");
+    return session;
   }
 
-  const { data: existing, error: existingError } = await admin
-    .from("ai_sessions")
-    .select("*")
-    .eq("patient_id", patientId)
-    .is("ended_at", null)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  if (existingError) throw existingError;
+  const existing = await loadActiveSessionRow(patientId);
   if (existing) return existing;
 
+  return createPatientChatSession(patientId);
+}
+
+async function createPatientChatSession(patientId: string): Promise<AiSessionRow> {
   const now = new Date().toISOString();
   const title = encryptedColumns("session_title", "Jurnal AI", requireEnv(["core"]).data.ENCRYPTION_MASTER_KEY);
+  const admin = createAdminClient();
   const { data, error } = await admin
     .from("ai_sessions")
     .insert({
@@ -490,26 +786,15 @@ async function getOrCreateActiveSession(patientId: string, requestedSessionId?: 
       session_title_ciphertext: title.session_title_ciphertext,
       session_title_iv: title.session_title_iv,
       session_title_tag: title.session_title_tag,
+      summary_generation_status: "pending",
       created_at: now,
       updated_at: now,
     })
-    .select("*")
+    .select(AI_SESSION_COLUMNS)
     .single();
 
   if (error) throw error;
   return data;
-}
-
-async function countPatientMessages(sessionId: string) {
-  const admin = createAdminClient();
-  const { count, error } = await admin
-    .from("ai_messages")
-    .select("message_id", { count: "exact", head: true })
-    .eq("session_id", sessionId)
-    .eq("sender_role", "patient");
-
-  if (error) throw error;
-  return count ?? 0;
 }
 
 async function insertEncryptedMessage(input: {
@@ -517,22 +802,26 @@ async function insertEncryptedMessage(input: {
   sessionId: string;
   role: "patient" | "ai";
   content: string;
-}) {
+}): Promise<AiMessageRow> {
   const env = requireEnv(["core"]);
   const encrypted = encryptString(input.content, env.data.ENCRYPTION_MASTER_KEY);
   const admin = createAdminClient();
   const now = new Date().toISOString();
 
-  const { error } = await admin.from("ai_messages").insert({
-    patient_id: input.patientId,
-    session_id: input.sessionId,
-    sender_role: input.role,
-    message_text_ciphertext: encrypted.ciphertext,
-    message_text_iv: encrypted.iv,
-    message_text_tag: encrypted.tag,
-    key_version: encrypted.keyVersion,
-    created_at: now,
-  });
+  const { data, error } = await admin
+    .from("ai_messages")
+    .insert({
+      patient_id: input.patientId,
+      session_id: input.sessionId,
+      sender_role: input.role,
+      message_text_ciphertext: encrypted.ciphertext,
+      message_text_iv: encrypted.iv,
+      message_text_tag: encrypted.tag,
+      key_version: encrypted.keyVersion,
+      created_at: now,
+    })
+    .select(AI_MESSAGE_COLUMNS)
+    .single();
   if (error) throw error;
 
   const { error: sessionError } = await admin
@@ -541,36 +830,204 @@ async function insertEncryptedMessage(input: {
     .eq("session_id", input.sessionId)
     .eq("patient_id", input.patientId);
   if (sessionError) throw sessionError;
+
+  return data;
 }
 
-async function loadDecryptedMessages(sessionId: string): Promise<JournalMessageView[]> {
-  const rows = await loadMessageRows(sessionId);
-  return rows.map((row) => ({
+async function updateSessionTitle(input: {
+  patientId: string;
+  sessionId: string;
+  title: string;
+}) {
+  const env = requireEnv(["core"]);
+  const title = encryptedColumns("session_title", input.title, env.data.ENCRYPTION_MASTER_KEY);
+  const { error } = await createAdminClient()
+    .from("ai_sessions")
+    .update({
+      session_title_ciphertext: title.session_title_ciphertext,
+      session_title_iv: title.session_title_iv,
+      session_title_tag: title.session_title_tag,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("session_id", input.sessionId)
+    .eq("patient_id", input.patientId);
+
+  if (error) throw error;
+}
+
+async function loadActiveSessionRow(patientId: string): Promise<AiSessionRow | null> {
+  const { data, error } = await createAdminClient()
+    .from("ai_sessions")
+    .select(AI_SESSION_COLUMNS)
+    .eq("patient_id", patientId)
+    .is("ended_at", null)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data;
+}
+
+async function loadPatientSessionRow(patientId: string, sessionId: string): Promise<AiSessionRow | null> {
+  const { data, error } = await createAdminClient()
+    .from("ai_sessions")
+    .select(AI_SESSION_COLUMNS)
+    .eq("session_id", sessionId)
+    .eq("patient_id", patientId)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data;
+}
+
+async function loadMessagesBySession(
+  patientId: string,
+  sessionIds: string[],
+): Promise<Map<string, JournalMessageView[]>> {
+  if (sessionIds.length === 0) return new Map();
+
+  const { data, error } = await createAdminClient()
+    .from("ai_messages")
+    .select(AI_MESSAGE_COLUMNS)
+    .eq("patient_id", patientId)
+    .in("session_id", sessionIds)
+    .order("created_at", { ascending: true });
+
+  if (error) throw error;
+
+  const rows = data ?? [];
+  const attachmentMaps = await loadAttachmentMaps(rows.map((row) => row.message_id));
+
+  return rows.reduce((groups, row) => {
+    const current = groups.get(row.session_id) ?? [];
+    current.push(toJournalMessageView(row, attachmentMaps.viewByMessageId.get(row.message_id) ?? null));
+    groups.set(row.session_id, current);
+    return groups;
+  }, new Map<string, JournalMessageView[]>());
+}
+
+async function loadDecryptedMessages(
+  sessionId: string,
+  patientId?: string,
+): Promise<JournalMessageView[]> {
+  const rows = await loadMessageRows(sessionId, patientId);
+  const attachmentMaps = await loadAttachmentMaps(rows.map((row) => row.message_id));
+  return rows.map((row) => toJournalMessageView(row, attachmentMaps.viewByMessageId.get(row.message_id) ?? null));
+}
+
+function toJournalMessageView(
+  row: AiMessageRow,
+  attachment: JournalMessageAttachmentView | null,
+): JournalMessageView {
+  return {
     id: row.message_id,
     role: row.sender_role === "ai" ? "assistant" : "user",
     content: decryptFromColumns(row, "message_text") ?? "",
     createdAt: row.created_at,
+    attachment,
+  };
+}
+
+async function loadConversation(sessionId: string, patientId?: string): Promise<JournalAiMessage[]> {
+  const rows = await loadMessageRows(sessionId, patientId);
+  const attachmentMaps = await loadAttachmentMaps(rows.map((row) => row.message_id));
+
+  return rows.map((row) => ({
+    role: row.sender_role === "ai" ? "assistant" : "user",
+    content: buildStoredMessageForModel(
+      decryptFromColumns(row, "message_text") ?? "",
+      row.sender_role === "patient" ? attachmentMaps.modelByMessageId.get(row.message_id) ?? null : null,
+    ),
   }));
 }
 
-async function loadConversation(sessionId: string): Promise<JournalAiMessage[]> {
-  const messages = await loadDecryptedMessages(sessionId);
-  return messages.map((message) => ({
-    role: message.role,
-    content: message.content,
-  }));
-}
+async function loadAttachmentMaps(messageIds: string[]): Promise<AttachmentMaps> {
+  if (messageIds.length === 0) {
+    return {
+      viewByMessageId: new Map(),
+      modelByMessageId: new Map(),
+    };
+  }
 
-async function loadMessageRows(sessionId: string): Promise<AiMessageRow[]> {
-  const admin = createAdminClient();
-  const { data, error } = await admin
-    .from("ai_messages")
-    .select("*")
-    .eq("session_id", sessionId)
+  const { data, error } = await createAdminClient()
+    .from("ai_message_attachments")
+    .select(AI_MESSAGE_ATTACHMENT_COLUMNS)
+    .in("message_id", messageIds)
     .order("created_at", { ascending: true });
 
   if (error) throw error;
+
+  const viewByMessageId = new Map<string, JournalMessageAttachmentView>();
+  const modelByMessageId = new Map<string, JournalMessageAttachmentForModel>();
+
+  for (const row of (data ?? []) as unknown as AiMessageAttachmentWithFile[]) {
+    const secureFile = firstSecureFile(row.secure_files);
+    const fileName = secureFile ? decryptFromColumns(secureFile, "original_filename") : null;
+    const viewAttachment: JournalMessageAttachmentView = {
+      id: row.attachment_id,
+      fileName,
+      fileType: secureFile?.mime_type ?? null,
+      fileSizeBytes: row.file_size_bytes,
+    };
+
+    viewByMessageId.set(row.message_id, viewAttachment);
+    modelByMessageId.set(row.message_id, {
+      ...viewAttachment,
+      extractedText: decryptFromColumns(row, "extracted_text") ?? "",
+      extractedTextTruncated: row.extracted_text_truncated,
+      extractionMethod: row.extraction_method,
+    });
+  }
+
+  return { viewByMessageId, modelByMessageId };
+}
+
+function firstSecureFile(value: SecureFileRow | SecureFileRow[] | null) {
+  return Array.isArray(value) ? value[0] ?? null : value;
+}
+
+function buildStoredMessageForModel(
+  content: string,
+  attachment: JournalMessageAttachmentForModel | null,
+) {
+  if (!attachment) return content;
+
+  return [
+    content,
+    buildAttachmentContextForAi({
+      filename: attachment.fileName ?? "lampiran",
+      mimeType: attachment.fileType ?? "application/octet-stream",
+      sizeBytes: attachment.fileSizeBytes ?? 0,
+      extractedText: attachment.extractedText,
+      extractedTextTruncated: attachment.extractedTextTruncated,
+    }),
+  ].filter(Boolean).join("\n\n");
+}
+
+async function loadMessageRows(sessionId: string, patientId?: string): Promise<AiMessageRow[]> {
+  let query = createAdminClient()
+    .from("ai_messages")
+    .select(AI_MESSAGE_COLUMNS)
+    .eq("session_id", sessionId)
+    .order("created_at", { ascending: true });
+
+  if (patientId) query = query.eq("patient_id", patientId);
+
+  const { data, error } = await query;
+  if (error) throw error;
   return data ?? [];
+}
+
+async function countSessionMessages(sessionId: string, patientId: string) {
+  const { count, error } = await createAdminClient()
+    .from("ai_messages")
+    .select("message_id", { count: "exact", head: true })
+    .eq("session_id", sessionId)
+    .eq("patient_id", patientId);
+
+  if (error) throw error;
+  return count ?? 0;
 }
 
 async function loadProfilingContext(patientId: string) {
@@ -603,13 +1060,100 @@ async function closeInactiveSessions(patientId: string) {
   if (staleIds.length === 0) return;
 
   for (const sessionId of staleIds) {
-    await finalizeAiSession({
+    const session = await markAiSessionFinished({
       patientId,
       sessionId,
       endReason: "inactivity_timeout",
-      provider: createDeepSeekJournalAiProvider(),
     });
+    scheduleAiSessionSummaryGeneration(session);
   }
+}
+
+function buildHistoryItem(
+  session: AiSessionRow,
+  messages: JournalMessageView[],
+): JournalSessionHistoryItem {
+  const title =
+    decryptFromColumns(session, "session_title") ??
+    buildSessionTitleFromMessage(messages.find((message) => message.role === "user")?.content ?? "");
+  const latestMessage = messages.at(-1)?.content ?? null;
+
+  return {
+    id: session.session_id,
+    title,
+    preview: latestMessage ? buildPreview(latestMessage) : null,
+    createdAt: session.created_at,
+    updatedAt: session.updated_at ?? session.created_at,
+    endedAt: session.ended_at,
+    isActive: !session.ended_at,
+    isClosed: Boolean(session.ended_at),
+    messageCount: messages.filter((message) => message.role === "user").length,
+  };
+}
+
+function buildSessionDetail(
+  session: AiSessionRow,
+  messages: JournalMessageView[],
+): JournalSessionDetailView {
+  const latestSummary = parseJournalSessionSummary(decryptFromColumns(session, "summary_text"));
+  const summaryGenerationStatus = resolveSummaryGenerationStatus(session, latestSummary);
+
+  return {
+    sessionId: session.session_id,
+    title: decryptFromColumns(session, "session_title"),
+    messages,
+    patientMessageCount: messages.filter((message) => message.role === "user").length,
+    latestSummary,
+    summaryGenerationStatus,
+    endedAt: session.ended_at,
+    isClosed: Boolean(session.ended_at),
+  };
+}
+
+function resolveSummaryGenerationStatus(
+  session: Pick<AiSessionRow, "ended_at" | "summary_generation_status" | "summary_generated_at">,
+  summary: JournalSessionSummaryView | null,
+): SummaryGenerationStatus {
+  if (summary || session.summary_generated_at) return "completed";
+  if (session.ended_at && session.summary_generation_status === "pending") return "generating";
+  return session.summary_generation_status;
+}
+
+function buildPreview(value: string) {
+  const preview = value.replace(/\s+/g, " ").trim();
+  if (preview.length <= 96) return preview;
+  return `${preview.slice(0, 93).trim()}...`;
+}
+
+function parseJournalSessionSummary(value: string | null): JournalSessionSummaryView | null {
+  const trimmed = value?.trim();
+  if (!trimmed) return null;
+
+  try {
+    const parsed = JSON.parse(trimmed) as unknown;
+    if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+      const summary = parsed as Record<string, unknown>;
+      return {
+        general: readSummarySection(summary.general),
+        mental: readSummarySection(summary.mental),
+        physical: readSummarySection(summary.physical),
+      };
+    }
+  } catch {
+    return { general: trimmed, mental: null, physical: null };
+  }
+
+  return { general: trimmed, mental: null, physical: null };
+}
+
+function readSummarySection(value: unknown) {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  return trimmed || null;
+}
+
+function sessionSummaryPreview(summary: JournalSessionSummaryView | null) {
+  return summary?.general ?? summary?.mental ?? summary?.physical ?? null;
 }
 
 function requirePatientId(role: ResolvedRole) {

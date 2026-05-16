@@ -82,4 +82,18 @@ describe("i18n locale contracts", () => {
       unknown: expect.any(String),
     });
   });
+
+  it("keeps doctor upload error messages short but reason-specific", () => {
+    const uploadErrorKeys = ["empty_file", "file_too_large", "unsupported_type", "network", "server", "unknown"] as const;
+
+    for (const locale of ["id", "en"] as const) {
+      for (const key of uploadErrorKeys) {
+        const message = dictionary[locale].doctor.onboarding.uploadErrors[key];
+        const wordCount = message.split(/\s+/).filter(Boolean).length;
+
+        expect(wordCount, `${locale}.${key}: ${message}`).toBeGreaterThanOrEqual(3);
+        expect(wordCount, `${locale}.${key}: ${message}`).toBeLessThanOrEqual(4);
+      }
+    }
+  });
 });

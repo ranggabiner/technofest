@@ -142,6 +142,83 @@ export type Database = {
           },
         ]
       }
+      ai_message_attachments: {
+        Row: {
+          attachment_id: string
+          created_at: string
+          extracted_text_ciphertext: string
+          extracted_text_iv: string
+          extracted_text_tag: string
+          extracted_text_truncated: boolean
+          extraction_method: "pdf_text" | "image_ocr"
+          file_id: string
+          file_size_bytes: number
+          key_version: string
+          message_id: string
+          patient_id: string
+          session_id: string
+        }
+        Insert: {
+          attachment_id?: string
+          created_at?: string
+          extracted_text_ciphertext: string
+          extracted_text_iv: string
+          extracted_text_tag: string
+          extracted_text_truncated?: boolean
+          extraction_method: "pdf_text" | "image_ocr"
+          file_id: string
+          file_size_bytes: number
+          key_version?: string
+          message_id: string
+          patient_id: string
+          session_id: string
+        }
+        Update: {
+          attachment_id?: string
+          created_at?: string
+          extracted_text_ciphertext?: string
+          extracted_text_iv?: string
+          extracted_text_tag?: string
+          extracted_text_truncated?: boolean
+          extraction_method?: "pdf_text" | "image_ocr"
+          file_id?: string
+          file_size_bytes?: number
+          key_version?: string
+          message_id?: string
+          patient_id?: string
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_message_attachments_file_id_fkey"
+            columns: ["file_id"]
+            isOneToOne: false
+            referencedRelation: "secure_files"
+            referencedColumns: ["file_id"]
+          },
+          {
+            foreignKeyName: "ai_message_attachments_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "ai_messages"
+            referencedColumns: ["message_id"]
+          },
+          {
+            foreignKeyName: "ai_message_attachments_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["patient_id"]
+          },
+          {
+            foreignKeyName: "ai_message_attachments_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "ai_sessions"
+            referencedColumns: ["session_id"]
+          },
+        ]
+      }
       ai_sessions: {
         Row: {
           created_at: string
@@ -154,6 +231,7 @@ export type Database = {
           session_title_iv: string | null
           session_title_tag: string | null
           summary_generated_at: string | null
+          summary_generation_status: "pending" | "generating" | "completed" | "failed"
           summary_text_ciphertext: string | null
           summary_text_iv: string | null
           summary_text_tag: string | null
@@ -170,6 +248,7 @@ export type Database = {
           session_title_iv?: string | null
           session_title_tag?: string | null
           summary_generated_at?: string | null
+          summary_generation_status?: "pending" | "generating" | "completed" | "failed"
           summary_text_ciphertext?: string | null
           summary_text_iv?: string | null
           summary_text_tag?: string | null
@@ -186,6 +265,7 @@ export type Database = {
           session_title_iv?: string | null
           session_title_tag?: string | null
           summary_generated_at?: string | null
+          summary_generation_status?: "pending" | "generating" | "completed" | "failed"
           summary_text_ciphertext?: string | null
           summary_text_iv?: string | null
           summary_text_tag?: string | null

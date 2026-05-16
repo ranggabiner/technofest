@@ -1,7 +1,7 @@
 import "server-only";
 
 import { createOpenAI } from "@ai-sdk/openai";
-import { generateObject } from "ai";
+import { generateText, Output } from "ai";
 
 import { requireEnv } from "@/lib/config/env";
 
@@ -32,10 +32,9 @@ export function createDeepSeekJournalAiProvider(): JournalAiProvider {
 }
 
 async function extractSessionWithDeepSeek(messages: JournalAiMessage[]): Promise<AiExtraction> {
-  const result = await generateObject({
+  const result = await generateText({
     model: createDeepSeekChatModel(),
-    schema: aiExtractionSchema,
-    schemaName: "MedProofScope2Extraction",
+    output: Output.json(),
     system: extractionSystemPrompt,
     prompt: `Ekstrak percakapan berikut menjadi json valid:\n\n${buildExtractionPrompt(messages)}`,
     maxOutputTokens: 1800,
@@ -43,5 +42,5 @@ async function extractSessionWithDeepSeek(messages: JournalAiMessage[]): Promise
     maxRetries: 1,
   });
 
-  return result.object;
+  return aiExtractionSchema.parse(result.output);
 }

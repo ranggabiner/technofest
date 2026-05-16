@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AlertTriangle, CheckCircle2, History } from "lucide-react";
 
@@ -10,6 +9,7 @@ import { roleOnboardingPath } from "@/lib/auth/roles";
 import { getDictionary, getLocale } from "@/lib/i18n/server";
 
 import { DoctorAccessClient } from "../../_components/doctor-access-client";
+import { PatientTransitionLink } from "../../_components/patient-navigation-transition";
 
 export const dynamic = "force-dynamic";
 
@@ -59,10 +59,10 @@ export default async function PatientAccessPage({
         </Card>
 
         <Button asChild variant="ghost" className="w-fit">
-          <Link href="/patient/access-history">
+          <PatientTransitionLink href="/patient/access-history">
             <History size={16} />
             {copy.patient.access.openHistory}
-          </Link>
+          </PatientTransitionLink>
         </Button>
       </div>
     </>

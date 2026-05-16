@@ -232,9 +232,9 @@ export function PatientDashboardSkeleton() {
         <Skeleton className="mt-3 h-5 w-full max-w-md" />
         <Skeleton className="mt-6 h-12 w-40 rounded-full" />
       </section>
-      <section className="grid gap-6 lg:grid-cols-12">
-        <LoadingCard className="lg:col-span-5" lines={5} />
-        <LoadingCard className="lg:col-span-7" lines={4} />
+      <section className="grid gap-6 lg:grid-cols-2">
+        <LoadingCard lines={5} />
+        <LoadingCard lines={4} />
       </section>
       <section className="grid gap-6 lg:grid-cols-2">
         <TimelineSkeleton />
@@ -246,18 +246,47 @@ export function PatientDashboardSkeleton() {
 
 export function PatientChatSkeleton() {
   return (
-    <div className="grid gap-5" data-loading-pattern="patient-chat">
-      <LoadingCard lines={3} />
-      <Card className="grid gap-4">
-        <div className="space-y-2">
-          <Skeleton className="h-6 w-36" />
-          <Skeleton className="h-8 w-56" />
-          <Skeleton className="h-4 w-full max-w-md" />
+    <div
+      className="h-screen overflow-hidden bg-[var(--color-warm-canvas)]"
+      data-loading-pattern="patient-chat"
+    >
+      <div className="grid h-full min-h-0 grid-rows-[auto_minmax(0,1fr)] overflow-hidden lg:grid-cols-[280px_minmax(0,1fr)] lg:grid-rows-1">
+        <aside className="grid min-h-0 shrink-0 gap-6 overflow-hidden border-b border-[var(--color-stone-surface)] bg-[color-mix(in_srgb,var(--color-stone-surface)_55%,var(--color-warm-canvas))] p-4 lg:border-b-0 lg:border-r lg:p-6">
+          <div data-chat-header="navigation-group" className="flex items-center gap-3">
+            <Skeleton className="size-9 rounded-full" />
+            <Skeleton className="size-10 rounded-full" />
+          </div>
+          <div className="grid gap-2">
+            <Skeleton className="h-10 w-full rounded-xl" />
+            <Skeleton className="h-10 w-full rounded-xl" />
+            <Skeleton className="h-10 w-full rounded-xl" />
+          </div>
+          <div className="grid gap-3">
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-10 w-full rounded-xl" />
+            <Skeleton className="h-10 w-full rounded-xl" />
+          </div>
+          <div className="mt-auto grid gap-2">
+            <Skeleton className="h-24 w-full rounded-xl" />
+            <Skeleton className="h-8 w-full rounded-full" />
+          </div>
+        </aside>
+        <div className="flex h-full min-h-0 flex-col justify-between overflow-hidden px-5 py-8 md:px-10">
+          <div className="mx-auto grid min-h-0 w-full max-w-[720px] flex-1 place-content-center gap-10 text-center">
+            <div className="grid justify-items-center gap-3">
+              <Skeleton className="h-12 w-72 md:h-16 md:w-96" />
+            </div>
+            <div className="grid gap-5 md:grid-cols-2">
+              <Skeleton className="h-[190px] rounded-xl" />
+              <Skeleton className="h-[190px] rounded-xl" />
+            </div>
+          </div>
+          <div className="mx-auto w-full max-w-[800px]">
+            <Skeleton className="h-14 w-full rounded-full" />
+            <Skeleton className="mx-auto mt-4 h-4 w-full max-w-[560px]" />
+          </div>
         </div>
-        <ChatWindowSkeleton />
-        <LoadingForm fields={1} />
-      </Card>
-      <LoadingCard lines={3} />
+      </div>
     </div>
   );
 }
@@ -279,6 +308,15 @@ export function PatientAccessSkeleton() {
         </div>
       </Card>
       <Skeleton className="h-10 w-44 rounded-full" />
+    </div>
+  );
+}
+
+export function PatientAccessHistorySkeleton() {
+  return (
+    <div className="grid gap-5" data-loading-pattern="patient-access-history">
+      <LoadingCard lines={4} />
+      <LoadingCard lines={5} />
     </div>
   );
 }

@@ -17,7 +17,11 @@ Gunakan hanya informasi yang tertulis di percakapan. Jangan mengarang nilai.
 Jika nilai tidak jelas, pakai null.
 JSON wajib memiliki bentuk:
 {
-  "summary": "ringkasan singkat Bahasa Indonesia",
+  "summary": {
+    "general": "paragraf ringkasan umum Bahasa Indonesia",
+    "mental": "paragraf ringkasan mental Bahasa Indonesia",
+    "physical": "paragraf ringkasan fisik Bahasa Indonesia"
+  },
   "mental": {
     "moodScore": 1-10 atau null,
     "anxietyLevel": 1-10 atau null,

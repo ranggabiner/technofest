@@ -8,10 +8,12 @@ import { Button } from "@/components/ui/button";
 import type { Dictionary } from "@/lib/i18n/dictionary";
 
 import { savePendingDoctorLookup } from "./doctor-lookup-handoff";
+import { usePatientNavigationTransition } from "./patient-navigation-transition";
 import { useDoctorQrScanner } from "./use-doctor-qr-scanner";
 
 export function PatientDashboardQuickAccess({ copy }: { copy: Dictionary }) {
   const router = useRouter();
+  const { beginPatientNavigation } = usePatientNavigationTransition();
   const [lookupValue, setLookupValue] = useState("");
   const scannerMessages = useMemo(
     () => ({
@@ -33,6 +35,7 @@ export function PatientDashboardQuickAccess({ copy }: { copy: Dictionary }) {
     messages: scannerMessages,
     onScan: (rawValue) => {
       savePendingDoctorLookup(rawValue);
+      beginPatientNavigation("/patient/access");
       router.push("/patient/access");
     },
   });
@@ -45,6 +48,7 @@ export function PatientDashboardQuickAccess({ copy }: { copy: Dictionary }) {
       return;
     }
     savePendingDoctorLookup(nextLookup);
+    beginPatientNavigation("/patient/access");
     router.push("/patient/access");
   }
 

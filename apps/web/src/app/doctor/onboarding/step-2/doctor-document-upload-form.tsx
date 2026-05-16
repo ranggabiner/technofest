@@ -2,15 +2,27 @@
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { AlertCircle, ArrowRight, Badge, FileText, RotateCcw, Upload } from "lucide-react";
+import {
+  AlertCircle,
+  ArrowRight,
+  Badge,
+  CheckCircle2,
+  FileText,
+  FileWarning,
+  Loader2,
+  RotateCcw,
+  Upload,
+} from "lucide-react";
 
-import { KycDocumentPreview, type KycDocumentPreviewLabels } from "@/components/kyc-document-preview";
+import type { KycDocumentPreviewLabels } from "@/components/kyc-document-preview";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/form";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import { formatFileSize, getFileTypeLabel, getKycPreviewKind } from "@/lib/kyc/preview";
 import type { KycDocumentSummary } from "@/lib/kyc/summaries";
 import type { KycDocumentType } from "@/lib/kyc/service";
+import { kycUploadErrorMessage } from "@/lib/kyc/upload-errors";
 
 import {
   continueDoctorDocumentsStepAction,
@@ -35,6 +47,11 @@ type DoctorDocumentUploadCopy = {
   };
   uploadErrors: {
     unknown: string;
+    network: string;
+    server: string;
+    empty_file: string;
+    file_too_large: string;
+    unsupported_type: string;
   };
 };
 
@@ -50,6 +67,7 @@ export function DoctorDocumentUploadForm({
   const [errors, setErrors] = useState<Partial<Record<KycDocumentType, string>>>({});
   const [continueError, setContinueError] = useState<string | null>(null);
   const [isContinuing, setIsContinuing] = useState(false);
+  const uploadInFlightRef = useRef(false);
   const router = useRouter();
 
   const isUploading = uploadingDocumentType !== null;
@@ -58,10 +76,11 @@ export function DoctorDocumentUploadForm({
   const canContinue = allUploaded && !isUploading && !isContinuing && !hasError;
 
   async function uploadDocument(documentType: KycDocumentType, file: File) {
-    if (uploadingDocumentType || isContinuing) return;
+    if (uploadInFlightRef.current || isContinuing) return;
 
     const formData = new FormData();
     formData.set("file", file);
+    uploadInFlightRef.current = true;
     setUploadingDocumentType(documentType);
     setErrors((current) => ({ ...current, [documentType]: undefined }));
     setContinueError(null);
@@ -77,9 +96,13 @@ export function DoctorDocumentUploadForm({
       } else {
         setErrors((current) => ({ ...current, [documentType]: result.message }));
       }
-    } catch {
-      setErrors((current) => ({ ...current, [documentType]: copy.uploadErrors.unknown }));
+    } catch (error) {
+      setErrors((current) => ({
+        ...current,
+        [documentType]: kycUploadErrorMessage(error, copy.uploadErrors, "client"),
+      }));
     } finally {
+      uploadInFlightRef.current = false;
       setUploadingDocumentType(null);
     }
   }
@@ -187,9 +210,10 @@ function DocumentUploadField({
   const previewUrl = document.documentId
     ? `/doctor/onboarding/documents/${document.documentId}`
     : null;
+  const surfaceDisabled = disabled || isUploading;
 
   function chooseFile() {
-    if (disabled) return;
+    if (surfaceDisabled) return;
     inputRef.current?.click();
   }
 
@@ -210,85 +234,204 @@ function DocumentUploadField({
         {description}
       </p>
 
-      {isUploading ? (
-        <div className={cn(previewUrl ? "mt-4" : "")}>
-          <Skeleton className="min-h-[140px] w-full rounded-lg" />
-        </div>
-      ) : previewUrl ? (
-        <KycDocumentPreview
-          document={document}
-          title={title}
-          previewUrl={previewUrl}
-          labels={labels}
-        />
-      ) : null}
-
-      {!isUploading ? (
-        <div className={cn(previewUrl ? "mt-4" : "")}>
-          <input
-            ref={inputRef}
-            id={`${document.documentType}-file`}
-            name={`${document.documentType}-file`}
-            type="file"
-            accept="application/pdf,image/jpeg,image/png"
-            className="sr-only"
-            disabled={disabled}
-            onChange={(event) => {
-              const file = event.currentTarget.files?.[0];
-              event.currentTarget.value = "";
-              if (file) onUpload(document.documentType, file);
-            }}
+      <input
+        ref={inputRef}
+        id={`${document.documentType}-file`}
+        name={`${document.documentType}-file`}
+        type="file"
+        accept="application/pdf,image/jpeg,image/png"
+        className="sr-only"
+        disabled={surfaceDisabled}
+        onChange={(event) => {
+          const file = event.currentTarget.files?.[0];
+          event.currentTarget.value = "";
+          if (file) onUpload(document.documentType, file);
+        }}
+      />
+      <div
+        data-upload-surface="doctor-kyc-document"
+        aria-busy={isUploading}
+        aria-live={isUploading || error ? "polite" : undefined}
+        className={cn(
+          "relative h-[140px] w-full overflow-hidden rounded-lg border bg-[var(--color-warm-canvas)] transition",
+          previewUrl ? "border-solid border-[var(--color-stone-surface)]" : "border-dashed border-[var(--color-stone-surface)]",
+          error && "border-[var(--color-error-red)] bg-[var(--color-error-surface)]",
+          surfaceDisabled && !isUploading && "opacity-60",
+        )}
+      >
+        {isUploading ? (
+          <UploadLoadingState label={labels.uploading} />
+        ) : previewUrl ? (
+          <UploadedDocumentState
+            document={document}
+            title={title}
+            previewUrl={previewUrl}
+            labels={labels}
+            disabled={surfaceDisabled}
+            error={error}
+            onReplace={chooseFile}
           />
-          <button
-            type="button"
-            disabled={disabled}
-            onClick={chooseFile}
+        ) : (
+          <EmptyDocumentUploadState
+            documentType={document.documentType}
+            uploadLabel={uploadLabel}
+            uploadHint={uploadHint}
+            retryLabel={labels.retry}
+            disabled={surfaceDisabled}
+            error={error}
+            onUpload={chooseFile}
+          />
+        )}
+      </div>
+    </div>
+  );
+}
+
+function UploadLoadingState({ label }: { label: string }) {
+  return (
+    <div className="relative flex h-full w-full items-center justify-center overflow-hidden px-6 text-center">
+      <Skeleton className="absolute inset-4 rounded-md opacity-70" />
+      <span className="relative inline-flex items-center gap-2 rounded-full bg-[var(--color-card)] px-4 py-2 text-[13px] font-medium leading-[1.47] tracking-[-0.16px] text-[var(--color-midnight)] shadow-sm">
+        <Loader2 size={16} className="animate-spin" aria-hidden="true" />
+        {label}
+      </span>
+    </div>
+  );
+}
+
+function UploadedDocumentState({
+  document,
+  title,
+  previewUrl,
+  labels,
+  disabled,
+  error,
+  onReplace,
+}: {
+  document: KycDocumentSummary;
+  title: string;
+  previewUrl: string;
+  labels: DoctorDocumentUploadCopy["uploadPreview"];
+  disabled: boolean;
+  error?: string;
+  onReplace: () => void;
+}) {
+  const previewKind = getKycPreviewKind(document.mimeType);
+
+  return (
+    <div className="grid h-full w-full grid-cols-[minmax(88px,42%)_minmax(0,1fr)]">
+      <div className="flex min-w-0 items-center justify-center overflow-hidden bg-[var(--color-parchment-card)]">
+        {previewKind === "image" ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={previewUrl}
+            alt={title}
+            className="h-full w-full object-contain"
+          />
+        ) : null}
+        {previewKind === "pdf" ? (
+          <iframe
+            src={previewUrl}
+            title={title}
+            tabIndex={-1}
+            className="h-full w-full border-0"
+          >
+            {labels.pdfFallback}
+          </iframe>
+        ) : null}
+        {previewKind === "fallback" ? (
+          <FileWarning size={30} className="text-[var(--color-ash)]" aria-hidden="true" />
+        ) : null}
+      </div>
+      <div className="flex min-w-0 flex-col justify-between gap-2 p-3">
+        <div className="min-w-0 space-y-1">
+          <p className="truncate text-[13px] font-medium leading-[1.35] tracking-[-0.16px] text-[var(--color-charcoal-primary)]">
+            {document.filename ?? title}
+          </p>
+          <p className="truncate text-[11px] leading-[1.45] text-[var(--color-ash)]">
+            {getFileTypeLabel(document.mimeType, document.filename)}
+            {" · "}
+            {formatFileSize(document.fileSizeBytes)}
+          </p>
+          <p
             className={cn(
-              "group flex min-h-[140px] w-full cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed border-[var(--color-stone-surface)] bg-[var(--color-warm-canvas)] p-6 text-center transition hover:bg-[var(--color-parchment-card)] disabled:cursor-not-allowed disabled:opacity-60",
-              previewUrl && "min-h-12 flex-row gap-3 border-solid py-3",
+              "inline-flex max-w-full items-center gap-1.5 truncate text-[11px] font-semibold leading-[1.45]",
+              error ? "text-[var(--color-error-red)]" : "text-[var(--color-valid-green)]",
             )}
           >
-            <span className="flex size-10 items-center justify-center rounded-full bg-[var(--color-stone-surface)] text-[var(--color-ash)] transition group-hover:scale-105">
-              {document.uploaded ? (
-                <RotateCcw size={20} aria-hidden="true" />
-              ) : document.documentType === "ktp" ? (
-                <Badge size={22} aria-hidden="true" />
-              ) : document.documentType === "sip" ? (
-                <FileText size={22} aria-hidden="true" />
-              ) : (
-                <Upload size={22} aria-hidden="true" />
-              )}
-            </span>
-            <span className="text-[15px] font-medium leading-[1.47] tracking-[-0.2px] text-[var(--color-midnight)]">
-              {document.uploaded ? labels.replace : uploadLabel}
-            </span>
-            {!previewUrl ? (
-              <span className="mt-1 text-[11px] leading-[1.5] text-[var(--color-ash)]">
-                {uploadHint}
-              </span>
-            ) : null}
-          </button>
+            {error ? (
+              <AlertCircle size={13} className="shrink-0" aria-hidden="true" />
+            ) : (
+              <CheckCircle2 size={13} className="shrink-0" fill="currentColor" aria-hidden="true" />
+            )}
+            <span className="truncate">{error ?? labels.uploadSuccess}</span>
+          </p>
         </div>
-      ) : null}
-
-      {error ? (
-        <div className="mt-3 flex flex-col gap-3 rounded-lg border border-[var(--color-error-red)] bg-[var(--color-error-surface)] p-3 text-[12px] leading-[1.58] tracking-[-0.14px] text-[var(--color-error-red)] sm:flex-row sm:items-center sm:justify-between">
-          <span className="inline-flex items-start gap-2">
-            <AlertCircle size={16} className="mt-0.5 shrink-0" aria-hidden="true" />
-            {error}
-          </span>
-          <Button
-            type="button"
-            variant="ghost"
-            disabled={disabled}
-            onClick={chooseFile}
-            className="min-h-9 shrink-0 px-4 text-[12px]"
-          >
-            <RotateCcw size={14} aria-hidden="true" />
-            {labels.retry}
-          </Button>
-        </div>
-      ) : null}
+        <button
+          type="button"
+          disabled={disabled}
+          onClick={onReplace}
+          className="inline-flex min-h-8 w-fit cursor-pointer items-center gap-2 rounded-full border border-[var(--color-stone-surface)] bg-[var(--color-card)] px-3 text-[11px] font-medium leading-[1.45] tracking-[-0.12px] text-[var(--color-midnight)] transition hover:bg-[var(--color-parchment-card)] disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          <RotateCcw size={13} aria-hidden="true" />
+          {error ? labels.retry : labels.replace}
+        </button>
+      </div>
     </div>
+  );
+}
+
+function EmptyDocumentUploadState({
+  documentType,
+  uploadLabel,
+  uploadHint,
+  retryLabel,
+  disabled,
+  error,
+  onUpload,
+}: {
+  documentType: KycDocumentType;
+  uploadLabel: string;
+  uploadHint: string;
+  retryLabel: string;
+  disabled: boolean;
+  error?: string;
+  onUpload: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={onUpload}
+      className="group flex h-full w-full cursor-pointer flex-col items-center justify-center p-6 text-center transition hover:bg-[var(--color-parchment-card)] disabled:cursor-not-allowed disabled:opacity-60"
+    >
+      <span
+        className={cn(
+          "flex size-10 items-center justify-center rounded-full bg-[var(--color-stone-surface)] text-[var(--color-ash)] transition group-hover:scale-105",
+          error && "bg-[var(--color-card)] text-[var(--color-error-red)]",
+        )}
+      >
+        {error ? (
+          <AlertCircle size={20} aria-hidden="true" />
+        ) : documentType === "ktp" ? (
+          <Badge size={22} aria-hidden="true" />
+        ) : documentType === "sip" ? (
+          <FileText size={22} aria-hidden="true" />
+        ) : (
+          <Upload size={22} aria-hidden="true" />
+        )}
+      </span>
+      <span
+        className={cn(
+          "mt-2 max-w-full truncate text-[15px] font-medium leading-[1.47] tracking-[-0.2px] text-[var(--color-midnight)]",
+          error && "text-[var(--color-error-red)]",
+        )}
+      >
+        {error ?? uploadLabel}
+      </span>
+      <span className="mt-1 max-w-full truncate text-[11px] leading-[1.5] text-[var(--color-ash)]">
+        {error ? retryLabel : uploadHint}
+      </span>
+    </button>
   );
 }

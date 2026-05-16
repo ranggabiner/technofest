@@ -16,6 +16,7 @@ import {
   type KycDocumentType,
 } from "@/lib/kyc/service";
 import type { KycDocumentSummary } from "@/lib/kyc/summaries";
+import { kycUploadErrorMessage } from "@/lib/kyc/upload-errors";
 
 export type UploadDoctorKycDocumentResult =
   | { ok: true; document: KycDocumentSummary }
@@ -138,7 +139,10 @@ export async function uploadDoctorKycDocumentAction(
 
     return { ok: true, document };
   } catch (error) {
-    return { ok: false, message: uploadErrorMessage(error, copy.doctor.onboarding.uploadErrors) };
+    return {
+      ok: false,
+      message: kycUploadErrorMessage(error, copy.doctor.onboarding.uploadErrors),
+    };
   }
 }
 
@@ -211,22 +215,4 @@ function readNumber(formData: FormData, key: string) {
 
 function isKycDocumentType(value: string): value is KycDocumentType {
   return (requiredKycDocumentTypes as readonly string[]).includes(value);
-}
-
-function uploadErrorMessage(
-  error: unknown,
-  messages: {
-    empty_file: string;
-    file_too_large: string;
-    unsupported_type: string;
-    unknown: string;
-  },
-) {
-  if (error instanceof Error) {
-    if (error.message === "empty_file") return messages.empty_file;
-    if (error.message === "file_too_large") return messages.file_too_large;
-    if (error.message === "unsupported_type") return messages.unsupported_type;
-  }
-
-  return messages.unknown;
 }

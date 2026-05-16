@@ -8,6 +8,8 @@ import {
   DoctorGrantPageSkeleton,
   LoadingCard,
   LoadingList,
+  PatientChatSkeleton,
+  PatientAccessHistorySkeleton,
   PatientDashboardSkeleton,
 } from "./loading-skeletons";
 import { Skeleton } from "./ui/skeleton";
@@ -53,6 +55,32 @@ describe("loading skeleton components", () => {
     expect(grantHtml).toContain('data-loading-pattern="doctor-grant"');
     expect(grantHtml.match(/data-skeleton-card/g)?.length).toBeGreaterThanOrEqual(4);
   });
+
+  it("renders patient access history as a reusable content-only skeleton", () => {
+    const html = renderToStaticMarkup(
+      React.createElement(PatientAccessHistorySkeleton),
+    );
+
+    expect(html).toContain('data-loading-pattern="patient-access-history"');
+    expect(html).not.toContain("data-patient-sidebar");
+    expect(html.match(/data-skeleton-card/g)).toHaveLength(2);
+  });
+
+  it("keeps patient chat loading header grouped around back navigation", () => {
+    const html = renderToStaticMarkup(
+      React.createElement(PatientChatSkeleton),
+    );
+
+    expect(html).toContain('data-loading-pattern="patient-chat"');
+    expect(html).toContain('data-chat-header="navigation-group"');
+    expect(html).toContain("h-screen");
+    expect(html).toContain("overflow-hidden");
+    expect(html).toContain("h-full");
+    expect(html).toContain("min-h-0");
+    expect(html).not.toContain("h-4 w-full max-w-md");
+    expect(html.match(/h-\[190px\] rounded-xl/g)).toHaveLength(2);
+    expect(html).not.toContain('class="flex items-center justify-between"');
+  });
 });
 
 describe("route loading skeletons", () => {
@@ -62,7 +90,7 @@ describe("route loading skeletons", () => {
     "login/loading.tsx",
     "login/role/loading.tsx",
     "patient/(portal)/loading.tsx",
-    "patient/(portal)/chat/loading.tsx",
+    "patient/chat/loading.tsx",
     "patient/(portal)/access/loading.tsx",
     "patient/(portal)/access-history/loading.tsx",
     "patient/onboarding/step-1/loading.tsx",

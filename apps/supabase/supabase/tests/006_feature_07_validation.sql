@@ -2,7 +2,7 @@ create extension if not exists pgtap with schema extensions;
 
 begin;
 
-select plan(10);
+select plan(16);
 
 select is(
   (
@@ -19,6 +19,7 @@ select is(
         'doctor_kyc_documents',
         'ai_sessions',
         'ai_messages',
+        'ai_message_attachments',
         'scope_2_mental',
         'scope_2_physical',
         'scope_1_medical_records',
@@ -43,6 +44,7 @@ select is(
         ('doctor_kyc_documents'),
         ('ai_sessions'),
         ('ai_messages'),
+        ('ai_message_attachments'),
         ('scope_2_mental'),
         ('scope_2_physical'),
         ('scope_1_medical_records'),
@@ -70,6 +72,7 @@ select is(
         ('doctor_kyc_documents'),
         ('ai_sessions'),
         ('ai_messages'),
+        ('ai_message_attachments'),
         ('scope_2_mental'),
         ('scope_2_physical'),
         ('scope_1_medical_records'),
@@ -103,6 +106,7 @@ select is(
         'patients',
         'ai_sessions',
         'ai_messages',
+        'ai_message_attachments',
         'scope_2_mental',
         'scope_2_physical',
         'scope_1_medical_records'
@@ -120,7 +124,8 @@ select is(
         'mood_score',
         'anxiety_level',
         'sleep_hours',
-        'raw_quote'
+        'raw_quote',
+        'extracted_text'
       )
   ),
   0,
@@ -147,6 +152,51 @@ select isnt_empty(
     group by table_name
     having count(*) = 6$$,
   'Scope 1 title and description encryption triplets exist'
+);
+
+select isnt_empty(
+  $$select 1
+    from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'ai_sessions'
+      and column_name = 'summary_generation_status'
+      and column_default = '''pending''::text'
+      and is_nullable = 'NO'$$,
+  'AI sessions track summary generation status'
+);
+
+select has_table('public', 'ai_message_attachments', 'AI message attachments table exists');
+
+select is(
+  has_table_privilege('service_role', 'public.ai_message_attachments', 'select'),
+  true,
+  'service role can read AI message attachment metadata for server-side decryption'
+);
+
+select is(
+  has_table_privilege('service_role', 'public.ai_message_attachments', 'insert'),
+  true,
+  'service role can insert AI message attachment metadata after server-side encryption'
+);
+
+select isnt_empty(
+  $$select 1
+    from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'ai_message_attachments'
+      and column_name in ('extracted_text_ciphertext', 'extracted_text_iv', 'extracted_text_tag')
+    group by table_name
+    having count(*) = 3$$,
+  'AI message attachment extracted text is stored as encrypted triplets'
+);
+
+select is_empty(
+  $$select 1
+    from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'ai_message_attachments'
+      and column_name in ('extracted_text', 'raw_text', 'plaintext')$$,
+  'AI message attachments do not expose plaintext extracted text columns'
 );
 
 select is(

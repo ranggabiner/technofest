@@ -13,7 +13,8 @@ import {
 import { requireRole } from "@/lib/auth/session";
 import {
   acceptAiConsent,
-  finalizeActiveAiSession,
+  finishActiveAiSession,
+  retryAiSessionSummaryGeneration,
   savePatientProfiling,
 } from "@/lib/ai/journal-service";
 import { getDictionary } from "@/lib/i18n/server";
@@ -45,14 +46,24 @@ export async function finishAiSessionAction() {
   const role = await requireRole();
 
   try {
-    await finalizeActiveAiSession(role, "manual_end");
+    await finishActiveAiSession(role, "manual_end");
   } catch {
-    redirect("/patient/chat?ai_error=finalize_failed");
+    redirect(`/patient/chat?ai_error=finalize_failed&ai_toast=${Date.now()}`);
   }
 
   revalidatePath("/patient");
   revalidatePath("/patient/chat");
-  redirect("/patient/chat?ai_status=finalized");
+  redirect(`/patient/chat?ai_status=finalized&ai_toast=${Date.now()}`);
+}
+
+export async function retryAiSessionSummaryAction(sessionId: string) {
+  const role = await requireRole();
+  const detail = await retryAiSessionSummaryGeneration(role, sessionId);
+
+  revalidatePath("/patient");
+  revalidatePath("/patient/chat");
+
+  return detail;
 }
 
 export async function grantDoctorAccessAction(formData: FormData) {

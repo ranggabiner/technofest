@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
+import { dictionary } from "../i18n/dictionary";
 import { PATIENT_DASHBOARD_ITEM_LIMIT } from "./dashboard-limits";
 
 describe("patient dashboard preview limits", () => {
@@ -30,6 +31,24 @@ describe("patient dashboard preview limits", () => {
 
     expect(pageSource).not.toContain("CalendarDays");
     expect(pageSource).toContain("data-scope1-record-marker");
+  });
+
+  it("groups medical records and complaints under a localized health history heading", () => {
+    const pageSource = readFileSync(new URL("../../app/patient/(portal)/page.tsx", import.meta.url), "utf8");
+    const idDashboard = dictionary.id.patient.dashboard as Record<string, string>;
+    const enDashboard = dictionary.en.patient.dashboard as Record<string, string>;
+
+    expect(idDashboard.healthHistoryTitle).toBe("Riwayat Kesehatan");
+    expect(enDashboard.healthHistoryTitle).toBe("Health History");
+    expect(pageSource).toContain("copy.patient.dashboard.healthHistoryTitle");
+    expect(pageSource).not.toContain("Riwayat Kesehatan");
+    expect(pageSource).not.toContain("Health History");
+    expect(pageSource.indexOf("copy.patient.dashboard.healthHistoryTitle")).toBeLessThan(
+      pageSource.indexOf("copy.patient.dashboard.scope1TimelineTitle"),
+    );
+    expect(pageSource.indexOf("copy.patient.dashboard.scope1TimelineTitle")).toBeLessThan(
+      pageSource.indexOf("copy.patient.dashboard.aiSummaryTitle"),
+    );
   });
 
   it("seeds enough dashboard history data to prove previews truncate to three items", () => {

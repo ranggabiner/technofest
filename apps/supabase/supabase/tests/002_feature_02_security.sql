@@ -75,20 +75,20 @@ select is(
 
 insert into auth.users (id, aud, role, email)
 values
-  ('00000000-0000-0000-0000-000000000101', 'authenticated', 'authenticated', 'patient@example.test'),
-  ('00000000-0000-0000-0000-000000000102', 'authenticated', 'authenticated', 'other-patient@example.test'),
-  ('00000000-0000-0000-0000-000000000201', 'authenticated', 'authenticated', 'approved-doctor@example.test'),
-  ('00000000-0000-0000-0000-000000000202', 'authenticated', 'authenticated', 'pending-doctor@example.test'),
-  ('00000000-0000-0000-0000-000000000203', 'authenticated', 'authenticated', 'rejected-doctor@example.test'),
-  ('00000000-0000-0000-0000-000000000301', 'authenticated', 'authenticated', 'admin@example.test');
+  ('90000000-0000-0000-0000-000000000101', 'authenticated', 'authenticated', 'patient@example.test'),
+  ('90000000-0000-0000-0000-000000000102', 'authenticated', 'authenticated', 'other-patient@example.test'),
+  ('90000000-0000-0000-0000-000000000201', 'authenticated', 'authenticated', 'approved-doctor@example.test'),
+  ('90000000-0000-0000-0000-000000000202', 'authenticated', 'authenticated', 'pending-doctor@example.test'),
+  ('90000000-0000-0000-0000-000000000203', 'authenticated', 'authenticated', 'rejected-doctor@example.test'),
+  ('90000000-0000-0000-0000-000000000301', 'authenticated', 'authenticated', 'admin@example.test');
 
 insert into public.patients (patient_id, auth_user_id, full_name, email)
 values
-  ('10000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000101', 'Patient One', 'patient@example.test'),
-  ('10000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000102', 'Patient Two', 'other-patient@example.test');
+  ('10000000-0000-0000-0000-000000000001', '90000000-0000-0000-0000-000000000101', 'Patient One', 'patient@example.test'),
+  ('10000000-0000-0000-0000-000000000002', '90000000-0000-0000-0000-000000000102', 'Patient Two', 'other-patient@example.test');
 
 insert into public.medical_admins (admin_id, auth_user_id, full_name, email)
-values ('30000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000301', 'Admin One', 'admin@example.test');
+values ('30000000-0000-0000-0000-000000000001', '90000000-0000-0000-0000-000000000301', 'Admin One', 'admin@example.test');
 
 insert into public.doctors (
   doctor_id,
@@ -100,9 +100,9 @@ insert into public.doctors (
   doctor_access_code
 )
 values
-  ('20000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000201', 'Approved Doctor', 'approved-doctor@example.test', 'approved', 'approved-token', '123456'),
-  ('20000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000202', 'Pending Doctor', 'pending-doctor@example.test', 'pending', null, null),
-  ('20000000-0000-0000-0000-000000000003', '00000000-0000-0000-0000-000000000203', 'Rejected Doctor', 'rejected-doctor@example.test', 'rejected', null, null);
+  ('20000000-0000-0000-0000-000000000001', '90000000-0000-0000-0000-000000000201', 'Approved Doctor', 'approved-doctor@example.test', 'approved', 'approved-token', '123456'),
+  ('20000000-0000-0000-0000-000000000002', '90000000-0000-0000-0000-000000000202', 'Pending Doctor', 'pending-doctor@example.test', 'pending', null, null),
+  ('20000000-0000-0000-0000-000000000003', '90000000-0000-0000-0000-000000000203', 'Rejected Doctor', 'rejected-doctor@example.test', 'rejected', null, null);
 
 insert into public.secure_files (
   file_id,
@@ -123,7 +123,7 @@ values
     'doctor',
     '20000000-0000-0000-0000-000000000001',
     'encrypted-kyc-documents',
-    '00000000-0000-0000-0000-000000000201/kyc/20000000-0000-0000-0000-000000000001/40000000-0000-0000-0000-000000000001.json',
+    '90000000-0000-0000-0000-000000000201/kyc/20000000-0000-0000-0000-000000000001/40000000-0000-0000-0000-000000000001.json',
     'cipher',
     'iv',
     'tag',
@@ -136,7 +136,7 @@ values
     'patient',
     '10000000-0000-0000-0000-000000000001',
     'encrypted-medical-attachments',
-    '00000000-0000-0000-0000-000000000101/medical/40000000-0000-0000-0000-000000000002.json',
+    '90000000-0000-0000-0000-000000000101/medical/40000000-0000-0000-0000-000000000002.json',
     'cipher',
     'iv',
     'tag',
@@ -199,29 +199,29 @@ values (
 );
 
 set local role authenticated;
-set local request.jwt.claim.sub = '00000000-0000-0000-0000-000000000101';
+set local request.jwt.claim.sub = '90000000-0000-0000-0000-000000000101';
 
 select is((select count(*)::int from public.patients), 1, 'patient sees only own patient row');
 
-set local request.jwt.claim.sub = '00000000-0000-0000-0000-000000000201';
+set local request.jwt.claim.sub = '90000000-0000-0000-0000-000000000201';
 
 select is((select count(*)::int from public.patients), 1, 'approved doctor sees active granted patient row');
 select is((select count(*)::int from public.scope_2_mental), 1, 'approved doctor sees granted mental Scope 2 row');
 
-set local request.jwt.claim.sub = '00000000-0000-0000-0000-000000000202';
+set local request.jwt.claim.sub = '90000000-0000-0000-0000-000000000202';
 
 select is((select count(*)::int from public.patients), 0, 'pending doctor cannot see granted patient row');
 
-set local request.jwt.claim.sub = '00000000-0000-0000-0000-000000000203';
+set local request.jwt.claim.sub = '90000000-0000-0000-0000-000000000203';
 
 select is((select count(*)::int from public.scope_2_mental), 0, 'rejected doctor cannot see Scope 2 rows');
 
-set local request.jwt.claim.sub = '00000000-0000-0000-0000-000000000301';
+set local request.jwt.claim.sub = '90000000-0000-0000-0000-000000000301';
 
 select is((select count(*)::int from public.patients), 0, 'medical admin cannot see patient rows');
 select is((select count(*)::int from public.secure_files), 1, 'medical admin sees only KYC file metadata');
 
-set local request.jwt.claim.sub = '00000000-0000-0000-0000-000000000101';
+set local request.jwt.claim.sub = '90000000-0000-0000-0000-000000000101';
 
 select throws_ok(
   $$insert into public.access_grants (
