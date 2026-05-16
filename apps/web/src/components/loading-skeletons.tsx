@@ -361,6 +361,32 @@ export function PatientHealthHistorySkeleton() {
   );
 }
 
+export function PatientHealthJournalSkeleton() {
+  return (
+    <div className="grid gap-8" data-loading-pattern="patient-health-journal">
+      <section className="border-b border-[var(--color-stone-surface)] pb-6">
+        <Skeleton className="mb-5 h-4 w-52" />
+        <Skeleton className="mb-3 h-6 w-36 rounded-full" />
+        <Skeleton className="h-12 w-full max-w-[520px] md:h-14" />
+        <Skeleton className="mt-4 h-5 w-full max-w-2xl" />
+        <Skeleton className="mt-6 h-12 w-40 rounded-full" />
+      </section>
+      <nav className="flex flex-wrap gap-3">
+        <Skeleton className="h-10 w-24 rounded-full" />
+        <Skeleton className="h-10 w-32 rounded-full" />
+        <Skeleton className="h-10 w-36 rounded-full" />
+      </nav>
+      <section className="grid gap-5">
+        <div className="space-y-2">
+          <Skeleton className="h-8 w-56" />
+          <Skeleton className="h-4 w-full max-w-2xl" />
+        </div>
+        <TimelineSkeleton />
+      </section>
+    </div>
+  );
+}
+
 export function DoctorDashboardSkeleton() {
   return (
     <AppShellSkeleton navItems={1}>

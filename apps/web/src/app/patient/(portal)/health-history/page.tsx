@@ -55,7 +55,7 @@ export default async function PatientHealthHistoryPage() {
             cta={copy.patient.healthHistory.journalCta}
             description={copy.patient.healthHistory.journalDescription}
             cardKey="journal"
-            href="/patient/chat"
+            href="/patient/health-history/journal"
             icon={<BookOpenText size={30} aria-hidden="true" />}
             title={copy.patient.healthHistory.journalTitle}
           />

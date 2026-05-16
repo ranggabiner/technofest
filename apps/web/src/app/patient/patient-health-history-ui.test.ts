@@ -7,6 +7,12 @@ import { dictionary } from "@/lib/i18n/dictionary";
 describe("patient health history page", () => {
   const pagePath = new URL("./(portal)/health-history/page.tsx", import.meta.url);
   const loadingPath = new URL("./(portal)/health-history/loading.tsx", import.meta.url);
+  const journalPagePath = new URL("./(portal)/health-history/journal/page.tsx", import.meta.url);
+  const journalLoadingPath = new URL("./(portal)/health-history/journal/loading.tsx", import.meta.url);
+  const journalClientPath = new URL(
+    "./(portal)/health-history/journal/_components/journal-history-client.tsx",
+    import.meta.url,
+  );
   const recordsPagePath = new URL("./(portal)/health-history/records/page.tsx", import.meta.url);
   const recordsLoadingPath = new URL("./(portal)/health-history/records/loading.tsx", import.meta.url);
   const attachmentModalPath = new URL(
@@ -41,11 +47,55 @@ describe("patient health history page", () => {
     expect(source).toContain('data-health-history-section="records"');
     expect(source).toContain('data-health-history-section="journal"');
     expect(source).toContain('href="/patient/health-history/records"');
+    expect(source).toContain('href="/patient/health-history/journal"');
     expect(source).not.toContain('href="#records"');
+    expect(source).not.toContain('href="/patient/chat"');
     expect(source).not.toContain("loadPatientDashboardState");
     expect(source).not.toContain("loadPatientJournalState");
     expect(source).not.toContain("SummaryMetric");
     expect(source).not.toContain("ProofStatus");
+  });
+
+  it("adds a dedicated patient journal page from the journal card", () => {
+    expect(existsSync(journalPagePath)).toBe(true);
+    expect(existsSync(journalLoadingPath)).toBe(true);
+
+    const source = readFileSync(journalPagePath, "utf8");
+
+    expect(source).not.toContain("PatientLayout");
+    expect(source).not.toContain("PatientForbiddenLayout");
+    expect(source).toContain('data-health-history-journal-page="timeline"');
+    expect(source).toContain("loadPatientHealthJournalState");
+    expect(source).toContain("JournalHistoryClient");
+    expect(source).toContain("copy.patient.healthHistory.journalDetail");
+    expect(source).toContain('href="/patient/health-history"');
+    expect(source).toContain("filter={activeFilter}");
+    expect(source).toContain("EmptyState");
+    expect(source).toContain("StatePanel");
+    expect(source).not.toContain("Cuplikan Percakapan");
+  });
+
+  it("keeps conversation snippets inside a dismissible chat popup", () => {
+    expect(existsSync(journalClientPath)).toBe(true);
+
+    const source = readFileSync(journalClientPath, "utf8");
+
+    expect(source).toContain('"use client"');
+    expect(source).toContain("JournalHistoryClient");
+    expect(source).toContain('data-journal-history="items"');
+    expect(source).toContain('data-journal-chat-dialog="overlay"');
+    expect(source).toContain('data-journal-chat-dialog="box"');
+    expect(source).toContain("copy.chatPopupTitle");
+    expect(source).toContain("copy.viewChat");
+    expect(source).toContain("copy.chatLoadFailed");
+    expect(source).toContain('role="dialog"');
+    expect(source).toContain('aria-modal="true"');
+    expect(source).toContain('event.key === "Escape"');
+    expect(source).toContain("onMouseDown={(event)");
+    expect(source).toContain("fetch(`/api/patient/ai/sessions/${session.sessionId}`");
+    expect(source).toContain("selectedSession.messages.map");
+    expect(source).not.toContain("PatientLayout");
+    expect(source).not.toContain("PatientForbiddenLayout");
   });
 
   it("adds a native patient portal record timeline route from the records card", () => {
@@ -127,6 +177,15 @@ describe("patient health history page", () => {
     expect(idCopy.recordFilters.lab).toBe("Hasil Lab");
     expect(idCopy.journalTitle).toBe("Jurnal Kesehatanku");
     expect(idCopy.journalCta).toBe("Lihat Jurnal");
+    expect(idCopy.journalDetail.title).toBe("Jurnal Kesehatanku");
+    expect(idCopy.journalDetail.description).toBe(
+      "Pantau tren kesehatan harianmu berdasarkan analisis AI (Scope 2).",
+    );
+    expect(idCopy.journalDetail.filters.physical).toBe("Gejala Fisik");
+    expect(idCopy.journalDetail.viewChat).toBe("Lihat Curhat");
+    expect(idCopy.journalDetail.chatPopupTitle).toBe("Cuplikan Percakapan");
+    expect(idCopy.journalDetail.chatLoading).toBe("Memuat percakapan...");
+    expect(idCopy.journalDetail.noChatMessages).toBe("Belum ada pesan tersimpan untuk sesi ini.");
 
     expect(enCopy.title).toBe("Health History");
     expect(enCopy.description).toBe("View your health history data here.");
@@ -151,6 +210,15 @@ describe("patient health history page", () => {
     expect(enCopy.recordFilters.lab).toBe("Lab Results");
     expect(enCopy.journalTitle).toBe("My Health Journal");
     expect(enCopy.journalCta).toBe("View Journal");
+    expect(enCopy.journalDetail.title).toBe("My Health Journal");
+    expect(enCopy.journalDetail.description).toBe(
+      "Track your daily health trends based on AI analysis (Scope 2).",
+    );
+    expect(enCopy.journalDetail.filters.physical).toBe("Physical Symptoms");
+    expect(enCopy.journalDetail.viewChat).toBe("View Chat");
+    expect(enCopy.journalDetail.chatPopupTitle).toBe("Conversation Snippet");
+    expect(enCopy.journalDetail.chatLoading).toBe("Loading conversation...");
+    expect(enCopy.journalDetail.noChatMessages).toBe("No stored messages for this session yet.");
   });
 
   it("uses localized keys instead of hardcoded visible page copy", () => {
