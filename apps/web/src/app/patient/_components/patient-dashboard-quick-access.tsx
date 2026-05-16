@@ -1,7 +1,7 @@
 "use client";
 
 import type { ClipboardEvent, FormEvent } from "react";
-import { useMemo, useState } from "react";
+import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight, QrCode } from "lucide-react";
 
@@ -24,12 +24,12 @@ export function PatientDashboardQuickAccess({ copy }: { copy: Dictionary }) {
   const [error, setError] = useState<string | null>(null);
   const [scannerModalOpen, setScannerModalOpen] = useState(false);
 
-  const openScannerModal = useMemo(() => () => {
+  const openScannerModal = useCallback(() => {
     setError(null);
     setScannerModalOpen(true);
   }, []);
 
-  const closeScannerModal = useMemo(() => () => {
+  const closeScannerModal = useCallback(() => {
     setScannerModalOpen(false);
   }, []);
 
