@@ -389,6 +389,47 @@ export function AdminDoctorDetailSkeleton() {
   );
 }
 
+export function AdminDashboardSkeleton() {
+  return (
+    <AppShellSkeleton navItems={3}>
+      <div className="grid gap-5" data-loading-pattern="admin-dashboard">
+        <section className="grid gap-4 md:grid-cols-3">
+          <LoadingCard lines={1} />
+          <LoadingCard lines={1} />
+          <LoadingCard lines={1} />
+        </section>
+        <section className="grid gap-5 lg:grid-cols-[minmax(0,1.45fr)_minmax(280px,0.85fr)]">
+          <LoadingCard lines={5} />
+          <LoadingCard lines={5} />
+        </section>
+      </div>
+    </AppShellSkeleton>
+  );
+}
+
+export function AdminApprovalSkeleton() {
+  return (
+    <AppShellSkeleton navItems={3}>
+      <div className="grid gap-4" data-loading-pattern="admin-approval">
+        <LoadingCard lines={2} />
+        <LoadingTable rows={6} />
+      </div>
+    </AppShellSkeleton>
+  );
+}
+
+export function AdminAddAdminSkeleton() {
+  return (
+    <AppShellSkeleton navItems={3}>
+      <div className="grid min-h-[calc(100vh-12rem)] place-items-center" data-loading-pattern="admin-add-admin">
+        <Card className="w-full max-w-xl">
+          <LoadingForm fields={1} />
+        </Card>
+      </div>
+    </AppShellSkeleton>
+  );
+}
+
 export function HomeSkeleton() {
   return (
     <div className="min-h-screen bg-[var(--color-warm-canvas)]">

@@ -28,6 +28,12 @@ export type AdminRow = {
   full_name: string;
 };
 
+export type AdminInvitationRow = {
+  invitation_id: string;
+  email: string;
+  accepted_at: string | null;
+};
+
 export type RoleResolutionInput = {
   authUserId: string;
   email: string;
@@ -38,6 +44,7 @@ export type RoleResolutionInput = {
   patient: PatientRow | null;
   doctor: DoctorRow | null;
   admin: AdminRow | null;
+  adminInvitation?: AdminInvitationRow | null;
 };
 
 export type ResolvedRole =
@@ -77,7 +84,9 @@ export function resolveRoleFromRows(input: RoleResolutionInput): ResolvedRole | 
   const email = input.email.trim().toLowerCase();
   const adminEmailSet = new Set(input.adminAllowlist.map((item) => item.trim().toLowerCase()));
 
-  if (adminEmailSet.has(email)) {
+  const hasAdminInvitation = input.adminInvitation?.email.trim().toLowerCase() === email;
+
+  if (adminEmailSet.has(email) || hasAdminInvitation) {
     return {
       kind: "medical_admin",
       authUserId: input.authUserId,
@@ -123,7 +132,7 @@ export function resolveRoleFromRows(input: RoleResolutionInput): ResolvedRole | 
 }
 
 export function roleHomePath(role: ResolvedRole): string {
-  if (role.kind === "medical_admin") return "/admin/doctors";
+  if (role.kind === "medical_admin") return "/admin/dashboard";
   if (role.kind === "doctor") {
     return role.status === "approved" ? "/doctor" : "/doctor/status";
   }

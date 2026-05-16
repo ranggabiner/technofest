@@ -2,11 +2,12 @@ create extension if not exists pgtap with schema extensions;
 
 begin;
 
-select plan(14);
+select plan(16);
 
 select has_table('public', 'patients', 'patients table exists');
 select has_table('public', 'doctors', 'doctors table exists');
 select has_table('public', 'medical_admins', 'medical_admins table exists');
+select has_table('public', 'admin_invitations', 'admin_invitations table exists');
 select has_table('public', 'secure_files', 'secure_files table exists');
 select has_table('public', 'doctor_kyc_documents', 'doctor_kyc_documents table exists');
 select has_table('public', 'audit_logs', 'audit_logs table exists');
@@ -26,6 +27,12 @@ select is(
   (select relrowsecurity from pg_class where oid = 'public.audit_logs'::regclass),
   true,
   'audit logs RLS enabled'
+);
+
+select is(
+  (select relrowsecurity from pg_class where oid = 'public.admin_invitations'::regclass),
+  true,
+  'admin invitations RLS enabled'
 );
 
 select isnt_empty(

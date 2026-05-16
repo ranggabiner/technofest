@@ -87,6 +87,8 @@ export type ClaimedBlockchainProof = {
   expiresAt?: string | null;
   isRevoked?: boolean | null;
   blockchainTxHash?: string | null;
+  blockchainStatus?: "pending" | "confirmed" | "failed" | null;
+  claimedBy?: string | null;
 };
 
 export type ProofContractCall =

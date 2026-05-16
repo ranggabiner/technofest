@@ -11,7 +11,11 @@ export type Database = {
     Tables: {
       access_grants: {
         Row: {
+          blockchain_attempt_count: number
+          blockchain_claimed_at: string | null
+          blockchain_claimed_by: string | null
           blockchain_last_error: string | null
+          blockchain_next_retry_at: string | null
           blockchain_status: string
           blockchain_tx_hash: string | null
           can_download_attachments: boolean
@@ -30,7 +34,11 @@ export type Database = {
           revoked_at: string | null
         }
         Insert: {
+          blockchain_attempt_count?: number
+          blockchain_claimed_at?: string | null
+          blockchain_claimed_by?: string | null
           blockchain_last_error?: string | null
+          blockchain_next_retry_at?: string | null
           blockchain_status?: string
           blockchain_tx_hash?: string | null
           can_download_attachments?: boolean
@@ -49,7 +57,11 @@ export type Database = {
           revoked_at?: string | null
         }
         Update: {
+          blockchain_attempt_count?: number
+          blockchain_claimed_at?: string | null
+          blockchain_claimed_by?: string | null
           blockchain_last_error?: string | null
+          blockchain_next_retry_at?: string | null
           blockchain_status?: string
           blockchain_tx_hash?: string | null
           can_download_attachments?: boolean
@@ -288,7 +300,11 @@ export type Database = {
           actor_auth_user_id: string
           actor_role: string
           audit_event_hash: string
+          blockchain_attempt_count: number
+          blockchain_claimed_at: string | null
+          blockchain_claimed_by: string | null
           blockchain_last_error: string | null
+          blockchain_next_retry_at: string | null
           blockchain_status: string
           blockchain_tx_hash: string | null
           created_at: string
@@ -306,7 +322,11 @@ export type Database = {
           actor_auth_user_id: string
           actor_role: string
           audit_event_hash: string
+          blockchain_attempt_count?: number
+          blockchain_claimed_at?: string | null
+          blockchain_claimed_by?: string | null
           blockchain_last_error?: string | null
+          blockchain_next_retry_at?: string | null
           blockchain_status?: string
           blockchain_tx_hash?: string | null
           created_at?: string
@@ -324,7 +344,11 @@ export type Database = {
           actor_auth_user_id?: string
           actor_role?: string
           audit_event_hash?: string
+          blockchain_attempt_count?: number
+          blockchain_claimed_at?: string | null
+          blockchain_claimed_by?: string | null
           blockchain_last_error?: string | null
+          blockchain_next_retry_at?: string | null
           blockchain_status?: string
           blockchain_tx_hash?: string | null
           created_at?: string
@@ -490,6 +514,41 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_invitations: {
+        Row: {
+          accepted_at: string | null
+          created_at: string
+          email: string
+          invitation_id: string
+          invited_by: string
+          updated_at: string | null
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string
+          email: string
+          invitation_id?: string
+          invited_by: string
+          updated_at?: string | null
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string
+          email?: string
+          invitation_id?: string
+          invited_by?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_invitations_invited_by_fkey"
+            columns: ["invited_by"]
+            isOneToOne: false
+            referencedRelation: "medical_admins"
+            referencedColumns: ["admin_id"]
+          },
+        ]
+      }
       patients: {
         Row: {
           auth_user_id: string
@@ -542,7 +601,11 @@ export type Database = {
         Row: {
           amends_record_id: string | null
           attachment_file_id: string | null
+          blockchain_attempt_count: number
+          blockchain_claimed_at: string | null
+          blockchain_claimed_by: string | null
           blockchain_last_error: string | null
+          blockchain_next_retry_at: string | null
           blockchain_status: string
           blockchain_tx_hash: string | null
           created_at: string
@@ -564,7 +627,11 @@ export type Database = {
         Insert: {
           amends_record_id?: string | null
           attachment_file_id?: string | null
+          blockchain_attempt_count?: number
+          blockchain_claimed_at?: string | null
+          blockchain_claimed_by?: string | null
           blockchain_last_error?: string | null
+          blockchain_next_retry_at?: string | null
           blockchain_status?: string
           blockchain_tx_hash?: string | null
           created_at?: string
@@ -586,7 +653,11 @@ export type Database = {
         Update: {
           amends_record_id?: string | null
           attachment_file_id?: string | null
+          blockchain_attempt_count?: number
+          blockchain_claimed_at?: string | null
+          blockchain_claimed_by?: string | null
           blockchain_last_error?: string | null
+          blockchain_next_retry_at?: string | null
           blockchain_status?: string
           blockchain_tx_hash?: string | null
           created_at?: string
@@ -944,12 +1015,17 @@ export type Database = {
       claim_blockchain_proofs: {
         Args: {
           batch_limit?: number
+          lease_seconds?: number
           target_proof_type: string
+          worker_id?: string | null
         }
         Returns: {
           action: string | null
           actor_auth_user_id: string | null
+          attempt_count: number
+          blockchain_status: string
           blockchain_tx_hash: string | null
+          claimed_by: string | null
           doctor_id: string | null
           expires_at: string | null
           id: string
@@ -960,42 +1036,50 @@ export type Database = {
           target_id: string | null
         }[]
       }
-      replace_active_access_grant: {
+      approve_doctor_with_audit: {
         Args: {
-          allow_download_attachments: boolean
-          allow_scope1: boolean
-          allow_scope2_mental: boolean
-          allow_scope2_physical: boolean
-          target_consent_hash: string
+          target_audit_event_hash: string
+          target_audit_log_id: string
+          target_doctor_access_code: string
           target_doctor_id: string
-          target_expires_at: string
+          target_qr_code_token: string
+          target_verified_at: string
+        }
+        Returns: unknown
+      }
+      create_scope1_record_with_audit: {
+        Args: {
+          target_amends_record_id: string | null
+          target_attachment_file_id: string | null
+          target_audit_event_hash: string
+          target_audit_log_id: string
+          target_created_at: string
+          target_description_ciphertext: string | null
+          target_description_iv: string | null
+          target_description_tag: string | null
+          target_doctor_id: string
+          target_key_version: string
           target_patient_id: string
+          target_record_hash: string
+          target_record_id: string
+          target_record_type_ciphertext: string
+          target_record_type_iv: string
+          target_record_type_tag: string
+          target_title_ciphertext: string
+          target_title_iv: string
+          target_title_tag: string
         }
-        Returns: {
-          blockchain_last_error: string | null
-          blockchain_status: string
-          blockchain_tx_hash: string | null
-          can_download_attachments: boolean
-          can_view_scope1: boolean
-          can_view_scope2_mental: boolean
-          can_view_scope2_physical: boolean
-          consent_hash: string
-          created_at: string
-          doctor_id: string
-          expires_at: string
-          grant_id: string
-          granted_at: string
-          is_revoked: boolean
-          patient_id: string
-          replaced_by_grant_id: string | null
-          revoked_at: string | null
+        Returns: unknown
+      }
+      reject_doctor_with_audit: {
+        Args: {
+          target_audit_event_hash: string
+          target_audit_log_id: string
+          target_doctor_id: string
+          target_rejection_reason: string
+          target_verified_at: string
         }
-        SetofOptions: {
-          from: "*"
-          to: "access_grants"
-          isOneToOne: true
-          isSetofReturn: false
-        }
+        Returns: unknown
       }
       replace_active_access_grant_v2: {
         Args: {

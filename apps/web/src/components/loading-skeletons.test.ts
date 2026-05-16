@@ -102,6 +102,9 @@ describe("route loading skeletons", () => {
     "doctor/onboarding/step-1/loading.tsx",
     "doctor/onboarding/step-2/loading.tsx",
     "doctor/onboarding/step-3/loading.tsx",
+    "admin/dashboard/loading.tsx",
+    "admin/approval/loading.tsx",
+    "admin/add-admin/loading.tsx",
     "admin/doctors/loading.tsx",
     "admin/doctors/[doctorId]/loading.tsx",
   ];

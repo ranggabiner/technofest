@@ -47,7 +47,7 @@ describe("role resolution", () => {
 
     expect(role).toMatchObject({ kind: "medical_admin", adminId: "admin-ranggabiner" });
     expect(userRoleName(role!)).toBe("admin");
-    expect(roleEntryPath(role!)).toBe("/admin/doctors");
+    expect(roleEntryPath(role!)).toBe("/admin/dashboard");
   });
 
   it("routes existing patients without requiring role selection again", () => {
@@ -248,7 +248,7 @@ describe("role resolution", () => {
     });
 
     expect(publicRouteRedirectPath(null)).toBeNull();
-    expect(publicRouteRedirectPath(adminRole)).toBe("/admin/doctors");
+    expect(publicRouteRedirectPath(adminRole)).toBe("/admin/dashboard");
     expect(publicRouteRedirectPath(patientRole)).toBe("/patient");
     expect(publicRouteRedirectPath(approvedDoctorRole)).toBe("/doctor");
     expect(publicRouteRedirectPath(pendingDoctorRole)).toBe("/doctor/status");

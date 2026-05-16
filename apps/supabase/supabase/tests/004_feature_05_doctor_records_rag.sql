@@ -2,7 +2,7 @@ create extension if not exists pgtap with schema extensions;
 
 begin;
 
-select plan(11);
+select plan(13);
 
 insert into auth.users (id, aud, role, email)
 values
@@ -133,7 +133,7 @@ select is(
   'approved doctor can see authorized Scope 2 mental rows'
 );
 
-select lives_ok(
+select throws_ok(
   $$insert into public.scope_1_medical_records (
       record_id,
       patient_id,
@@ -156,9 +156,46 @@ select lives_ok(
       'cipher-title',
       'iv-title',
       'tag-title',
-      'record-proof-hash'
+      repeat('b', 64)
     )$$,
-  'approved doctor can insert Scope 1 row with active Scope 1 grant'
+  '42501',
+  null,
+  'direct Scope 1 insert is blocked; audited RPC is required'
+);
+
+select lives_ok(
+  $$select public.create_scope1_record_with_audit(
+      '90000000-0000-0000-0000-000000005001',
+      '10000000-0000-0000-0000-000000005001',
+      '20000000-0000-0000-0000-000000005001',
+      null,
+      'cipher-type',
+      'iv-type',
+      'tag-type',
+      'cipher-title',
+      'iv-title',
+      'tag-title',
+      null,
+      null,
+      null,
+      null,
+      repeat('b', 64),
+      'v1',
+      '2026-05-15T10:00:00+00'::timestamptz,
+      '91000000-0000-0000-0000-000000005001',
+      repeat('c', 64)
+    )$$,
+  'approved doctor creates Scope 1 row plus audit through atomic RPC'
+);
+
+select isnt_empty(
+  $$select 1
+    from public.audit_logs
+    where log_id = '91000000-0000-0000-0000-000000005001'
+      and action = 'scope1_record_created'
+      and target_id = '90000000-0000-0000-0000-000000005001'
+      and blockchain_status = 'pending'$$,
+  'Scope 1 RPC writes pending audit proof row'
 );
 
 select throws_ok(
