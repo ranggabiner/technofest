@@ -32,6 +32,7 @@ export type RoleResolutionInput = {
   authUserId: string;
   email: string;
   fullName: string;
+  avatarUrl?: string | null;
   adminAllowlist: string[];
   intent: AuthIntent;
   patient: PatientRow | null;
@@ -46,6 +47,7 @@ export type ResolvedRole =
       adminId: string | null;
       email: string;
       fullName: string;
+      avatarUrl: string | null;
     }
   | {
       kind: "doctor";
@@ -54,6 +56,7 @@ export type ResolvedRole =
       status: DoctorStatus;
       email: string;
       fullName: string;
+      avatarUrl: string | null;
       rejectionReason: string | null;
       onboardingStep: DoctorOnboardingStep;
       onboardingCompletedAt: string | null;
@@ -65,6 +68,7 @@ export type ResolvedRole =
       patientId: string | null;
       email: string;
       fullName: string;
+      avatarUrl: string | null;
       onboardingStep: PatientOnboardingStep;
       onboardingCompletedAt: string | null;
     };
@@ -80,6 +84,7 @@ export function resolveRoleFromRows(input: RoleResolutionInput): ResolvedRole | 
       adminId: input.admin?.admin_id ?? null,
       email,
       fullName: input.admin?.full_name ?? input.fullName,
+      avatarUrl: input.avatarUrl ?? null,
     };
   }
 
@@ -93,6 +98,7 @@ export function resolveRoleFromRows(input: RoleResolutionInput): ResolvedRole | 
       status,
       email,
       fullName: input.doctor.full_name,
+      avatarUrl: input.avatarUrl ?? null,
       rejectionReason: input.doctor.rejection_reason,
       onboardingStep: normalizeDoctorOnboardingStep(input.doctor.onboarding_step),
       onboardingCompletedAt: input.doctor.onboarding_completed_at ?? null,
@@ -107,6 +113,7 @@ export function resolveRoleFromRows(input: RoleResolutionInput): ResolvedRole | 
       patientId: input.patient.patient_id,
       email,
       fullName: input.patient.full_name,
+      avatarUrl: input.avatarUrl ?? null,
       onboardingStep: normalizePatientOnboardingStep(input.patient.onboarding_step),
       onboardingCompletedAt: input.patient.onboarding_completed_at ?? null,
     };

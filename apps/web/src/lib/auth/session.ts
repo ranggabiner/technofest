@@ -98,6 +98,7 @@ export async function resolveRoleForUser(
   const cookieStore = await cookies();
   const email = user.email?.toLowerCase();
   const fullName = displayNameFromUser(user);
+  const avatarUrl = avatarUrlFromUser(user);
 
   if (!email) {
     throw new Error("Google account did not return an email");
@@ -111,6 +112,7 @@ export async function resolveRoleForUser(
     authUserId: user.id,
     email,
     fullName,
+    avatarUrl,
     adminAllowlist,
     intent: null,
     ...rows,
@@ -137,6 +139,7 @@ export async function resolveRoleForUser(
       authUserId: user.id,
       email,
       fullName,
+      avatarUrl,
       adminAllowlist,
       intent: null,
       ...refreshed,
@@ -157,6 +160,7 @@ export async function completeRoleForUser(
   const env = requireEnv(["core"]);
   const email = user.email?.toLowerCase();
   const fullName = displayNameFromUser(user);
+  const avatarUrl = avatarUrlFromUser(user);
 
   if (!email) {
     throw new Error("Google account did not return an email");
@@ -196,6 +200,7 @@ export async function completeRoleForUser(
     authUserId: user.id,
     email,
     fullName,
+    avatarUrl,
     adminAllowlist: parseAdminEmailAllowlist(env.data.ADMIN_EMAIL_ALLOWLIST),
     intent,
     ...rows,
@@ -249,4 +254,10 @@ function displayNameFromUser(user: User) {
   const name = metadata.full_name ?? metadata.name;
   if (typeof name === "string" && name.trim()) return name.trim();
   return user.email?.split("@")[0] ?? "Pengguna MedProof";
+}
+
+function avatarUrlFromUser(user: User) {
+  const metadata = user.user_metadata as Record<string, unknown>;
+  const avatarUrl = metadata.avatar_url ?? metadata.picture;
+  return typeof avatarUrl === "string" && avatarUrl.trim() ? avatarUrl.trim() : null;
 }
