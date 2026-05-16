@@ -1,0 +1,1 @@
+export const PATIENT_DASHBOARD_ITEM_LIMIT = 3;

@@ -1,0 +1,177 @@
+"use client";
+
+import { useCallback, useEffect, useMemo } from "react";
+import { Loader2, QrCode, RefreshCw, X } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+import type { Dictionary } from "@/lib/i18n/dictionary";
+
+import { useDoctorQrScanner } from "./use-doctor-qr-scanner";
+
+export function DoctorQrScannerModal({
+  autoStart = true,
+  copy,
+  error,
+  isBusy = false,
+  onClose,
+  onScan,
+  open,
+}: {
+  autoStart?: boolean;
+  copy: Dictionary;
+  error?: string | null;
+  isBusy?: boolean;
+  onClose: () => void;
+  onScan: (rawValue: string) => void;
+  open: boolean;
+}) {
+  const scannerMessages = useMemo(
+    () => ({
+      scannerUnavailable: copy.patient.access.scannerUnavailable,
+      qrUnreadable: copy.patient.access.qrUnreadable,
+      cameraFailed: copy.patient.access.cameraFailed,
+      cameraPermissionDenied: copy.patient.access.cameraPermissionDenied,
+    }),
+    [copy],
+  );
+
+  const {
+    cameraSupported,
+    error: scannerError,
+    isScanning,
+    setError: setScannerError,
+    startCamera,
+    stopCamera,
+    videoRef,
+  } = useDoctorQrScanner({
+    messages: scannerMessages,
+    onScan,
+  });
+
+  const visibleError = error ?? scannerError;
+
+  const handleClose = useCallback(() => {
+    stopCamera();
+    onClose();
+  }, [onClose, stopCamera]);
+
+  const handleRetry = useCallback(() => {
+    setScannerError(null);
+    void startCamera();
+  }, [setScannerError, startCamera]);
+
+  useEffect(() => {
+    if (!open) {
+      stopCamera();
+      return;
+    }
+    if (!autoStart) {
+      stopCamera();
+      return;
+    }
+    setScannerError(null);
+    void startCamera();
+    return () => stopCamera();
+  }, [autoStart, open, setScannerError, startCamera, stopCamera]);
+
+  useEffect(() => {
+    if (!open) return;
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") handleClose();
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [handleClose, open]);
+
+  if (!open) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 grid place-items-center overflow-y-auto bg-[color-mix(in_srgb,var(--color-ash)_28%,transparent)] p-4 backdrop-blur-sm"
+      data-doctor-qr-scanner-modal
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="doctor-qr-scanner-title"
+      aria-describedby="doctor-qr-scanner-description"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) handleClose();
+      }}
+    >
+      <section className="my-6 grid w-full max-w-[560px] overflow-hidden rounded-[18px] border border-[var(--color-stone-surface)] bg-[var(--color-card)] shadow-[0_24px_80px_rgba(18,18,18,0.18),inset_0_0_0_1px_var(--color-stone-surface)]">
+        <header className="flex items-start justify-between gap-4 px-5 pb-4 pt-5 sm:px-6">
+          <div className="min-w-0">
+            <h2
+              id="doctor-qr-scanner-title"
+              className="text-[24px] font-semibold leading-tight text-[var(--color-midnight)] sm:text-[28px]"
+            >
+              {copy.patient.access.scannerModalTitle}
+            </h2>
+            <p
+              id="doctor-qr-scanner-description"
+              className="mt-2 text-sm leading-6 text-[var(--color-ash)]"
+            >
+              {copy.patient.access.scannerModalDescription}
+            </p>
+          </div>
+          <button
+            type="button"
+            className="grid size-10 shrink-0 cursor-pointer place-items-center rounded-full text-[var(--color-ash)] transition hover:bg-[var(--color-stone-surface)] hover:text-[var(--color-midnight)]"
+            aria-label={copy.patient.access.scannerModalClose}
+            onClick={handleClose}
+          >
+            <X size={18} aria-hidden="true" />
+          </button>
+        </header>
+
+        <div className="grid gap-4 px-5 pb-5 sm:px-6">
+          <div className="relative overflow-hidden rounded-[14px] border border-[var(--color-fog)] bg-black">
+            <video
+              ref={videoRef}
+              muted
+              playsInline
+              className={isScanning ? "aspect-video w-full bg-black object-cover" : "hidden"}
+            />
+            {!isScanning ? (
+              <div className="grid aspect-video place-items-center bg-[var(--color-midnight)] p-6 text-center text-[var(--color-inverted)]">
+                <div className="grid justify-items-center gap-3">
+                  <span className="grid size-14 place-items-center rounded-full bg-white/10">
+                    {isBusy ? (
+                      <Loader2 size={26} aria-hidden="true" className="animate-spin" />
+                    ) : (
+                      <QrCode size={28} aria-hidden="true" />
+                    )}
+                  </span>
+                  <p className="text-sm font-semibold">
+                    {isBusy ? copy.patient.access.scannerModalVerifying : copy.patient.access.qrScanHint}
+                  </p>
+                </div>
+              </div>
+            ) : null}
+          </div>
+
+          {visibleError ? (
+            <p className="rounded-[10px] border border-[var(--color-error-red)] bg-[var(--color-error-surface)] px-3 py-2 text-sm text-[var(--color-error-red)]">
+              {visibleError}
+            </p>
+          ) : null}
+
+          <footer className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <Button type="button" variant="ghost" className="rounded-[10px]" onClick={handleClose}>
+              {copy.patient.access.scannerModalClose}
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              className="rounded-[10px]"
+              onClick={handleRetry}
+              disabled={isBusy || !cameraSupported}
+            >
+              <RefreshCw size={16} aria-hidden="true" />
+              {copy.patient.access.scannerModalRetry}
+            </Button>
+          </footer>
+        </div>
+      </section>
+    </div>
+  );
+}
