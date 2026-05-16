@@ -116,7 +116,7 @@ export async function rejectDoctorAction(formData: FormData) {
     target_audit_event_hash: auditEventHash,
   });
 
-  if (update.error) throw update.error;
+  if (update.error) throw new Error(update.error.message);
 
   const emailResult = await sendDoctorStatusEmail({
     to: doctor.email,
@@ -150,7 +150,7 @@ async function loadDoctor(doctorId: string) {
     .eq("doctor_id", doctorId)
     .single();
 
-  if (error) throw error;
+  if (error) throw new Error(error.message);
   return data;
 }
 

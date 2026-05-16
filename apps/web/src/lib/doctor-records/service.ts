@@ -419,7 +419,7 @@ export async function createScope1Record(
     target_audit_event_hash: auditEventHash,
   });
 
-  if (error) throw error;
+  if (error) throw new Error(error.message);
 
   return recordId;
 }

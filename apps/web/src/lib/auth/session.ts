@@ -262,13 +262,15 @@ async function loadRoleRows(authUserId: string, email: string): Promise<RoleRows
   if (patient.error) throw patient.error;
   if (doctor.error) throw doctor.error;
   if (medicalAdmin.error) throw medicalAdmin.error;
-  if (adminInvitation.error) throw adminInvitation.error;
+  if (adminInvitation.error && adminInvitation.error.code !== "PGRST205") {
+    throw new Error(adminInvitation.error.message);
+  }
 
   return {
     patient: patient.data as PatientRow | null,
     doctor: doctor.data as DoctorRow | null,
     admin: medicalAdmin.data as AdminRow | null,
-    adminInvitation: adminInvitation.data as AdminInvitationRow | null,
+    adminInvitation: adminInvitation.error ? null : (adminInvitation.data as AdminInvitationRow | null),
   };
 }
 
