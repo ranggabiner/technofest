@@ -84,16 +84,21 @@ jobs:
         run: supabase --workdir apps/supabase link --project-ref "$SUPABASE_PROJECT_REF"
 
       - name: Preview migration changes
-        run: supabase --workdir apps/supabase db push --dry-run
+        run: supabase --workdir apps/supabase db push --linked --dry-run
 
       - name: Apply migrations
-        run: supabase --workdir apps/supabase db push
+        run: supabase --workdir apps/supabase db push --linked
 
       - name: List linked migrations
         run: supabase --workdir apps/supabase migration list --linked
 
       - name: Run linked advisors
         run: supabase --workdir apps/supabase db advisors --linked --type all --fail-on warn
+
+      - name: Refresh PostgREST schema cache
+        run: |
+          supabase --workdir apps/supabase db query --linked "notify pgrst, 'reload schema'"
+          supabase --workdir apps/supabase db query --linked "select pg_notification_queue_usage()"
 
       - name: Run remote privacy validation
         working-directory: apps/web
@@ -159,16 +164,21 @@ jobs:
         run: supabase --workdir apps/supabase link --project-ref "$SUPABASE_PROJECT_REF"
 
       - name: Preview migration changes
-        run: supabase --workdir apps/supabase db push --dry-run
+        run: supabase --workdir apps/supabase db push --linked --dry-run
 
       - name: Apply migrations
-        run: supabase --workdir apps/supabase db push
+        run: supabase --workdir apps/supabase db push --linked
 
       - name: List linked migrations
         run: supabase --workdir apps/supabase migration list --linked
 
       - name: Run linked advisors
         run: supabase --workdir apps/supabase db advisors --linked --type all --fail-on warn
+
+      - name: Refresh PostgREST schema cache
+        run: |
+          supabase --workdir apps/supabase db query --linked "notify pgrst, 'reload schema'"
+          supabase --workdir apps/supabase db query --linked "select pg_notification_queue_usage()"
 
       - name: Run remote privacy validation
         working-directory: apps/web

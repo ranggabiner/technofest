@@ -48,6 +48,8 @@ RELAYER_PRIVATE_KEY
 
 Use staging values in the `staging` environment and production values in the `production` environment. Do not reuse staging Supabase credentials for production or production credentials for staging.
 
+The Supabase deploy workflow runs remote privacy validation after migrations are applied. `NEXT_PUBLIC_SUPABASE_URL` must match `SUPABASE_PROJECT_REF` for that GitHub Environment, and `SUPABASE_SERVICE_ROLE_KEY` must come from the same Supabase project. The workflow refreshes the PostgREST schema cache before `pnpm validate:privacy` so validation checks the newly migrated schema.
+
 ## Required Vercel Setup
 
 Connect the Git repository to Vercel and set:
