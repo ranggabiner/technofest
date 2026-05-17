@@ -384,7 +384,7 @@ export function AiJournalClient({
     <div className="grid h-full min-h-0 grid-rows-[auto_minmax(0,1fr)] overflow-hidden bg-[var(--color-warm-canvas)] lg:grid-cols-[280px_minmax(0,1fr)] lg:grid-rows-1">
       <aside
         data-chat-sidebar="actions"
-        className="flex min-h-0 shrink-0 flex-col gap-6 overflow-hidden max-h-[min(420px,48vh)] border-b border-[var(--color-stone-surface)] bg-[color-mix(in_srgb,var(--color-stone-surface)_55%,var(--color-warm-canvas))] p-4 lg:h-full lg:max-h-none lg:border-b-0 lg:border-r lg:p-6"
+        className="grid min-h-0 max-h-[min(220px,34dvh)] shrink-0 grid-rows-[auto_auto_minmax(0,1fr)] gap-3 overflow-hidden border-b border-[var(--color-stone-surface)] bg-[color-mix(in_srgb,var(--color-stone-surface)_55%,var(--color-warm-canvas))] p-3 sm:p-4 lg:flex lg:h-full lg:max-h-none lg:flex-col lg:gap-6 lg:border-b-0 lg:border-r lg:p-6"
       >
         <div data-chat-header="navigation-group" className="flex items-center gap-3">
           <BackNavigationMenu copy={copy} navigationCopy={navigationCopy} />
@@ -393,7 +393,7 @@ export function AiJournalClient({
           </div>
         </div>
 
-        <div className="grid gap-1">
+        <div className="grid grid-cols-2 gap-2 lg:grid-cols-1 lg:gap-1">
           <ActionRailButton
             icon={<Plus size={18} />}
             label={copy.newChat}
@@ -409,17 +409,17 @@ export function AiJournalClient({
           />
         </div>
 
-        <div className="flex min-h-0 flex-1 flex-col gap-3">
+        <div className="flex min-h-0 flex-col gap-2 overflow-hidden lg:flex-1 lg:gap-3">
           <RailHeading>{copy.chatHistoryLabel}</RailHeading>
-          <div data-chat-history="items" className="min-h-0 flex-1 overflow-y-auto custom-scrollbar pr-1">
+          <div data-chat-history="items" className="min-h-0 overflow-x-auto overflow-y-hidden custom-scrollbar pb-1 lg:flex-1 lg:overflow-x-hidden lg:overflow-y-auto lg:pb-0 lg:pr-1">
             {isHistoryLoading ? (
               <HistorySkeleton />
             ) : history.length === 0 ? (
-              <p className="rounded-xl bg-[color-mix(in_srgb,var(--color-card)_70%,transparent)] px-3 py-3 text-xs leading-5 text-[var(--color-ash)]">
+              <p className="whitespace-nowrap rounded-xl bg-[color-mix(in_srgb,var(--color-card)_70%,transparent)] px-3 py-3 text-xs leading-5 text-[var(--color-ash)] lg:whitespace-normal">
                 {sidebarHistoryEmptyMessage}
               </p>
             ) : (
-              <div className="grid gap-1">
+              <div className="flex min-w-0 gap-2 lg:grid lg:gap-1">
                 {history.map((item) => (
                   <button
                     key={item.id}
@@ -427,7 +427,7 @@ export function AiJournalClient({
                     aria-current={item.id === sessionId ? "true" : undefined}
                     onClick={() => void loadSelectedSession(item.id)}
                     className={cn(
-                      "grid min-h-12 cursor-pointer gap-0.5 rounded-xl px-3 py-2 text-left text-xs transition hover:bg-[var(--color-card)] hover:text-[var(--color-midnight)] disabled:cursor-wait disabled:opacity-70",
+                      "grid min-h-12 w-[min(220px,70vw)] shrink-0 cursor-pointer gap-0.5 rounded-xl px-3 py-2 text-left text-xs transition hover:bg-[var(--color-card)] hover:text-[var(--color-midnight)] disabled:cursor-wait disabled:opacity-70 lg:w-auto lg:shrink",
                       item.id === sessionId
                         ? "bg-[var(--color-card)] text-[var(--color-midnight)] shadow-[var(--shadow-subtle)]"
                         : "text-[var(--color-graphite)]",
@@ -451,7 +451,7 @@ export function AiJournalClient({
         className="relative flex h-full min-h-0 flex-col overflow-hidden bg-[var(--color-warm-canvas)]"
       >
         {showFinishAction ? (
-          <div data-chat-actions="main-session" className="shrink-0 px-5 pt-5 md:px-10 md:pt-8">
+          <div data-chat-actions="main-session" className="shrink-0 px-3 pt-3 sm:px-5 md:px-10 md:pt-8">
             <div className="flex w-full justify-start">
               <button
                 type="button"
@@ -473,7 +473,7 @@ export function AiJournalClient({
 
         <div
           className={cn(
-            "relative min-h-0 flex-1 overflow-y-auto px-5 py-8 md:px-10",
+            "relative min-h-0 flex-1 overflow-y-auto px-3 py-5 sm:px-5 sm:py-7 md:px-10 md:py-8",
             hasMessages ? "custom-scrollbar" : "grid place-items-center",
           )}
         >
@@ -484,15 +484,15 @@ export function AiJournalClient({
               <AssistantBubbleSkeleton />
             </div>
           ) : !hasMessages ? (
-            <div className="mx-auto grid w-full max-w-[760px] gap-12 text-center md:gap-14">
+            <div className="mx-auto grid w-full max-w-[760px] gap-6 text-center sm:gap-8 md:gap-14">
               <div className="grid gap-3">
-                <h2 className="font-serif text-[32px] font-medium leading-[1.15] text-[var(--color-charcoal-primary)] md:text-[44px]">
+                <h2 className="font-serif text-[28px] font-medium leading-[1.15] text-[var(--color-charcoal-primary)] sm:text-[32px] md:text-[44px]">
                   {copy.heroPrompt}
                 </h2>
               </div>
               <div
                 data-chat-empty-guidance="cards"
-                className="grid gap-5 md:grid-cols-2 md:gap-6"
+                className="grid gap-3 sm:gap-5 md:grid-cols-2 md:gap-6"
               >
                 <EmptyGuidanceCard
                   kind="emotional"
@@ -509,7 +509,7 @@ export function AiJournalClient({
               </div>
             </div>
           ) : (
-            <div className="mx-auto grid w-full max-w-[760px] gap-3 pb-3">
+            <div className="mx-auto grid w-full max-w-[760px] gap-3 pb-2 sm:pb-3">
               {messages.map((message) => {
                 const isPendingAssistant = message.role === "assistant" && !message.content && isStreaming;
 
@@ -521,7 +521,7 @@ export function AiJournalClient({
                   <div
                     key={message.id}
                     className={cn(
-                      "max-w-[82%] px-4 py-3 text-sm leading-6",
+                      "max-w-[92%] px-3.5 py-3 text-sm leading-6 sm:max-w-[82%] sm:px-4",
                       message.role === "user" && "whitespace-pre-wrap break-words",
                       message.role === "user"
                         ? "ml-auto rounded-[22px] rounded-br-lg bg-[var(--color-midnight)] text-[var(--color-inverted)]"
@@ -550,7 +550,7 @@ export function AiJournalClient({
         </div>
 
         {error ? (
-          <p className="mx-5 mb-3 rounded-xl border border-[var(--color-error-red)] bg-[var(--color-error-surface)] px-4 py-3 text-sm text-[var(--color-error-red)] md:mx-10">
+          <p className="mx-3 mb-3 rounded-xl border border-[var(--color-error-red)] bg-[var(--color-error-surface)] px-4 py-3 text-sm text-[var(--color-error-red)] sm:mx-5 md:mx-10">
             {error}
           </p>
         ) : null}
@@ -560,7 +560,7 @@ export function AiJournalClient({
         ) : (
           <form
             data-chat-composer="bottom-input"
-            className="shrink-0 bg-[var(--color-warm-canvas)] px-2.5 pb-5 md:px-5 md:pb-8"
+            className="shrink-0 bg-[var(--color-warm-canvas)] px-3 pb-[calc(env(safe-area-inset-bottom)+1rem)] sm:px-4 md:px-5 md:pb-8"
             onSubmit={(event) => {
               event.preventDefault();
               if (!canSend) return;
@@ -571,7 +571,7 @@ export function AiJournalClient({
               {copy.messageLabel}
             </label>
             <div className="mx-auto w-full max-w-[800px]">
-              <div className="flex items-center gap-1 rounded-full border border-[var(--color-stone-surface)] bg-[var(--color-card)] p-1.5 shadow-[var(--shadow-subtle)] transition focus-within:border-[var(--color-midnight)] focus-within:shadow-[0_0_0_4px_color-mix(in_srgb,var(--color-midnight)_5%,transparent)]">
+              <div className="flex items-center gap-1 rounded-[28px] border border-[var(--color-stone-surface)] bg-[var(--color-card)] p-1.5 shadow-[var(--shadow-subtle)] transition focus-within:border-[var(--color-midnight)] focus-within:shadow-[0_0_0_4px_color-mix(in_srgb,var(--color-midnight)_5%,transparent)] sm:rounded-full">
                 <input
                   ref={inputRef}
                   id="ai-message"
@@ -584,7 +584,7 @@ export function AiJournalClient({
                     }
                   }}
                   maxLength={2000}
-                  className="min-h-11 min-w-0 flex-1 bg-transparent px-3 text-sm text-[var(--color-charcoal-primary)] outline-none placeholder:text-[var(--color-ash)] disabled:text-[var(--color-ash)]"
+                  className="min-h-11 min-w-0 flex-1 bg-transparent px-3 text-base sm:text-sm text-[var(--color-charcoal-primary)] outline-none placeholder:text-[var(--color-ash)] disabled:text-[var(--color-ash)]"
                   placeholder={copy.messagePlaceholder}
                 />
                 <button
@@ -597,7 +597,7 @@ export function AiJournalClient({
                   {isStreaming ? <Ban size={20} aria-hidden="true" /> : <ArrowUp size={20} aria-hidden="true" />}
                 </button>
               </div>
-              <p className="mx-auto mt-4 max-w-[640px] text-center text-[11px] leading-5 text-[var(--color-ash)]">
+              <p className="mx-auto mt-3 max-w-[640px] px-1 text-center text-[11px] leading-5 text-[var(--color-ash)] sm:mt-4 sm:px-0">
                 {copy.bottomDisclosure}
               </p>
             </div>
@@ -617,7 +617,7 @@ export function AiJournalClient({
       {isSearchOpen ? (
         <div
           data-chat-search-overlay="global"
-          className="fixed inset-0 z-50 grid place-items-center bg-black/45 px-4 py-8 backdrop-blur-[2px]"
+          className="fixed inset-0 z-50 grid place-items-center bg-black/45 px-3 py-5 backdrop-blur-[2px] sm:px-4 sm:py-8"
           onClick={closeSearchOverlay}
         >
           <div
@@ -625,7 +625,7 @@ export function AiJournalClient({
             aria-modal="true"
             aria-labelledby="chat-search-overlay-title"
             data-chat-search-panel="global"
-            className="w-full max-w-2xl overflow-hidden rounded-xl border border-[var(--color-stone-surface)] bg-[var(--color-card)] shadow-[var(--shadow-elevated)]"
+            className="max-h-[calc(100dvh-2.5rem)] w-full max-w-2xl overflow-hidden rounded-xl border border-[var(--color-stone-surface)] bg-[var(--color-card)] shadow-[var(--shadow-elevated)]"
             onClick={(event) => event.stopPropagation()}
           >
             <div className="flex min-h-14 items-center gap-3 border-b border-[var(--color-stone-surface)] px-4">
@@ -698,16 +698,16 @@ function EmptyGuidanceCard({
   return (
     <article
       data-chat-empty-guidance-card={kind}
-      className="grid min-h-[190px] content-center justify-items-center gap-4 rounded-xl border border-[var(--color-stone-surface)] bg-[var(--color-card)] px-7 py-8 shadow-[var(--shadow-subtle)]"
+      className="grid min-h-[128px] content-center justify-items-center gap-3 rounded-xl border border-[var(--color-stone-surface)] bg-[var(--color-card)] px-4 py-5 shadow-[var(--shadow-subtle)] sm:min-h-[160px] sm:px-6 sm:py-6 md:min-h-[190px] md:gap-4 md:px-7 md:py-8"
     >
-      <div className="grid size-16 place-items-center rounded-full bg-[color-mix(in_srgb,var(--color-stone-surface)_78%,var(--color-card))] text-[var(--color-midnight)]">
+      <div className="grid size-12 place-items-center rounded-full bg-[color-mix(in_srgb,var(--color-stone-surface)_78%,var(--color-card))] text-[var(--color-midnight)] sm:size-14 md:size-16">
         {icon}
       </div>
       <div className="grid gap-3">
-        <h3 className="text-xl font-bold leading-tight text-[var(--color-midnight)]">
+        <h3 className="text-base font-bold leading-tight text-[var(--color-midnight)] sm:text-lg md:text-xl">
           {title}
         </h3>
-        <p className="mx-auto max-w-[260px] text-sm leading-6 text-[var(--color-graphite)]">
+        <p className="mx-auto max-w-[260px] text-xs leading-5 text-[var(--color-graphite)] sm:text-sm sm:leading-6">
           {description}
         </p>
       </div>
@@ -863,10 +863,10 @@ function ReadonlyClosedSessionComposer({
   return (
     <div
       data-chat-composer="readonly-bottom"
-      className="shrink-0 bg-[var(--color-warm-canvas)] px-2.5 pb-5 md:px-5 md:pb-8"
+      className="shrink-0 bg-[var(--color-warm-canvas)] px-3 pb-[calc(env(safe-area-inset-bottom)+1rem)] sm:px-4 md:px-5 md:pb-8"
     >
       <div className="mx-auto w-full max-w-[800px]">
-        <div className="flex cursor-not-allowed items-center gap-3 rounded-[28px] border border-[var(--color-stone-surface)] bg-[color-mix(in_srgb,var(--color-card)_78%,var(--color-stone-surface))] p-3 text-[var(--color-ash)] shadow-[var(--shadow-subtle)]">
+        <div className="flex cursor-not-allowed items-start gap-3 rounded-[28px] border border-[var(--color-stone-surface)] bg-[color-mix(in_srgb,var(--color-card)_78%,var(--color-stone-surface))] p-3 text-[var(--color-ash)] shadow-[var(--shadow-subtle)] sm:items-center">
           <span className="grid size-10 shrink-0 place-items-center rounded-full bg-[var(--color-stone-surface)] text-[var(--color-graphite)]">
             <Square size={18} aria-hidden="true" />
           </span>
@@ -879,7 +879,7 @@ function ReadonlyClosedSessionComposer({
             </span>
           </span>
         </div>
-        <p className="mx-auto mt-4 max-w-[640px] text-center text-[11px] leading-5 text-[var(--color-ash)]">
+        <p className="mx-auto mt-3 max-w-[640px] px-1 text-center text-[11px] leading-5 text-[var(--color-ash)] sm:mt-4 sm:px-0">
           {copy.bottomDisclosure}
         </p>
       </div>
@@ -1000,7 +1000,7 @@ function BackNavigationMenuItem({
 
 function RailHeading({ children }: { children: React.ReactNode }) {
   return (
-    <h3 className="px-2 text-[11px] font-semibold uppercase leading-5 tracking-[0.12em] text-[var(--color-ash)]">
+    <h3 className="hidden px-2 text-[11px] font-semibold uppercase leading-5 tracking-[0.12em] text-[var(--color-ash)] lg:block">
       {children}
     </h3>
   );
@@ -1025,10 +1025,10 @@ function ActionRailButton({
       title={title}
       disabled={disabled}
       onClick={onClick}
-      className="flex min-h-10 w-full cursor-pointer items-center gap-3 rounded-xl px-3 text-sm font-medium text-[var(--color-graphite)] transition hover:bg-[var(--color-card)] hover:text-[var(--color-midnight)] disabled:cursor-not-allowed disabled:opacity-50"
+      className="flex min-h-10 w-full min-w-0 cursor-pointer items-center justify-center gap-2 rounded-xl px-2 text-sm font-medium text-[var(--color-graphite)] transition hover:bg-[var(--color-card)] hover:text-[var(--color-midnight)] disabled:cursor-not-allowed disabled:opacity-50 lg:justify-start lg:gap-3 lg:px-3"
     >
       {icon}
-      <span>{label}</span>
+      <span className="truncate">{label}</span>
     </button>
   );
 }

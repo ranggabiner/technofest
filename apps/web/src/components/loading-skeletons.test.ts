@@ -64,11 +64,13 @@ describe("loading skeleton components", () => {
     expect(html).toContain('data-loading-pattern="patient-chat"');
     expect(html).toContain('data-chat-header="navigation-group"');
     expect(html).toContain("h-screen");
+    expect(html).toContain("h-[100dvh]");
     expect(html).toContain("overflow-hidden");
     expect(html).toContain("h-full");
     expect(html).toContain("min-h-0");
     expect(html).not.toContain("h-4 w-full max-w-md");
-    expect(html.match(/h-\[190px\] rounded-xl/g)).toHaveLength(2);
+    expect(html.match(/h-\[128px\] rounded-xl/g)).toHaveLength(2);
+    expect(html).toContain("md:h-[190px]");
     expect(html).not.toContain('class="flex items-center justify-between"');
   });
 
