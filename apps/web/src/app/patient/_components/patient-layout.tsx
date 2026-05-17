@@ -130,7 +130,7 @@ function PatientProfileCard({
           </p>
           <div className={cn("mt-4 grid gap-2", isMobile ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1")}>
             <Link
-              href="/patient/onboarding/step-1"
+              href="/patient/profile"
               className="inline-flex min-h-9 w-full cursor-pointer items-center justify-center rounded-full border border-[var(--color-stone-surface)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.08em] text-[var(--color-midnight)] transition hover:bg-[var(--color-stone-surface)] hover:text-[var(--color-teal-deep)]"
             >
               {copy.patient.dashboard.editProfile}

@@ -2,7 +2,12 @@ import { describe, expect, it } from "vitest";
 
 import { hmacSha256Hex } from "@/lib/crypto/hashing";
 
-import { buildProofContractCall, medProofProofRegistryAbi } from "./registry";
+import {
+  buildProofContractCall,
+  buildProofContractWrite,
+  medProofProofRegistryAbi,
+  proofContractGasLimit,
+} from "./registry";
 import { actionHash, toBytes32, ZERO_BYTES32 } from "./proofs";
 
 describe("MedProof registry relayer call mapping", () => {
@@ -74,5 +79,21 @@ describe("MedProof registry relayer call mapping", () => {
       ZERO_BYTES32,
       actionHash("doctor_rag_requested"),
     ]);
+  });
+
+  it("adds an explicit gas limit for Amoy relayer writes", () => {
+    const write = buildProofContractWrite(
+      {
+        proofType: "scope1_record",
+        id: "90000000-0000-0000-0000-000000000001",
+        proofHash: "a".repeat(64),
+        patientId: "10000000-0000-0000-0000-000000000001",
+        doctorId: "20000000-0000-0000-0000-000000000001",
+      },
+      pepper,
+    );
+
+    expect(write.gas).toBe(proofContractGasLimit);
+    expect(write.gas).toBeGreaterThan(BigInt(36_593));
   });
 });

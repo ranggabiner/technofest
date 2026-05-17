@@ -1,5 +1,7 @@
 import "server-only";
 
+import { randomUUID } from "node:crypto";
+
 import {
   createPublicClient,
   createWalletClient,
@@ -23,7 +25,7 @@ import type { Database } from "@/lib/supabase/database.types";
 
 import { sanitizeBlockchainError, toBytes32, type ProofType, type VerifyStatus } from "./proofs";
 import {
-  buildProofContractCall,
+  buildProofContractWrite,
   medProofProofRegistryAbi,
   type ClaimedBlockchainProof,
 } from "./registry";
@@ -31,6 +33,7 @@ import { classifyProofVerification } from "./verify";
 
 const proofTypes: ProofType[] = ["scope1_record", "access_grant", "audit_log"];
 const retryTimeoutMs = 15_000;
+const retryDelayMs = 60_000;
 
 type RetryResult = {
   claimed: number;
@@ -46,6 +49,9 @@ type ProofStatusPatch = {
   blockchain_status?: "pending" | "confirmed" | "failed";
   blockchain_tx_hash?: string | null;
   blockchain_last_error?: string | null;
+  blockchain_claimed_at?: string | null;
+  blockchain_claimed_by?: string | null;
+  blockchain_next_retry_at?: string | null;
 };
 
 type Scope1RecordProofRow = Pick<
@@ -116,6 +122,7 @@ export async function retryPendingProofs(limit = 10): Promise<RetryResult> {
   const env = requireEnv(["core", "blockchain"]);
   const admin = createAdminClient();
   const clients = createBlockchainClients(env.data);
+  const workerId = `web-${randomUUID()}`;
   const result: RetryResult = {
     claimed: 0,
     submitted: 0,
@@ -127,7 +134,7 @@ export async function retryPendingProofs(limit = 10): Promise<RetryResult> {
   let remaining = safeLimit;
   for (const proofType of proofTypes) {
     if (remaining <= 0) break;
-    const proofs = await claimProofs(proofType, remaining);
+    const proofs = await claimProofs(proofType, remaining, workerId);
     result.claimed += proofs.length;
     remaining -= proofs.length;
 
@@ -184,11 +191,17 @@ export async function verifyProofForRole(
   };
 }
 
-async function claimProofs(proofType: ProofType, limit: number): Promise<ClaimedBlockchainProof[]> {
+async function claimProofs(
+  proofType: ProofType,
+  limit: number,
+  workerId: string,
+): Promise<ClaimedBlockchainProof[]> {
   const admin = createAdminClient();
   const { data, error } = await admin.rpc("claim_blockchain_proofs", {
     target_proof_type: proofType,
     batch_limit: limit,
+    worker_id: workerId,
+    lease_seconds: 300,
   });
 
   if (error) throw error;
@@ -204,6 +217,8 @@ async function claimProofs(proofType: ProofType, limit: number): Promise<Claimed
     expiresAt: row.expires_at,
     isRevoked: row.is_revoked,
     blockchainTxHash: row.blockchain_tx_hash,
+    blockchainStatus: row.blockchain_status as "pending" | "confirmed" | "failed",
+    claimedBy: row.claimed_by,
   }));
 }
 
@@ -214,7 +229,7 @@ async function processClaimedProof(
   clients: BlockchainClients,
 ): Promise<"confirmed" | "pending" | "failed"> {
   try {
-    if (proof.blockchainTxHash) {
+    if (proof.blockchainTxHash && proof.blockchainStatus !== "failed") {
       const existing = await readReceiptProofHash({
         clients,
         proofType: proof.proofType,
@@ -225,12 +240,14 @@ async function processClaimedProof(
           await updateProofStatus(admin, proof, {
             blockchain_status: "failed",
             blockchain_last_error: "proof_hash_mismatch",
+            ...releaseProofLease({ retry: true }),
           });
           return "failed";
         }
         await updateProofStatus(admin, proof, {
           blockchain_status: "confirmed",
           blockchain_last_error: null,
+          ...releaseProofLease(),
         });
         return "confirmed";
       }
@@ -238,18 +255,25 @@ async function processClaimedProof(
         await updateProofStatus(admin, proof, {
           blockchain_status: "failed",
           blockchain_last_error: "transaction_reverted",
+          ...releaseProofLease({ retry: true }),
         });
         return "failed";
       }
+      await updateProofStatus(admin, proof, {
+        blockchain_status: "pending",
+        blockchain_last_error: null,
+        ...releaseProofLease({ retry: true }),
+      });
       return "pending";
     }
 
-    const call = buildProofContractCall(proof, hashPepper);
+    const call = buildProofContractWrite(proof, hashPepper);
     const hash = await clients.walletClient.writeContract({
       address: clients.contractAddress,
       abi: medProofProofRegistryAbi,
       functionName: call.functionName,
       args: call.args,
+      gas: call.gas,
     } as never);
     await updateProofStatus(admin, proof, {
       blockchain_status: "pending",
@@ -265,11 +289,20 @@ async function processClaimedProof(
       })
       .catch(() => null);
 
-    if (!receipt) return "pending";
+    if (!receipt) {
+      await updateProofStatus(admin, proof, {
+        blockchain_status: "pending",
+        blockchain_tx_hash: hash,
+        blockchain_last_error: null,
+        ...releaseProofLease({ retry: true }),
+      });
+      return "pending";
+    }
     if (receipt.status !== "success") {
       await updateProofStatus(admin, proof, {
         blockchain_status: "failed",
         blockchain_last_error: "transaction_reverted",
+        ...releaseProofLease({ retry: true }),
       });
       return "failed";
     }
@@ -280,6 +313,7 @@ async function processClaimedProof(
         blockchain_status: "failed",
         blockchain_tx_hash: hash,
         blockchain_last_error: "proof_hash_mismatch",
+        ...releaseProofLease({ retry: true }),
       });
       return "failed";
     }
@@ -288,6 +322,7 @@ async function processClaimedProof(
       blockchain_status: "confirmed",
       blockchain_tx_hash: hash,
       blockchain_last_error: null,
+      ...releaseProofLease(),
     });
     return "confirmed";
   } catch (error) {
@@ -299,6 +334,7 @@ async function processClaimedProof(
           blockchain_status: "confirmed",
           blockchain_tx_hash: duplicate,
           blockchain_last_error: null,
+          ...releaseProofLease(),
         });
         return "confirmed";
       }
@@ -307,6 +343,7 @@ async function processClaimedProof(
     await updateProofStatus(admin, proof, {
       blockchain_status: "failed",
       blockchain_last_error: summary,
+      ...releaseProofLease({ retry: true }),
     });
     return "failed";
   }
@@ -326,6 +363,16 @@ async function updateProofStatus(
     .update(patch)
     .eq(config.idColumn, proof.id);
   if (error) throw error;
+}
+
+function releaseProofLease(options: { retry?: boolean } = {}): ProofStatusPatch {
+  return {
+    blockchain_claimed_at: null,
+    blockchain_claimed_by: null,
+    blockchain_next_retry_at: options.retry
+      ? new Date(Date.now() + retryDelayMs).toISOString()
+      : null,
+  };
 }
 
 async function loadRecomputedProofForRole(

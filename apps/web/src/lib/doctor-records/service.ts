@@ -4,15 +4,17 @@ import { randomUUID } from "node:crypto";
 
 import { generateText } from "ai";
 
-import { writeAuditLog } from "@/lib/audit/audit";
+import { buildAuditEventHash, writeAuditLog } from "@/lib/audit/audit";
 import type { ResolvedRole } from "@/lib/auth/roles";
 import { requireEnv } from "@/lib/config/env";
 import { decryptBytes, decryptString, encryptBytes, encryptString } from "@/lib/crypto/server";
 import { sha256Hex } from "@/lib/crypto/hashing";
 import { createDeepSeekChatModel } from "@/lib/ai/deepseek";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/database.types";
 
+import type { DoctorDashboardSession } from "./dashboard-model";
 import {
   medicalAttachmentValidationMessage,
   validateMedicalAttachmentFile,
@@ -177,15 +179,7 @@ type GrantScope2FilterRow = {
   session_id: string | null;
 };
 
-export type DoctorDashboardGrant = {
-  grantId: string;
-  patientName: string;
-  patientEmail: string;
-  scopes: string[];
-  expiresAt: string;
-  blockchainStatus: string;
-  blockchainTxHash: string | null;
-};
+export type DoctorDashboardGrant = DoctorDashboardSession;
 
 export type DoctorDashboardState = {
   doctor: DoctorRow;
@@ -301,7 +295,7 @@ export async function loadDoctorDashboardState(role: ResolvedRole): Promise<Doct
       .eq("doctor_id", doctorId)
       .eq("is_revoked", false)
       .gt("expires_at", now)
-      .order("expires_at", { ascending: true }),
+      .order("granted_at", { ascending: false }),
   ]);
 
   if (doctorResult.error) throw doctorResult.error;
@@ -316,8 +310,15 @@ export async function loadDoctorDashboardState(role: ResolvedRole): Promise<Doct
           grantId: grant.grant_id,
           patientName: patient?.full_name ?? "Pasien",
           patientEmail: patient?.email ?? "Email tidak tersedia",
+          grantedAt: grant.granted_at,
           scopes: describeDoctorGrantScopes(toAccessInput(grant)),
           expiresAt: grant.expires_at,
+          isRevoked: grant.is_revoked,
+          revokedAt: grant.revoked_at,
+          canViewScope1: grant.can_view_scope1,
+          canViewScope2Mental: grant.can_view_scope2_mental,
+          canViewScope2Physical: grant.can_view_scope2_physical,
+          canDownloadAttachments: grant.can_download_attachments,
           blockchainStatus: grant.blockchain_status,
           blockchainTxHash: grant.blockchain_tx_hash,
         };
@@ -391,40 +392,46 @@ export async function createScope1Record(
     createdAt,
   });
 
-  const admin = createAdminClient();
-  const { error } = await admin.from("scope_1_medical_records").insert({
-    record_id: recordId,
-    patient_id: grant.patientId,
-    doctor_id: grant.doctorId,
-    amends_record_id: amendsRecordId,
-    record_type_ciphertext: recordType.ciphertext,
-    record_type_iv: recordType.iv,
-    record_type_tag: recordType.tag,
-    title_ciphertext: title.ciphertext,
-    title_iv: title.iv,
-    title_tag: title.tag,
-    description_ciphertext: description?.ciphertext ?? null,
-    description_iv: description?.iv ?? null,
-    description_tag: description?.tag ?? null,
-    attachment_file_id: attachment?.fileId ?? null,
-    record_hash: proof.hash,
-    blockchain_status: "pending",
-    key_version: "v1",
-    created_at: createdAt,
-  });
-
-  if (error) throw error;
-
-  await writeAuditLog({
+  const auditLogId = randomUUID();
+  const auditAction = amendsRecordId ? "scope1_record_amended" : "scope1_record_created";
+  const auditStatus = amendsRecordId ? "amended" : "created";
+  const auditEventHash = buildAuditEventHash({
+    hashPepper: env.data.HASH_PEPPER,
+    logId: auditLogId,
     actorAuthUserId: role.authUserId,
     actorRole: "doctor",
-    action: amendsRecordId ? "scope1_record_amended" : "scope1_record_created",
-    accessStatus: amendsRecordId ? "amended" : "created",
+    action: auditAction,
+    accessStatus: auditStatus,
     targetType: "scope_1_medical_record",
     targetId: recordId,
     patientId: grant.patientId,
     doctorId: grant.doctorId,
+    createdAt,
   });
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("create_scope1_record_with_audit", {
+    target_record_id: recordId,
+    target_patient_id: grant.patientId,
+    target_doctor_id: grant.doctorId,
+    target_amends_record_id: amendsRecordId,
+    target_record_type_ciphertext: recordType.ciphertext,
+    target_record_type_iv: recordType.iv,
+    target_record_type_tag: recordType.tag,
+    target_title_ciphertext: title.ciphertext,
+    target_title_iv: title.iv,
+    target_title_tag: title.tag,
+    target_description_ciphertext: description?.ciphertext ?? null,
+    target_description_iv: description?.iv ?? null,
+    target_description_tag: description?.tag ?? null,
+    target_attachment_file_id: attachment?.fileId ?? null,
+    target_record_hash: proof.hash,
+    target_key_version: "v1",
+    target_created_at: createdAt,
+    target_audit_log_id: auditLogId,
+    target_audit_event_hash: auditEventHash,
+  });
+
+  if (error) throw new Error(error.message);
 
   return recordId;
 }
