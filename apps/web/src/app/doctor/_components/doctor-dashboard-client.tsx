@@ -15,16 +15,17 @@ import {
   X,
 } from "lucide-react";
 
+import { DashboardCard } from "@/app/_components/dashboard-card";
 import { ProofStatus } from "@/components/proof-status";
 import { StatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, Input, Label, Select, Textarea } from "@/components/ui/form";
 import {
   createScope1RecordFromDashboardAction,
   loadDoctorGrantModalStateAction,
 } from "@/app/doctor/actions";
-import { DoctorRagClient } from "@/app/doctor/grants/[grantId]/_components/doctor-rag-client";
+import { DoctorRagClient } from "@/app/doctor/_components/doctor-rag-client";
 import {
   deriveDoctorSessionStatus,
   filterDoctorDashboardSessions,
@@ -107,8 +108,8 @@ export function DoctorDashboardClient({
   }
 
   return (
-    <div className="grid gap-5">
-      <Card>
+    <div className="grid gap-8">
+      <DashboardCard className="p-6 md:p-8">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <CardHeader className="mb-0">
             <div className="mb-2 flex flex-wrap items-center gap-2">
@@ -150,7 +151,7 @@ export function DoctorDashboardClient({
             </Link>
           </Button>
         </div>
-      </Card>
+      </DashboardCard>
 
       <section>
         <div className="mb-4">
@@ -162,7 +163,7 @@ export function DoctorDashboardClient({
           </p>
         </div>
 
-        <Card>
+        <DashboardCard className="p-6 md:p-8">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
             <CardHeader className="mb-0">
               <CardTitle>{copy.doctor.dashboard.sessionTableTitle}</CardTitle>
@@ -225,7 +226,7 @@ export function DoctorDashboardClient({
               </tbody>
             </table>
           </div>
-        </Card>
+        </DashboardCard>
       </section>
 
       {isQrOpen && qrData ? (

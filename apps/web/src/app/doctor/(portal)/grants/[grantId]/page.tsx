@@ -1,15 +1,15 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { AlertTriangle, Download, Eye, PlusCircle } from "lucide-react";
 
-import { AppShell } from "@/components/app-shell";
+import { DashboardCard } from "@/app/_components/portal-layout";
+import { DoctorRagClient } from "@/app/doctor/_components/doctor-rag-client";
+import { requireApprovedDoctorPortalRole } from "@/app/doctor/_components/doctor-portal-role";
 import { ProofStatus } from "@/components/proof-status";
-import { ForbiddenState, StatePanel } from "@/components/state-panel";
+import { StatePanel } from "@/components/state-panel";
 import { StatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, Input, Label, Select, Textarea } from "@/components/ui/form";
-import { requireRole } from "@/lib/auth/session";
 import { DoctorAccessError, loadDoctorGrantPageState } from "@/lib/doctor-records/service";
 import type { Dictionary } from "@/lib/i18n/dictionary";
 import { fillTemplate, formatDateTime } from "@/lib/i18n/format";
@@ -21,7 +21,6 @@ import {
 } from "@/lib/i18n/labels";
 import { getDictionary, getLocale } from "@/lib/i18n/server";
 
-import { DoctorRagClient } from "./_components/doctor-rag-client";
 import { createScope1RecordAction } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -35,15 +34,7 @@ export default async function DoctorGrantPage({
 }) {
   const locale = await getLocale();
   const copy = await getDictionary();
-  const role = await requireRole();
-  if (role.kind !== "doctor") {
-    return (
-      <AppShell title={copy.doctor.grant.accessTitle} nav={[]}>
-        <ForbiddenState role={role} />
-      </AppShell>
-    );
-  }
-  if (!role.canAccessDoctorFeatures) redirect("/doctor/status");
+  const role = await requireApprovedDoctorPortalRole();
 
   const { grantId } = await params;
   const query = await searchParams;
@@ -54,28 +45,34 @@ export default async function DoctorGrantPage({
   } catch (error) {
     if (error instanceof DoctorAccessError) {
       return (
-        <AppShell title={copy.doctor.grant.accessTitle} nav={[{ href: "/doctor", label: copy.doctor.nav.dashboard }]}>
+        <section className="grid gap-8" data-doctor-grant-page="access-error">
           <StatePanel
             title={doctorAccessTitle(copy, error.reason)}
             description={error.message}
             tone="danger"
           />
-        </AppShell>
+        </section>
       );
     }
     throw error;
   }
 
   return (
-    <AppShell
-      title={copy.doctor.grant.title}
-      nav={[
-        { href: "/doctor", label: copy.doctor.nav.dashboard },
-        { href: `/doctor/grants/${grantId}`, label: copy.doctor.grant.title },
-      ]}
-    >
+    <section className="grid gap-8" data-doctor-grant-page="main">
+      <header className="border-b border-[var(--color-stone-surface)] pb-5">
+        <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-ash)]">
+          {copy.doctor.grant.accessTitle}
+        </p>
+        <h1 className="text-[36px] font-semibold leading-[1.1] text-[var(--color-midnight)] md:text-[44px]">
+          {copy.doctor.grant.title}
+        </h1>
+        <p className="mt-3 max-w-2xl text-base leading-7 text-[var(--color-ash)]">
+          {fillTemplate(copy.doctor.grant.timerDescription, { email: state.grant.patientEmail })}
+        </p>
+      </header>
+
       <div className="grid gap-5">
-        <Card>
+        <DashboardCard className="p-6 md:p-8">
           <CardHeader>
             <div className="flex flex-wrap items-center gap-2">
               <StatusBadge tone={proofTone(state.grant.blockchainStatus)}>
@@ -101,7 +98,7 @@ export default async function DoctorGrantPage({
               messages={proofStatusMessages(copy)}
             />
           </div>
-        </Card>
+        </DashboardCard>
 
         {query.scope1_error ? (
           <StatusMessage tone="failed" message={query.scope1_error} />
@@ -110,7 +107,7 @@ export default async function DoctorGrantPage({
         ) : null}
 
         {state.grant.canViewScope1 ? (
-          <Card>
+          <DashboardCard className="p-6 md:p-8">
             <CardHeader>
               <CardTitle>{copy.doctor.grant.scope1Title}</CardTitle>
               <CardDescription>{copy.doctor.grant.scope1Description}</CardDescription>
@@ -174,11 +171,11 @@ export default async function DoctorGrantPage({
                 <EmptyState message={copy.doctor.grant.noScope1} />
               )}
             </div>
-          </Card>
+          </DashboardCard>
         ) : null}
 
         {state.grant.canViewScope2Mental ? (
-          <Card>
+          <DashboardCard className="p-6 md:p-8">
             <CardHeader>
               <CardTitle>{copy.doctor.grant.scope2MentalTitle}</CardTitle>
               <CardDescription>{copy.doctor.grant.scope2MentalDescription}</CardDescription>
@@ -207,11 +204,11 @@ export default async function DoctorGrantPage({
                 <EmptyState message={copy.doctor.grant.noMental} />
               )}
             </div>
-          </Card>
+          </DashboardCard>
         ) : null}
 
         {state.grant.canViewScope2Physical ? (
-          <Card>
+          <DashboardCard className="p-6 md:p-8">
             <CardHeader>
               <CardTitle>{copy.doctor.grant.scope2PhysicalTitle}</CardTitle>
               <CardDescription>{copy.doctor.grant.scope2PhysicalDescription}</CardDescription>
@@ -240,27 +237,27 @@ export default async function DoctorGrantPage({
                 <EmptyState message={copy.doctor.grant.noPhysical} />
               )}
             </div>
-          </Card>
+          </DashboardCard>
         ) : null}
 
         {state.ragAvailable ? (
-          <Card>
+          <DashboardCard className="p-6 md:p-8">
             <CardHeader>
               <CardTitle>{copy.doctor.grant.ragTitle}</CardTitle>
               <CardDescription>{copy.doctor.grant.ragDescription}</CardDescription>
             </CardHeader>
             <DoctorRagClient grantId={grantId} copy={copy.doctor.rag} />
-          </Card>
+          </DashboardCard>
         ) : (
-          <Card>
+          <DashboardCard className="p-6 md:p-8">
             <CardHeader>
               <CardTitle>{copy.doctor.grant.ragUnavailableTitle}</CardTitle>
               <CardDescription>{copy.doctor.grant.ragUnavailableDescription}</CardDescription>
             </CardHeader>
-          </Card>
+          </DashboardCard>
         )}
       </div>
-    </AppShell>
+    </section>
   );
 }
 

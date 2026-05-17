@@ -65,10 +65,18 @@ export function parseEnv(
     return { ok: false, errors };
   }
 
+  const adminEmailAllowlist = parseAdminEmailAllowlist(data.ADMIN_EMAIL_ALLOWLIST);
+  if (groups.includes("core") && adminEmailAllowlist.length !== 1) {
+    return {
+      ok: false,
+      errors: ["ADMIN_EMAIL_ALLOWLIST: must contain exactly one superadmin email"],
+    };
+  }
+
   return {
     ok: true,
     data,
-    adminEmailAllowlist: parseAdminEmailAllowlist(data.ADMIN_EMAIL_ALLOWLIST),
+    adminEmailAllowlist,
   };
 }
 

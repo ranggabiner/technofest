@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Field, Input, Label } from "@/components/ui/form";
 import type { Dictionary } from "@/lib/i18n/dictionary";
 
-import { initialInviteAdminFormState, inviteAdminAction } from "./actions";
+import { inviteAdminAction } from "./actions";
+import { initialInviteAdminFormState } from "./form-state";
 
 export function AddAdminForm({ copy }: { copy: Dictionary["admin"]["addAdmin"] }) {
   const [state, formAction, isPending] = useActionState(inviteAdminAction, initialInviteAdminFormState);

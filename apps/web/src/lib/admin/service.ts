@@ -1,5 +1,6 @@
 import "server-only";
 
+import { requireAdminRole } from "@/lib/auth/session";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export const adminDoctorStatuses = ["pending", "approved", "rejected"] as const;
@@ -64,6 +65,48 @@ export type AdminApprovalState = {
   showingTo: number;
 };
 
+export type AdminDoctorDetailState = {
+  doctor: {
+    doctor_id: string;
+    full_name: string;
+    email: string;
+    phone_number: string | null;
+    specialization: string | null;
+    account_status: string;
+    rejection_reason: string | null;
+    created_at: string;
+    doctor_access_code: string | null;
+    qr_code_token: string | null;
+  };
+  documents: Array<{
+    document_id: string;
+    document_type: string;
+    created_at: string;
+  }>;
+  audits: Array<{
+    log_id: string;
+    action: string;
+    access_status: string;
+    reason: string | null;
+    blockchain_status: string;
+    blockchain_tx_hash: string | null;
+    blockchain_last_error: string | null;
+    created_at: string;
+  }>;
+};
+
+export type AdminInvitationListItem = {
+  invitationId: string;
+  email: string;
+  status: "pending" | "active";
+  createdAt: string;
+  acceptedAt: string | null;
+};
+
+export type AdminInvitationsState = {
+  invitations: AdminInvitationListItem[];
+};
+
 type DoctorRow = {
   doctor_id: string;
   full_name: string;
@@ -94,6 +137,8 @@ export function normalizeAdminRowsPerPage(value: string | null | undefined): Adm
 }
 
 export async function loadAdminDashboardState(): Promise<AdminDashboardState> {
+  await requireAdminRole();
+
   const admin = createAdminClient();
   const [pendingCount, approvedCount, rejectedCount, queue, audits] = await Promise.all([
     countDoctorsByStatus("pending"),
@@ -134,6 +179,8 @@ export async function loadAdminApprovalState(input: {
   page?: string;
   pageSize?: string;
 }): Promise<AdminApprovalState> {
+  await requireAdminRole();
+
   const admin = createAdminClient();
   const status = normalizeAdminDoctorStatus(input.status);
   const page = normalizeAdminPage(input.page);
@@ -165,6 +212,72 @@ export async function loadAdminApprovalState(input: {
     totalPages: Math.max(1, Math.ceil(totalDoctors / pageSize)),
     showingFrom: totalDoctors === 0 ? 0 : from + 1,
     showingTo: from + doctors.length,
+  };
+}
+
+export async function loadAdminDoctorDetailState(doctorId: string): Promise<AdminDoctorDetailState> {
+  await requireAdminRole();
+
+  const admin = createAdminClient();
+  const doctorResult = await admin
+    .from("doctors")
+    .select(
+      "doctor_id,full_name,email,phone_number,specialization,account_status,rejection_reason,created_at,doctor_access_code,qr_code_token",
+    )
+    .eq("doctor_id", doctorId)
+    .single();
+
+  if (doctorResult.error) throw doctorResult.error;
+
+  const documents = await admin
+    .from("doctor_kyc_documents")
+    .select("document_id,document_type,created_at")
+    .eq("doctor_id", doctorId)
+    .order("document_type", { ascending: true });
+
+  if (documents.error) throw documents.error;
+
+  const audits = await admin
+    .from("audit_logs")
+    .select("log_id,action,access_status,reason,blockchain_status,blockchain_tx_hash,blockchain_last_error,created_at")
+    .eq("doctor_id", doctorId)
+    .is("patient_id", null)
+    .in("action", [...kycAuditActions])
+    .order("created_at", { ascending: false })
+    .limit(10);
+
+  if (audits.error) throw audits.error;
+
+  return {
+    doctor: doctorResult.data,
+    documents: documents.data ?? [],
+    audits: audits.data ?? [],
+  };
+}
+
+export async function loadAdminInvitationsState(adminId: string): Promise<AdminInvitationsState> {
+  const role = await requireAdminRole();
+  if (role.adminLevel !== "superadmin" || role.adminId !== adminId) {
+    throw new Error("Superadmin access is required");
+  }
+
+  const { data, error } = await createAdminClient()
+    .from("admin_invitations")
+    .select("invitation_id,email,accepted_at,created_at")
+    .eq("invited_by", adminId)
+    .is("revoked_at", null)
+    .order("created_at", { ascending: false });
+
+  if (error) throw error;
+
+  return {
+    invitations: (data ?? []).map((invitation) => ({
+      invitationId: invitation.invitation_id,
+      email: invitation.email,
+      status: invitation.accepted_at ? "active" : "pending",
+      createdAt: invitation.created_at,
+      acceptedAt: invitation.accepted_at,
+    })),
   };
 }
 

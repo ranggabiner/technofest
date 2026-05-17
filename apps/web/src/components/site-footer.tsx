@@ -32,8 +32,6 @@ export function SiteFooterContent({ copy }: { copy: Dictionary }) {
         </div>
       </div>
       <p
-        data-scroll-reveal=""
-        data-scroll-reveal-group="footer-copyright"
         className="mx-auto w-full max-w-[1100px] text-center text-[14px] text-[color-mix(in_srgb,var(--color-graphite)_70%,transparent)]"
       >
         {copy.common.copyright}

@@ -491,29 +491,49 @@ export type Database = {
       medical_admins: {
         Row: {
           admin_id: string
+          admin_role: "superadmin" | "admin"
           auth_user_id: string
           created_at: string
           email: string
           full_name: string
           phone_number: string | null
+          revoked_at: string | null
+          revoked_by: string | null
+          updated_at: string | null
         }
         Insert: {
           admin_id?: string
+          admin_role?: "superadmin" | "admin"
           auth_user_id: string
           created_at?: string
           email: string
           full_name: string
           phone_number?: string | null
+          revoked_at?: string | null
+          revoked_by?: string | null
+          updated_at?: string | null
         }
         Update: {
           admin_id?: string
+          admin_role?: "superadmin" | "admin"
           auth_user_id?: string
           created_at?: string
           email?: string
           full_name?: string
           phone_number?: string | null
+          revoked_at?: string | null
+          revoked_by?: string | null
+          updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "medical_admins_revoked_by_fkey"
+            columns: ["revoked_by"]
+            isOneToOne: false
+            referencedRelation: "medical_admins"
+            referencedColumns: ["admin_id"]
+          },
+        ]
       }
       admin_invitations: {
         Row: {
@@ -522,6 +542,8 @@ export type Database = {
           email: string
           invitation_id: string
           invited_by: string
+          revoked_at: string | null
+          revoked_by: string | null
           updated_at: string | null
         }
         Insert: {
@@ -530,6 +552,8 @@ export type Database = {
           email: string
           invitation_id?: string
           invited_by: string
+          revoked_at?: string | null
+          revoked_by?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -538,12 +562,21 @@ export type Database = {
           email?: string
           invitation_id?: string
           invited_by?: string
+          revoked_at?: string | null
+          revoked_by?: string | null
           updated_at?: string | null
         }
         Relationships: [
           {
             foreignKeyName: "admin_invitations_invited_by_fkey"
             columns: ["invited_by"]
+            isOneToOne: false
+            referencedRelation: "medical_admins"
+            referencedColumns: ["admin_id"]
+          },
+          {
+            foreignKeyName: "admin_invitations_revoked_by_fkey"
+            columns: ["revoked_by"]
             isOneToOne: false
             referencedRelation: "medical_admins"
             referencedColumns: ["admin_id"]

@@ -27,32 +27,6 @@ export function HeaderSkeleton({ position = "sticky" }: { position?: "fixed" | "
   );
 }
 
-export function AppShellSkeleton({
-  children,
-  navItems = 3,
-}: {
-  children: React.ReactNode;
-  navItems?: number;
-}) {
-  return (
-    <div className="min-h-screen bg-[var(--color-warm-canvas)]">
-      <HeaderSkeleton />
-      <div className="min-h-[calc(100vh-4rem)] md:grid md:grid-cols-[260px_1fr]">
-        <aside className="border-b border-[var(--color-stone-surface)] bg-[var(--color-card)] px-5 py-3 md:border-b-0 md:border-r md:py-6">
-          <nav className="flex gap-2 overflow-x-auto pb-1 md:grid md:overflow-visible md:pb-0">
-            {Array.from({ length: navItems }).map((_, index) => (
-              <Skeleton key={index} className="h-10 w-32 shrink-0 md:w-full" />
-            ))}
-          </nav>
-        </aside>
-        <main>
-          <div className="mx-auto max-w-[860px] px-6 py-8">{children}</div>
-        </main>
-      </div>
-    </div>
-  );
-}
-
 export function LoadingCard({
   className,
   lines = 2,
@@ -389,110 +363,138 @@ export function PatientHealthJournalSkeleton() {
 
 export function DoctorDashboardSkeleton() {
   return (
-    <AppShellSkeleton navItems={1}>
+    <div className="grid gap-8" data-loading-pattern="doctor-dashboard">
+      <section className="border-b border-[var(--color-stone-surface)] pb-5">
+        <Skeleton className="mb-3 h-4 w-24" />
+        <Skeleton className="h-12 w-full max-w-[520px]" />
+        <Skeleton className="mt-4 h-5 w-full max-w-2xl" />
+      </section>
       <div className="grid gap-5 sm:grid-cols-[260px_1fr]">
         <LoadingCard lines={1} />
         <LoadingCard lines={2} />
       </div>
-      <div className="mt-5">
+      <div className="grid gap-5">
         <LoadingCard lines={1} />
         <LoadingList rows={3} />
       </div>
-    </AppShellSkeleton>
+    </div>
   );
 }
 
 export function DoctorGrantPageSkeleton() {
   return (
-    <AppShellSkeleton navItems={2}>
-      <div className="grid gap-5" data-loading-pattern="doctor-grant">
-        <LoadingCard lines={3} />
-        <LoadingCard lines={6} />
-        <LoadingCard lines={4} />
-        <LoadingCard lines={4} />
-        <LoadingCard lines={4} />
-      </div>
-    </AppShellSkeleton>
+    <div className="grid gap-8" data-loading-pattern="doctor-grant">
+      <section className="border-b border-[var(--color-stone-surface)] pb-5">
+        <Skeleton className="mb-3 h-4 w-28" />
+        <Skeleton className="h-12 w-full max-w-[520px]" />
+        <Skeleton className="mt-4 h-5 w-full max-w-2xl" />
+      </section>
+      <LoadingCard lines={3} />
+      <LoadingCard lines={6} />
+      <LoadingCard lines={4} />
+      <LoadingCard lines={4} />
+      <LoadingCard lines={4} />
+    </div>
   );
 }
 
 export function DoctorStatusSkeleton() {
   return (
-    <AppShellSkeleton navItems={2}>
-      <LoadingCard lines={3} />
-    </AppShellSkeleton>
+    <div className="min-h-screen bg-[var(--color-warm-canvas)]">
+      <HeaderSkeleton position="fixed" />
+      <main className="mx-auto min-h-screen max-w-[860px] px-6 pb-[120px] pt-[100px]">
+        <LoadingCard lines={3} />
+      </main>
+    </div>
   );
 }
 
-export function AdminDoctorsSkeleton() {
+export function DoctorMedicalRecordLibrarySkeleton() {
   return (
-    <AppShellSkeleton navItems={1}>
-      <Card>
-        <div className="space-y-2">
-          <Skeleton className="h-8 w-52" />
-          <Skeleton className="h-4 w-full max-w-md" />
-        </div>
-        <div className="my-5">
-          <BlockchainRetrySkeleton />
-        </div>
-        <LoadingForm fields={3} />
-        <LoadingTable rows={6} />
-      </Card>
-    </AppShellSkeleton>
+    <div className="grid gap-8" data-loading-pattern="doctor-medical-record-library">
+      <section className="border-b border-[var(--color-stone-surface)] pb-5">
+        <Skeleton className="mb-3 h-4 w-24" />
+        <Skeleton className="h-12 w-full max-w-[520px]" />
+        <Skeleton className="mt-4 h-5 w-full max-w-2xl" />
+      </section>
+      <LoadingCard lines={3} />
+    </div>
   );
 }
 
 export function AdminDoctorDetailSkeleton() {
   return (
-    <AppShellSkeleton navItems={1}>
-      <div className="grid gap-5">
-        <LoadingCard lines={3} />
-        <LoadingCard lines={3} />
-        <LoadingCard lines={4} />
-        <LoadingCard lines={5} />
-      </div>
-    </AppShellSkeleton>
+    <div className="grid gap-8" data-loading-pattern="admin-doctor-detail">
+      <section className="border-b border-[var(--color-stone-surface)] pb-5">
+        <Skeleton className="mb-3 h-4 w-36" />
+        <Skeleton className="h-12 w-full max-w-[520px]" />
+        <Skeleton className="mt-4 h-5 w-full max-w-2xl" />
+      </section>
+      <LoadingCard lines={3} />
+      <LoadingCard lines={3} />
+      <LoadingCard lines={4} />
+      <LoadingCard lines={5} />
+    </div>
   );
 }
 
 export function AdminDashboardSkeleton() {
   return (
-    <AppShellSkeleton navItems={3}>
-      <div className="grid gap-5" data-loading-pattern="admin-dashboard">
-        <section className="grid gap-4 md:grid-cols-3">
-          <LoadingCard lines={1} />
-          <LoadingCard lines={1} />
-          <LoadingCard lines={1} />
-        </section>
-        <section className="grid gap-5 lg:grid-cols-[minmax(0,1.45fr)_minmax(280px,0.85fr)]">
-          <LoadingCard lines={5} />
-          <LoadingCard lines={5} />
-        </section>
-      </div>
-    </AppShellSkeleton>
+    <div className="grid gap-8" data-loading-pattern="admin-dashboard">
+      <section className="border-b border-[var(--color-stone-surface)] pb-5">
+        <Skeleton className="mb-3 h-4 w-32" />
+        <Skeleton className="h-12 w-full max-w-[520px]" />
+        <Skeleton className="mt-4 h-5 w-full max-w-2xl" />
+      </section>
+      <section className="grid gap-4 md:grid-cols-3">
+        <LoadingCard lines={1} />
+        <LoadingCard lines={1} />
+        <LoadingCard lines={1} />
+      </section>
+      <section className="grid gap-5 lg:grid-cols-[minmax(0,1.45fr)_minmax(280px,0.85fr)]">
+        <LoadingCard lines={5} />
+        <LoadingCard lines={5} />
+      </section>
+    </div>
   );
 }
 
 export function AdminApprovalSkeleton() {
   return (
-    <AppShellSkeleton navItems={3}>
-      <div className="grid gap-4" data-loading-pattern="admin-approval">
-        <LoadingCard lines={2} />
-        <LoadingTable rows={6} />
-      </div>
-    </AppShellSkeleton>
+    <div className="grid gap-8" data-loading-pattern="admin-approval">
+      <section className="border-b border-[var(--color-stone-surface)] pb-5">
+        <Skeleton className="mb-3 h-4 w-36" />
+        <Skeleton className="h-12 w-full max-w-[520px]" />
+        <Skeleton className="mt-4 h-5 w-full max-w-2xl" />
+      </section>
+      <LoadingCard lines={2} />
+      <LoadingTable rows={6} />
+    </div>
   );
 }
 
 export function AdminAddAdminSkeleton() {
   return (
-    <AppShellSkeleton navItems={3}>
-      <div className="grid min-h-[calc(100vh-12rem)] place-items-center" data-loading-pattern="admin-add-admin">
-        <Card className="w-full max-w-xl">
-          <LoadingForm fields={1} />
-        </Card>
-      </div>
-    </AppShellSkeleton>
+    <div className="grid gap-8" data-loading-pattern="admin-add-admin">
+      <section className="border-b border-[var(--color-stone-surface)] pb-5">
+        <Skeleton className="mb-3 h-4 w-32" />
+        <Skeleton className="h-12 w-full max-w-[520px]" />
+        <Skeleton className="mt-4 h-5 w-full max-w-2xl" />
+      </section>
+      <Card className="w-full max-w-xl">
+        <LoadingForm fields={1} />
+      </Card>
+      <Card className="w-full">
+        <div className="mb-5 space-y-2">
+          <Skeleton className="h-7 w-48" />
+          <Skeleton className="h-4 w-full max-w-md" />
+        </div>
+        <div className="grid gap-3">
+          <Skeleton className="h-20 w-full rounded-[10px]" />
+          <Skeleton className="h-20 w-full rounded-[10px]" />
+        </div>
+      </Card>
+    </div>
   );
 }
 

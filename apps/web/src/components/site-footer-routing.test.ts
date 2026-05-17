@@ -30,9 +30,8 @@ describe("site footer route coverage", () => {
 
   it("adds the shared footer through authenticated route shells", () => {
     for (const path of [
-      "app-shell.tsx",
       "onboarding-shell.tsx",
-      "../app/patient/_components/patient-layout.tsx",
+      "../app/_components/portal-layout.tsx",
       "../app/patient/onboarding/_components/patient-onboarding-shell.tsx",
     ]) {
       const source = path.startsWith("../app/")
@@ -55,7 +54,7 @@ describe("site footer route coverage", () => {
     expect(readApp("login/page.tsx")).toContain('className="flex min-h-screen flex-1 flex-col"');
     expect(readApp("login/role/page.tsx")).toContain('className="flex min-h-screen flex-1 items-center justify-center');
     expect(readComponent("onboarding-shell.tsx")).toContain("mx-auto flex min-h-screen w-full max-w-[1100px] flex-1 flex-col px-6 py-20");
-    expect(readFileSync(new URL("../app/patient/_components/patient-layout.tsx", import.meta.url), "utf8")).toContain(
+    expect(readFileSync(new URL("../app/_components/portal-layout.tsx", import.meta.url), "utf8")).toContain(
       "mx-auto grid min-h-screen max-w-[1400px]",
     );
     expect(readFileSync(new URL("../app/patient/onboarding/_components/patient-onboarding-shell.tsx", import.meta.url), "utf8")).toContain(

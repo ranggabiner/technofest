@@ -21,6 +21,7 @@ describe("SiteFooter", () => {
     expect(source).toContain("copy.common.copyright");
     expect(source).toContain("w-full bg-[var(--color-card)] px-6 pb-10 pt-20 text-[var(--color-graphite)]");
     expect(source).toContain("border-b border-[var(--color-stone-surface)] pb-10");
+    expect(source).not.toContain('data-scroll-reveal-group="footer-copyright"');
   });
 
   it("removes quick links from the reusable footer", async () => {
@@ -47,5 +48,16 @@ describe("SiteFooter", () => {
     expect(source).not.toContain('href="#about"');
     expect(source).not.toContain('href="#features"');
     expect(source).not.toContain('href="#articles"');
+  });
+
+  it("keeps the copyright visible outside individual scroll reveal animation", async () => {
+    const { SiteFooterContent } = await import("./site-footer");
+    const html = renderToStaticMarkup(
+      React.createElement(SiteFooterContent, { copy: dictionary.id }),
+    );
+
+    expect(html).toContain(dictionary.id.common.copyright);
+    expect(html).not.toContain('data-scroll-reveal-group="footer-copyright"');
+    expect(html).not.toMatch(/<p[^>]*data-scroll-reveal[^>]*>© 2026 MedProof<\/p>/);
   });
 });

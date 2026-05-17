@@ -23,6 +23,14 @@ describe("landing scroll reveal animation", () => {
     expect(pageSource).toContain('data-scroll-reveal-group="workflow-step"');
   });
 
+  it("does not target the shared footer copyright as its own reveal element", () => {
+    expect(pageSource).toContain("<SiteFooter />");
+    expect(revealSource).toContain("[data-scroll-reveal]");
+    expect(readFileSync(new URL("../components/site-footer.tsx", import.meta.url), "utf8")).not.toContain(
+      'data-scroll-reveal-group="footer-copyright"',
+    );
+  });
+
   it("uses IntersectionObserver once per element without React state re-renders", () => {
     expect(revealSource).toContain('"use client";');
     expect(revealSource).toContain("IntersectionObserver");

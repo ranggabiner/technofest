@@ -1,6 +1,7 @@
 export type AuthIntent = "patient" | "doctor" | null;
 export type UserRoleName = "patient" | "doctor" | "admin";
 export type DoctorStatus = "pending" | "approved" | "rejected";
+export type AdminLevel = "superadmin" | "admin";
 export type PatientOnboardingStep = "basic" | "health" | "ai_consent" | "complete";
 export type DoctorOnboardingStep = "profile" | "documents" | "review" | "complete";
 
@@ -26,12 +27,15 @@ export type AdminRow = {
   admin_id: string;
   email: string;
   full_name: string;
+  admin_role?: AdminLevel | string | null;
+  revoked_at?: string | null;
 };
 
 export type AdminInvitationRow = {
   invitation_id: string;
   email: string;
   accepted_at: string | null;
+  revoked_at?: string | null;
 };
 
 export type RoleResolutionInput = {
@@ -52,6 +56,7 @@ export type ResolvedRole =
       kind: "medical_admin";
       authUserId: string;
       adminId: string | null;
+      adminLevel: AdminLevel;
       email: string;
       fullName: string;
       avatarUrl: string | null;
@@ -83,14 +88,16 @@ export type ResolvedRole =
 export function resolveRoleFromRows(input: RoleResolutionInput): ResolvedRole | null {
   const email = input.email.trim().toLowerCase();
   const adminEmailSet = new Set(input.adminAllowlist.map((item) => item.trim().toLowerCase()));
+  const isAllowlistedSuperadmin = adminEmailSet.has(email);
+  const hasActiveAdminInvitation =
+    input.adminInvitation?.email.trim().toLowerCase() === email && !input.adminInvitation.revoked_at;
 
-  const hasAdminInvitation = input.adminInvitation?.email.trim().toLowerCase() === email;
-
-  if (adminEmailSet.has(email) || hasAdminInvitation) {
+  if (isAllowlistedSuperadmin || hasActiveAdminInvitation) {
     return {
       kind: "medical_admin",
       authUserId: input.authUserId,
       adminId: input.admin?.admin_id ?? null,
+      adminLevel: isAllowlistedSuperadmin ? "superadmin" : "admin",
       email,
       fullName: input.admin?.full_name ?? input.fullName,
       avatarUrl: input.avatarUrl ?? null,

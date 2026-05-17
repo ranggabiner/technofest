@@ -1,14 +1,11 @@
-import Link from "next/link";
+import type { ReactNode } from "react";
 
+import { DashboardCard } from "@/app/_components/portal-layout";
+import { PortalTransitionLink } from "@/app/_components/portal-navigation";
 import { AdminDoctorTable } from "@/app/admin/_components/admin-doctor-table";
-import { AppShell } from "@/components/app-shell";
-import { ForbiddenState } from "@/components/state-panel";
 import { Button } from "@/components/ui/button";
-import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select } from "@/components/ui/form";
-import { adminNavItems } from "@/lib/admin/navigation";
 import { adminDoctorStatuses, loadAdminApprovalState, rowsPerPageOptions } from "@/lib/admin/service";
-import { requireRole } from "@/lib/auth/session";
 import { getDictionary, getLocale } from "@/lib/i18n/server";
 
 export const dynamic = "force-dynamic";
@@ -20,30 +17,28 @@ export default async function AdminApprovalPage({
 }) {
   const locale = await getLocale();
   const copy = await getDictionary();
-  const role = await requireRole();
-
-  if (role.kind !== "medical_admin") {
-    return (
-      <AppShell title={copy.admin.approval.title} nav={[]}>
-        <ForbiddenState role={role} />
-      </AppShell>
-    );
-  }
-
   const params = (await searchParams) ?? {};
   const state = await loadAdminApprovalState(params);
   const returnPath = `/admin/approval?status=${state.status}&page=${state.page}&pageSize=${state.pageSize}`;
 
   return (
-    <AppShell title={copy.admin.approval.title} nav={adminNavItems(copy, "approval")}>
-      <Card>
-        <CardHeader>
-          <CardTitle>{copy.admin.approval.title}</CardTitle>
-        </CardHeader>
+    <section className="grid gap-8" data-admin-approval-page="main">
+      <header className="border-b border-[var(--color-stone-surface)] pb-5">
+        <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-ash)]">
+          {copy.admin.nav.doctorVerification}
+        </p>
+        <h1 className="text-[36px] font-semibold leading-[1.1] text-[var(--color-midnight)] md:text-[44px]">
+          {copy.admin.approval.title}
+        </h1>
+        <p className="mt-3 max-w-2xl text-base leading-7 text-[var(--color-ash)]">
+          {copy.admin.doctors.queueDescription}
+        </p>
+      </header>
 
+      <DashboardCard className="p-6 md:p-8">
         <div className="mb-5 flex flex-wrap gap-2">
           {adminDoctorStatuses.map((status) => (
-            <Link
+            <PortalTransitionLink
               key={status}
               href={approvalHref({ status, page: 1, pageSize: state.pageSize })}
               aria-current={state.status === status ? "page" : undefined}
@@ -54,7 +49,7 @@ export default async function AdminApprovalPage({
               }
             >
               {statusLabel(copy, status)}
-            </Link>
+            </PortalTransitionLink>
           ))}
         </div>
 
@@ -115,8 +110,8 @@ export default async function AdminApprovalPage({
             </PaginationLink>
           </div>
         </div>
-      </Card>
-    </AppShell>
+      </DashboardCard>
+    </section>
   );
 }
 
@@ -139,7 +134,7 @@ function PaginationLink({
   href: string;
   active?: boolean;
   disabled?: boolean;
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   if (disabled) {
     return (
@@ -150,7 +145,7 @@ function PaginationLink({
   }
 
   return (
-    <Link
+    <PortalTransitionLink
       href={href}
       className={
         active
@@ -159,6 +154,6 @@ function PaginationLink({
       }
     >
       {children}
-    </Link>
+    </PortalTransitionLink>
   );
 }
