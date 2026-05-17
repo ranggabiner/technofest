@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 
+import { SiteFooterContent } from "@/components/site-footer";
 import { ForbiddenState } from "@/components/state-panel";
 import { requireRole } from "@/lib/auth/session";
 import { roleOnboardingPath } from "@/lib/auth/roles";
@@ -20,11 +21,14 @@ export default async function PatientChatPage({
   const role = await requireRole();
   if (role.kind !== "patient") {
     return (
-      <main className="grid min-h-screen place-items-center bg-[var(--color-warm-canvas)] px-6">
-        <div className="w-full max-w-[680px]">
-          <ForbiddenState role={role} />
-        </div>
-      </main>
+      <div className="min-h-screen bg-[var(--color-warm-canvas)]">
+        <main className="grid min-h-screen place-items-center px-6">
+          <div className="w-full max-w-[680px]">
+            <ForbiddenState role={role} />
+          </div>
+        </main>
+        <SiteFooterContent copy={copy} />
+      </div>
     );
   }
   const onboardingPath = roleOnboardingPath(role);
@@ -39,39 +43,43 @@ export default async function PatientChatPage({
   const state = await loadPatientJournalState(role);
 
   return (
-    <main className="h-screen overflow-hidden bg-[var(--color-warm-canvas)]">
-      <StatusToast
-        key={statusToastKey}
-        failedMessage={
-          params.ai_error === "finalize_failed"
-            ? copy.patient.chat.finalizeFailed
-            : null
-        }
-        successMessage={
-          params.ai_status === "finalized"
-            ? copy.patient.chat.finalized
-            : null
-        }
-      />
-
-      <section
-        data-chat-layout="stitch-chat-workspace"
-        className="h-full overflow-hidden bg-[var(--color-warm-canvas)]"
-      >
-        <AiJournalClient
-          initialSessionId={state.activeSessionId}
-          initialHistory={state.chatHistory}
-          initialMessages={state.messages}
-          initialSessionClosed={state.activeSessionClosed}
-          latestSummary={state.latestSummary}
-          initialSummaryGenerationStatus={state.latestSummaryStatus}
-          copy={copy.patient.chat}
-          navigationCopy={{
-            dashboard: copy.patient.nav.dashboard,
-            access: copy.patient.nav.access,
-          }}
+    <div className="min-h-screen bg-[var(--color-warm-canvas)]">
+      <main className="h-screen overflow-hidden bg-[var(--color-warm-canvas)]">
+        <StatusToast
+          key={statusToastKey}
+          failedMessage={
+            params.ai_error === "finalize_failed"
+              ? copy.patient.chat.finalizeFailed
+              : null
+          }
+          successMessage={
+            params.ai_status === "finalized"
+              ? copy.patient.chat.finalized
+              : null
+          }
         />
-      </section>
-    </main>
+
+        <section
+          data-chat-layout="stitch-chat-workspace"
+          className="h-full overflow-hidden bg-[var(--color-warm-canvas)]"
+        >
+          <AiJournalClient
+            initialSessionId={state.activeSessionId}
+            initialHistory={state.chatHistory}
+            initialMessages={state.messages}
+            initialSessionClosed={state.activeSessionClosed}
+            latestSummary={state.latestSummary}
+            initialSummaryGenerationStatus={state.latestSummaryStatus}
+            copy={copy.patient.chat}
+            navigationCopy={{
+              dashboard: copy.patient.nav.dashboard,
+              access: copy.patient.nav.access,
+              healthHistory: copy.patient.nav.healthHistory,
+            }}
+          />
+        </section>
+      </main>
+      <SiteFooterContent copy={copy} />
+    </div>
   );
 }

@@ -2,7 +2,7 @@ create extension if not exists pgtap with schema extensions;
 
 begin;
 
-select plan(21);
+select plan(24);
 
 select is(
   exists(select 1 from pg_extension where extname = 'pg_graphql'),
@@ -86,15 +86,26 @@ values
   ('90000000-0000-0000-0000-000000000201', 'authenticated', 'authenticated', 'approved-doctor@example.test'),
   ('90000000-0000-0000-0000-000000000202', 'authenticated', 'authenticated', 'pending-doctor@example.test'),
   ('90000000-0000-0000-0000-000000000203', 'authenticated', 'authenticated', 'rejected-doctor@example.test'),
-  ('90000000-0000-0000-0000-000000000301', 'authenticated', 'authenticated', 'admin@example.test');
+  ('90000000-0000-0000-0000-000000000301', 'authenticated', 'authenticated', 'admin@example.test'),
+  ('90000000-0000-0000-0000-000000000302', 'authenticated', 'authenticated', 'normal-admin@example.test');
 
 insert into public.patients (patient_id, auth_user_id, full_name, email)
 values
   ('10000000-0000-0000-0000-000000000001', '90000000-0000-0000-0000-000000000101', 'Patient One', 'patient@example.test'),
   ('10000000-0000-0000-0000-000000000002', '90000000-0000-0000-0000-000000000102', 'Patient Two', 'other-patient@example.test');
 
-insert into public.medical_admins (admin_id, auth_user_id, full_name, email)
-values ('30000000-0000-0000-0000-000000000001', '90000000-0000-0000-0000-000000000301', 'Admin One', 'admin@example.test');
+insert into public.medical_admins (admin_id, auth_user_id, full_name, email, admin_role)
+values
+  ('30000000-0000-0000-0000-000000000001', '90000000-0000-0000-0000-000000000301', 'Admin One', 'admin@example.test', 'superadmin'),
+  ('30000000-0000-0000-0000-000000000002', '90000000-0000-0000-0000-000000000302', 'Normal Admin', 'normal-admin@example.test', 'admin');
+
+insert into public.admin_invitations (invitation_id, email, invited_by, accepted_at)
+values (
+  '31000000-0000-0000-0000-000000000001',
+  'normal-admin@example.test',
+  '30000000-0000-0000-0000-000000000001',
+  now()
+);
 
 insert into public.doctors (
   doctor_id,
@@ -225,13 +236,65 @@ select is((select count(*)::int from public.scope_2_mental), 0, 'rejected doctor
 set local request.jwt.claim.sub = '90000000-0000-0000-0000-000000000301';
 
 select is((select count(*)::int from public.patients), 0, 'medical admin cannot see patient rows');
-select is((select count(*)::int from public.secure_files), 1, 'medical admin sees only KYC file metadata');
+select is(
+  (
+    select count(*)::int
+    from public.secure_files
+    where file_id in (
+      '40000000-0000-0000-0000-000000000001',
+      '40000000-0000-0000-0000-000000000002'
+    )
+  ),
+  1,
+  'medical admin sees only KYC file metadata'
+);
 
 select lives_ok(
   $$insert into public.admin_invitations (email, invited_by)
     values ('new-admin@example.test', '30000000-0000-0000-0000-000000000001')$$,
-  'medical admin can invite another admin'
+  'superadmin can invite another admin'
 );
+
+set local request.jwt.claim.sub = '90000000-0000-0000-0000-000000000302';
+
+select is(
+  (
+    select count(*)::int
+    from public.doctors
+    where doctor_id in (
+      '20000000-0000-0000-0000-000000000001',
+      '20000000-0000-0000-0000-000000000002',
+      '20000000-0000-0000-0000-000000000003'
+    )
+  ),
+  3,
+  'normal admin can still view doctor KYC queue rows'
+);
+
+select throws_ok(
+  $$insert into public.admin_invitations (email, invited_by)
+    values ('blocked-admin@example.test', '30000000-0000-0000-0000-000000000002')$$,
+  '42501',
+  'new row violates row-level security policy for table "admin_invitations"',
+  'normal admin cannot invite another admin'
+);
+
+reset role;
+
+update public.admin_invitations
+set revoked_at = now(),
+    revoked_by = '30000000-0000-0000-0000-000000000001'
+where invitation_id = '31000000-0000-0000-0000-000000000001';
+
+update public.medical_admins
+set revoked_at = now(),
+    revoked_by = '30000000-0000-0000-0000-000000000001'
+where admin_id = '30000000-0000-0000-0000-000000000002';
+
+set local role authenticated;
+set local request.jwt.claim.sub = '90000000-0000-0000-0000-000000000302';
+
+select is((select count(*)::int from public.doctors), 0, 'revoked admin loses admin data access');
 
 set local request.jwt.claim.sub = '90000000-0000-0000-0000-000000000101';
 

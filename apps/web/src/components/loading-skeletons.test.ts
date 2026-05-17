@@ -6,6 +6,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   DoctorGrantPageSkeleton,
+  HomeSkeleton,
   LoadingCard,
   LoadingList,
   PatientChatSkeleton,
@@ -70,6 +71,41 @@ describe("loading skeleton components", () => {
     expect(html.match(/h-\[190px\] rounded-xl/g)).toHaveLength(2);
     expect(html).not.toContain('class="flex items-center justify-between"');
   });
+
+  it("keeps home loading state aligned to the landing page sections", () => {
+    const html = renderToStaticMarkup(React.createElement(HomeSkeleton));
+
+    expect(html).toContain('data-loading-pattern="home"');
+    expect(html).toContain('data-home-skeleton-section="hero"');
+    expect(html).toContain('data-home-skeleton-section="about"');
+    expect(html).toContain('data-home-skeleton-section="features"');
+    expect(html).toContain('data-home-skeleton-section="articles"');
+    expect(html).toContain('data-home-skeleton-section="workflow"');
+    expect(html).toContain('data-home-skeleton-section="footer"');
+    expect(html).not.toContain('data-home-skeleton-section="testimonials"');
+    expect(html).not.toContain('data-home-skeleton-section="contact"');
+    expect(html.match(/data-home-skeleton-section=/g)).toHaveLength(6);
+    expect(html).toContain("lg:grid-cols-[5fr_7fr]");
+    expect(html.match(/md:grid-cols-3/g)?.length).toBeGreaterThanOrEqual(3);
+    expect(html).not.toContain("md:grid-cols-2");
+    expect(html).not.toContain("grid min-h-screen place-items-center");
+    expect(html).not.toContain(">Loading<");
+  });
+
+  it("keeps home loading state free of light-only landing colors", () => {
+    const html = renderToStaticMarkup(React.createElement(HomeSkeleton));
+
+    expect(html).toContain("bg-[var(--color-warm-canvas)]");
+    expect(html).toContain("bg-[var(--color-card)]");
+    expect(html).toContain("bg-[var(--color-parchment-card)]");
+    expect(html).toContain("border-[var(--color-stone-surface)]");
+
+    expect(html).not.toMatch(/#[0-9a-fA-F]{3,8}/);
+    expect(html).not.toContain("bg-white");
+    expect(html).not.toContain("text-white");
+    expect(html).not.toContain("border-white");
+    expect(html).not.toContain("rgba(");
+  });
 });
 
 describe("route loading skeletons", () => {
@@ -86,17 +122,17 @@ describe("route loading skeletons", () => {
     "patient/onboarding/step-1/loading.tsx",
     "patient/onboarding/step-2/loading.tsx",
     "patient/onboarding/step-3/loading.tsx",
-    "doctor/loading.tsx",
+    "doctor/(portal)/loading.tsx",
     "doctor/status/loading.tsx",
-    "doctor/grants/[grantId]/loading.tsx",
+    "doctor/(portal)/medical-record-library/loading.tsx",
+    "doctor/(portal)/grants/[grantId]/loading.tsx",
     "doctor/onboarding/step-1/loading.tsx",
     "doctor/onboarding/step-2/loading.tsx",
     "doctor/onboarding/step-3/loading.tsx",
-    "admin/dashboard/loading.tsx",
-    "admin/approval/loading.tsx",
-    "admin/add-admin/loading.tsx",
-    "admin/doctors/loading.tsx",
-    "admin/doctors/[doctorId]/loading.tsx",
+    "admin/(portal)/dashboard/loading.tsx",
+    "admin/(portal)/approval/loading.tsx",
+    "admin/(portal)/add-admin/loading.tsx",
+    "admin/(portal)/doctors/[doctorId]/loading.tsx",
   ];
 
   it.each(routeLoadingFiles)("%s uses skeleton UI", (relativePath) => {

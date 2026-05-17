@@ -72,6 +72,12 @@ export async function requireAdminRole() {
   return role;
 }
 
+export async function requireSuperAdminRole() {
+  const role = await requireAdminRole();
+  if (role.adminLevel !== "superadmin") redirect("/login?error=unauthorized");
+  return role;
+}
+
 export async function requireDoctorRole() {
   const role = await requireRole();
   if (role.kind !== "doctor") redirect("/login?error=unauthorized");
@@ -120,25 +126,46 @@ export async function resolveRoleForUser(
     ...rows,
   });
 
-  if (role?.kind === "medical_admin" && !rows.admin) {
-    const { error } = await admin.from("medical_admins").insert({
-      auth_user_id: user.id,
-      email,
-      full_name: fullName,
-    });
-    if (error && error.code !== "23505") throw error;
-    shouldReloadAdminProfile = true;
+  if (role?.kind === "medical_admin") {
+    if (!rows.admin) {
+      const { error } = await admin.from("medical_admins").insert({
+        auth_user_id: user.id,
+        email,
+        full_name: fullName,
+        admin_role: role.adminLevel,
+      });
+      if (error && error.code !== "23505") throw error;
+      shouldReloadAdminProfile = true;
+    } else if (rows.admin.admin_role !== role.adminLevel || rows.admin.revoked_at) {
+      const { error } = await admin
+        .from("medical_admins")
+        .update({
+          admin_role: role.adminLevel,
+          revoked_at: null,
+          revoked_by: null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("admin_id", rows.admin.admin_id);
+
+      if (error) throw error;
+      shouldReloadAdminProfile = true;
+    }
   }
 
-  if (role?.kind === "medical_admin" && rows.adminInvitation && !rows.adminInvitation.accepted_at) {
+  if (
+    role?.kind === "medical_admin" &&
+    rows.adminInvitation &&
+    !rows.adminInvitation.revoked_at &&
+    !rows.adminInvitation.accepted_at
+  ) {
+    const now = new Date().toISOString();
     const { error } = await admin
       .from("admin_invitations")
       .update({
-        accepted_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
+        accepted_at: now,
+        updated_at: now,
       })
       .eq("invitation_id", rows.adminInvitation.invitation_id);
-
     if (error) throw error;
     shouldReloadAdminProfile = true;
   }
@@ -249,13 +276,14 @@ async function loadRoleRows(authUserId: string, email: string): Promise<RoleRows
       .maybeSingle(),
     admin
       .from("medical_admins")
-      .select("admin_id,email,full_name")
+      .select("admin_id,email,full_name,admin_role,revoked_at")
       .eq("auth_user_id", authUserId)
       .maybeSingle(),
     admin
       .from("admin_invitations")
-      .select("invitation_id,email,accepted_at")
+      .select("invitation_id,email,accepted_at,revoked_at")
       .eq("email", normalizedEmail)
+      .is("revoked_at", null)
       .maybeSingle(),
   ]);
 

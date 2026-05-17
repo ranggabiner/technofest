@@ -30,7 +30,7 @@ describe("role resolution", () => {
       admin: { admin_id: "admin-1", email: "admin@example.com", full_name: "Admin Demo" },
     });
 
-    expect(role?.kind).toBe("medical_admin");
+    expect(role).toMatchObject({ kind: "medical_admin", adminLevel: "superadmin" });
   });
 
   it("maps the local demo admin account to the admin role and admin dashboard", () => {
@@ -45,9 +45,84 @@ describe("role resolution", () => {
       admin: { admin_id: "admin-ranggabiner", email: "ranggabiner@gmail.com", full_name: "Rangga Biner" },
     });
 
-    expect(role).toMatchObject({ kind: "medical_admin", adminId: "admin-ranggabiner" });
+    expect(role).toMatchObject({ kind: "medical_admin", adminId: "admin-ranggabiner", adminLevel: "superadmin" });
     expect(userRoleName(role!)).toBe("admin");
     expect(roleEntryPath(role!)).toBe("/admin/dashboard");
+  });
+
+  it("resolves active invited admins as normal admins", () => {
+    const role = resolveRoleFromRows({
+      authUserId: "invited-user",
+      email: "invited@example.com",
+      fullName: "Invited Admin",
+      adminAllowlist: ["super@example.com"],
+      intent: null,
+      patient: null,
+      doctor: null,
+      admin: {
+        admin_id: "admin-invited",
+        email: "invited@example.com",
+        full_name: "Invited Admin",
+        admin_role: "admin",
+        revoked_at: null,
+      },
+      adminInvitation: {
+        invitation_id: "invite-1",
+        email: "invited@example.com",
+        accepted_at: "2026-05-17T10:00:00.000Z",
+        revoked_at: null,
+      },
+    });
+
+    expect(role).toMatchObject({ kind: "medical_admin", adminId: "admin-invited", adminLevel: "admin" });
+  });
+
+  it("does not grant invited admin access to a different Google email", () => {
+    const role = resolveRoleFromRows({
+      authUserId: "other-user",
+      email: "other@example.com",
+      fullName: "Other User",
+      adminAllowlist: [],
+      intent: null,
+      patient: null,
+      doctor: null,
+      admin: null,
+      adminInvitation: {
+        invitation_id: "invite-1",
+        email: "invited@example.com",
+        accepted_at: null,
+        revoked_at: null,
+      },
+    });
+
+    expect(role).toBeNull();
+  });
+
+  it("does not resolve revoked invited admins", () => {
+    const role = resolveRoleFromRows({
+      authUserId: "revoked-user",
+      email: "revoked@example.com",
+      fullName: "Revoked Admin",
+      adminAllowlist: ["super@example.com"],
+      intent: null,
+      patient: null,
+      doctor: null,
+      admin: {
+        admin_id: "admin-revoked",
+        email: "revoked@example.com",
+        full_name: "Revoked Admin",
+        admin_role: "admin",
+        revoked_at: "2026-05-17T11:00:00.000Z",
+      },
+      adminInvitation: {
+        invitation_id: "invite-2",
+        email: "revoked@example.com",
+        accepted_at: "2026-05-17T10:00:00.000Z",
+        revoked_at: "2026-05-17T11:00:00.000Z",
+      },
+    });
+
+    expect(role).toBeNull();
   });
 
   it("routes existing patients without requiring role selection again", () => {

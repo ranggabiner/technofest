@@ -2,7 +2,7 @@ create extension if not exists pgtap with schema extensions;
 
 begin;
 
-select plan(17);
+select plan(22);
 
 select has_table('public', 'patients', 'patients table exists');
 select has_table('public', 'doctors', 'doctors table exists');
@@ -16,6 +16,21 @@ select has_table('public', 'access_grants', 'access_grants table exists');
 select col_is_pk('public', 'patients', 'patient_id', 'patients primary key');
 select col_is_pk('public', 'doctors', 'doctor_id', 'doctors primary key');
 select col_is_unique('public', 'doctors', 'doctor_access_code', 'doctor access code unique');
+
+select has_column('public', 'medical_admins', 'admin_role', 'medical_admins stores superadmin/admin role');
+select has_column('public', 'medical_admins', 'revoked_at', 'medical_admins supports soft revoke');
+select has_column('public', 'admin_invitations', 'revoked_at', 'admin invitations support soft revoke');
+select has_column('public', 'admin_invitations', 'revoked_by', 'admin invitations track revoker');
+
+select isnt_empty(
+  $$select 1
+    from pg_indexes
+    where schemaname = 'public'
+      and tablename = 'admin_invitations'
+      and indexname = 'admin_invitations_active_email_key'
+      and indexdef like '%WHERE (revoked_at IS NULL)%'$$,
+  'admin invitations enforce one active invitation per email while allowing revoked history'
+);
 
 select is(
   (select relrowsecurity from pg_class where oid = 'public.patients'::regclass),

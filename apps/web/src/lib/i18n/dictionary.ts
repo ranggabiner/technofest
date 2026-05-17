@@ -1,12 +1,19 @@
 export const dictionary = {
   id: {
     metadata: {
-      description: "MVP rekam medis personal dan jurnal kesehatan",
+      description: "Platform rekam medis terenkripsi dengan proof blockchain, log akses transparan, dan Jurnal AI pasien.",
     },
     common: {
       brand: "MedProof",
       copyright: "© 2026 MedProof",
+      scrollToTop: "Kembali ke bagian atas halaman",
       language: "Bahasa",
+      languageToggle: {
+        indonesia: "ID",
+        english: "EN",
+        switchToIndonesian: "Ganti ke Bahasa Indonesia",
+        switchToEnglish: "Ganti ke Bahasa Inggris",
+      },
       logout: "Keluar akun",
       indonesia: "ID",
       english: "EN",
@@ -75,6 +82,287 @@ export const dictionary = {
       ],
       primaryNavLabel: "Navigasi utama",
       loginCta: "Masuk",
+      articlesHub: {
+        listTitle: "Artikel & Wawasan Medis",
+        listDescription:
+          "Temukan informasi terkini, panduan klinis, dan wawasan mendalam mengenai teknologi verifikasi rekam medis dan kesehatan digital.",
+        searchLabel: "Cari artikel",
+        searchPlaceholder: "Cari judul artikel, topik, atau kata kunci...",
+        readMore: "Baca Selengkapnya",
+        loadMore: "Muat Lebih Banyak",
+        breadcrumbHome: "Beranda",
+        breadcrumbArticles: "Artikel Medis",
+        publishedMeta: "Dipublikasikan pada {date} • {readTime}",
+        relatedTitle: "Artikel Terkait",
+        items: [
+          {
+            slug: "medproof-ai-verifikasi-rekam-medis",
+            category: "Teknologi",
+            publishedAt: "20 Oktober 2025",
+            readTime: "5 menit membaca",
+            title: "Cara MedProof AI Meningkatkan Akurasi Verifikasi Rekam Medis Hingga 99%",
+            excerpt:
+              "Menjaga integritas data rekam medis merupakan faktor penting dalam keberhasilan diagnosis pasien, terutama pada kasus dengan komorbiditas yang kompleks.",
+            imageAlt: "Laboratorium riset medis modern dengan mikroskop digital dan vial kaca.",
+            detailImageAlt: "Dokter meninjau pemindaian medis pada tablet di klinik modern.",
+            body: {
+              intro: [
+                "Dalam beberapa tahun terakhir, kecerdasan buatan (AI) telah membawa revolusi signifikan dalam bidang kesehatan, khususnya pada proses verifikasi dan peninjauan data medis.",
+                "Integrasi AI ke dalam alur kerja klinis membantu mempercepat analisis, memeriksa konsistensi catatan, dan mengurangi risiko human error akibat volume pasien yang tinggi.",
+              ],
+              sections: [
+                {
+                  title: "1. Peningkatan Presisi melalui Analisis Data",
+                  paragraphs: [
+                    "MedProof AI membantu membaca pola dari catatan pasien, ringkasan jurnal, dan metadata operasional yang sudah terotorisasi. Sistem ini tidak menggantikan dokter, tetapi memberi lapisan pemeriksaan tambahan untuk menemukan inkonsistensi lebih cepat.",
+                  ],
+                  bullets: [
+                    "Mendeteksi anomali catatan yang perlu ditinjau ulang",
+                    "Mengurangi waktu pemeriksaan administratif",
+                    "Mendukung dokter sebagai second opinion berbasis data",
+                  ],
+                },
+                {
+                  title: "2. Otomatisasi Alur Kerja Klinis",
+                  paragraphs: [
+                    "Selain membantu verifikasi, AI juga dapat merapikan konteks pasien sebelum konsultasi. Dokter menerima ringkasan yang lebih terstruktur sehingga waktu temu lebih fokus pada keputusan klinis.",
+                  ],
+                  bullets: [],
+                },
+                {
+                  title: "3. Membangun Ekosistem Kesehatan Berkelanjutan",
+                  paragraphs: [
+                    "Implementasi AI di MedProof diarahkan untuk memberdayakan pasien dan dokter. Setiap penggunaan tetap dibatasi oleh izin pasien, audit event, dan proof integritas agar data kesehatan tetap dapat ditelusuri.",
+                  ],
+                  bullets: [],
+                },
+              ],
+            },
+          },
+          {
+            slug: "standar-enkripsi-privasi-pasien",
+            category: "Keamanan Data",
+            publishedAt: "18 Oktober 2025",
+            readTime: "4 menit membaca",
+            title: "Standar Enkripsi Baru dalam Melindungi Privasi Pasien di Era Digital",
+            excerpt:
+              "Keamanan data kesehatan bukan lagi sekadar kepatuhan regulasi, melainkan janji kepercayaan kepada pasien.",
+            imageAlt: "Tangan dokter meninjau berkas pasien dengan titik data digital.",
+            detailImageAlt: "Dokumen medis dan data digital di atas meja kerja klinis.",
+            body: {
+              intro: [
+                "Data kesehatan punya konsekuensi privasi yang tinggi. Karena itu, platform digital perlu menempatkan enkripsi, audit, dan pembatasan akses sebagai fondasi, bukan fitur tambahan.",
+              ],
+              sections: [
+                {
+                  title: "1. Enkripsi sebelum penyimpanan",
+                  paragraphs: [
+                    "MedProof menyimpan konten kesehatan secara terenkripsi di luar blockchain. Data sensitif tidak dibaca langsung dari database tanpa otorisasi server dan konteks peran yang valid.",
+                  ],
+                  bullets: [
+                    "Konten medis tidak disimpan sebagai plaintext",
+                    "Kunci enkripsi berada di environment server",
+                    "Proof blockchain hanya memakai hash yang menjaga privasi",
+                  ],
+                },
+                {
+                  title: "2. Akses granular berbasis izin pasien",
+                  paragraphs: [
+                    "Pasien menentukan dokter mana yang boleh melihat data, cakupan data yang terbuka, izin unduh lampiran, dan batas waktu akses.",
+                  ],
+                  bullets: [],
+                },
+                {
+                  title: "3. Audit sebagai jejak kepercayaan",
+                  paragraphs: [
+                    "Setiap grant, revoke, akses dokter, dan verifikasi proof perlu tercatat agar pasien dapat memahami apa yang terjadi pada datanya.",
+                  ],
+                  bullets: [],
+                },
+              ],
+            },
+          },
+          {
+            slug: "rs-sejahtera-administrasi-40",
+            category: "Studi Kasus",
+            publishedAt: "15 Oktober 2025",
+            readTime: "6 menit membaca",
+            title: "Bagaimana RS Sejahtera Memangkas Waktu Administrasi Sebesar 40%",
+            excerpt:
+              "Beban administratif yang tinggi seringkali mengurangi waktu berharga dokter untuk pasien.",
+            imageAlt: "Simbol medis dan node jaringan di atas latar minimalis.",
+            detailImageAlt: "Jaringan simbol medis abstrak untuk integrasi alur kerja rumah sakit.",
+            body: {
+              intro: [
+                "Banyak fasilitas kesehatan masih menghabiskan waktu besar untuk memeriksa dokumen, menyiapkan konteks pasien, dan memastikan izin akses valid.",
+              ],
+              sections: [
+                {
+                  title: "1. Menyatukan konteks sebelum konsultasi",
+                  paragraphs: [
+                    "Dengan ringkasan terstruktur dan akses yang jelas, dokter tidak perlu menelusuri semua catatan secara manual sebelum memahami gambaran awal pasien.",
+                  ],
+                  bullets: [
+                    "Riwayat akses lebih mudah diaudit",
+                    "Dokumen terkait tersusun per cakupan izin",
+                    "Status proof membantu prioritas pemeriksaan",
+                  ],
+                },
+                {
+                  title: "2. Mengurangi pekerjaan berulang",
+                  paragraphs: [
+                    "Otomatisasi verifikasi status, ringkasan jurnal, dan proof membantu staf mengurangi langkah administratif yang biasanya berulang.",
+                  ],
+                  bullets: [],
+                },
+                {
+                  title: "3. Tetap menjaga batas privasi",
+                  paragraphs: [
+                    "Efisiensi tidak boleh mengorbankan izin pasien. Setiap alur tetap dibatasi role, waktu akses, dan scope yang dipilih pasien.",
+                  ],
+                  bullets: [],
+                },
+              ],
+            },
+          },
+          {
+            slug: "hak-akses-rekam-medis-elektronik",
+            category: "Edukasi Pasien",
+            publishedAt: "10 Oktober 2025",
+            readTime: "4 menit membaca",
+            title: "Pentingnya Pasien Memahami Hak Akses Terhadap Rekam Medis Elektronik",
+            excerpt:
+              "Transparansi dalam layanan kesehatan dimulai dari pemahaman pasien tentang hak mereka atas data pribadi.",
+            imageAlt: "Tenaga kesehatan berdiskusi dengan tablet di koridor klinik minimalis.",
+            detailImageAlt: "Tenaga kesehatan menjelaskan data digital kepada pasien.",
+            body: {
+              intro: [
+                "Rekam medis elektronik membuat layanan kesehatan lebih praktis, tetapi pasien tetap perlu memahami siapa yang dapat mengakses data dan untuk tujuan apa.",
+              ],
+              sections: [
+                {
+                  title: "1. Kontrol ada pada pasien",
+                  paragraphs: [
+                    "Dalam MedProof, pasien dapat memilih dokter, cakupan informasi, dan batas waktu akses. Model ini menghindari akses all-or-nothing yang terlalu luas.",
+                  ],
+                  bullets: [
+                    "Pilih Scope 1, Scope 2 mental, atau Scope 2 fisik",
+                    "Tentukan apakah lampiran dapat diunduh",
+                    "Cabut akses ketika konsultasi selesai",
+                  ],
+                },
+                {
+                  title: "2. Riwayat akses harus mudah dibaca",
+                  paragraphs: [
+                    "Pasien perlu melihat aktivitas grant, revoke, akses dokter, dan status proof dalam bahasa yang mudah dipahami.",
+                  ],
+                  bullets: [],
+                },
+                {
+                  title: "3. Transparansi memperkuat kepercayaan",
+                  paragraphs: [
+                    "Ketika pasien dapat memantau izin dan bukti integritas, komunikasi dengan dokter menjadi lebih jelas dan terukur.",
+                  ],
+                  bullets: [],
+                },
+              ],
+            },
+          },
+        ],
+      },
+      landing: {
+        mobileMenuLabel: "Buka navigasi",
+        nav: [
+          { label: "Tentang Kami", href: "#about" },
+          { label: "Keunggulan", href: "#features" },
+          { label: "Artikel", href: "#articles" },
+          { label: "Alur Kerja", href: "#workflow" },
+        ],
+        hero: {
+          title: "Rekam Medis Aman, Jurnal AI Lebih Siap Konsultasi",
+          description:
+            "MedProof membantu pasien menyimpan rekam medis terenkripsi, memantau siapa yang mengakses data melalui audit trail, dan merangkum keluhan mental maupun fisik lewat Jurnal AI sebelum konsultasi dokter.",
+          primaryCta: "Mulai Sekarang",
+          imageAlt: "Antarmuka AI kesehatan MedProof",
+        },
+        about: {
+          title: "Tentang",
+          accent: "MedProof",
+          description:
+            "MedProof dirancang untuk pasien sebagai pemilik utama data kesehatan. Rekam medis disimpan aman off-chain dengan proof blockchain untuk verifikasi integritas, sementara dokter hanya mengakses data dan ringkasan keluhan yang sudah diberi izin pasien.",
+          imageAlt: "Dokter menggunakan tablet untuk meninjau data kesehatan",
+          cards: [
+            {
+              title: "Untuk Pasien",
+              description:
+                "Simpan rekam medis, atur cakupan dan masa berlaku akses dokter, lihat riwayat akses, serta gunakan Jurnal AI untuk menyusun keluhan mental dan fisik dengan lebih jelas.",
+            },
+            {
+              title: "Untuk Dokter",
+              description:
+                "Dokter yang sudah disetujui dapat melihat rekam medis dan ringkasan keluhan yang diizinkan pasien, lalu menambahkan catatan rekam medis baru atau koreksi sebagai catatan lanjutan tanpa mengubah catatan lama.",
+            },
+          ],
+        },
+        features: {
+          title: "Kenapa Harus",
+          accent: "MedProof?",
+          description:
+            "Fokus MedProof adalah keamanan rekam medis, transparansi akses, dan Jurnal AI yang membantu pasien menyiapkan informasi konsultasi tanpa menggantikan penilaian dokter.",
+          items: [
+            {
+              title: "Rekam Medis Terverifikasi Blockchain",
+              description:
+                "Simpan rekam medis dan lampiran secara terenkripsi off-chain. Hash privasi-preserving digunakan sebagai proof blockchain untuk membantu memverifikasi integritas data.",
+            },
+            {
+              title: "Audit Trail Akses Dokter",
+              description:
+                "Pasien dapat melihat dokter yang diberi akses, waktu aktivitas, cakupan izin, dan jenis tindakan seperti grant, revoke, view, RAG, atau mismatch melalui log audit.",
+            },
+            {
+              title: "Jurnal AI Keluhan Pasien",
+              description:
+                "Pasien dapat chat dengan AI untuk menjelaskan keluhan mental dan fisik. Ringkasan membantu informasi tersampaikan lebih cepat dan jelas saat konsultasi.",
+            },
+          ],
+        },
+        articles: {
+          title: "Artikel",
+          accent: "Terbaru",
+          description:
+            "Jelajahi wawasan tentang keamanan rekam medis, proof blockchain, audit akses, dan Jurnal AI untuk data demo MedProof.",
+          readMore: "Lihat selengkapnya",
+          viewAll: "Lihat Selengkapnya",
+        },
+        workflow: {
+          title: "Alur",
+          accent: "Kerja",
+          description:
+            "Alur MedProof dimulai dari pasien: simpan rekam medis, catat keluhan lewat Jurnal AI, lalu beri dokter akses terbatas saat konsultasi.",
+          steps: [
+            {
+              title: "Pasien Mencatat Keluhan",
+              description:
+                "Pasien menggunakan Jurnal AI untuk menceritakan gejala fisik, kondisi mental, tidur, aktivitas, atau keluhan lain dalam bahasa sehari-hari.",
+            },
+            {
+              title: "Ringkasan & Proof Disiapkan",
+              description:
+                "MedProof menyusun ringkasan Scope 2 untuk konsultasi dan menjaga proof blockchain untuk catatan, consent, serta audit event yang relevan.",
+            },
+            {
+              title: "Dokter Mengakses Dengan Izin",
+              description:
+                "Dokter melihat rekam medis dan ringkasan hanya selama izin pasien masih aktif, sesuai cakupan dan batas waktu yang dipilih.",
+            },
+          ],
+        },
+        footer: {
+          description:
+            "MedProof membantu pasien menyimpan rekam medis terverifikasi blockchain, melacak akses dokter, dan menyiapkan keluhan mental maupun fisik melalui Jurnal AI.",
+        },
+      },
       login: {
         features: [
           {
@@ -510,6 +798,7 @@ export const dictionary = {
         messagePlaceholder: "Ceritakan gejala, perasaan, tidur, atau aktivitas hari ini...",
         disclosure: "Data diproses oleh DeepSeek untuk demo/test. Jangan masukkan data klinis produksi.",
         sendTitle: "Kirim pesan",
+        sendDisabledTitle: "Tunggu respons AI selesai",
         send: "Kirim",
         aiContactFailed: "Gagal menghubungi AI",
       },
@@ -729,6 +1018,7 @@ export const dictionary = {
       },
       dashboard: {
         title: "Dashboard Dokter",
+        sidebarSection: "Dokter",
         qrTitle: "QR Dokter",
         qrDescription: "Tunjukkan QR ini ke pasien untuk permintaan akses.",
         qrAlt: "QR dokter MedProof",
@@ -1084,22 +1374,46 @@ export const dictionary = {
         emailPlaceholder: "Masukkan alamat email admin baru",
         submit: "Tambah Admin",
         submitting: "Menambahkan...",
-        success: "Admin baru berhasil ditambahkan.",
+        success: "Undangan admin berhasil dibuat dan email notifikasi dikirim.",
+        emailSendFailed: "Undangan admin berhasil dibuat, tetapi email notifikasi gagal dikirim. Bagikan tautan login secara manual.",
         duplicate: "Email ini sudah terdaftar sebagai admin.",
         emailRequired: "Email wajib diisi.",
         emailInvalid: "Format email tidak valid.",
         adminRequired: "Akses admin diperlukan.",
+        superadminRequired: "Hanya superadmin yang dapat menambah atau mencabut admin.",
+        listTitle: "Admin yang Ditambahkan",
+        listDescription: "Daftar undangan admin yang dibuat oleh superadmin saat ini.",
+        noAdmins: "Belum ada admin yang ditambahkan.",
+        fetchError: "Daftar admin gagal dimuat. Coba muat ulang halaman.",
+        statusPending: "Menunggu login",
+        statusActive: "Aktif",
+        createdAt: "Dibuat",
+        acceptedAt: "Diterima",
+        revoke: "Cabut",
+        revoking: "Mencabut...",
+        revokeSuccess: "Akses admin berhasil dicabut.",
+        revokeMissing: "Undangan admin tidak valid.",
+        revokeNotFound: "Undangan admin tidak ditemukan atau sudah dicabut.",
+        revokeSelfBlocked: "Superadmin tidak dapat mencabut akses sendiri.",
+        revokeSuperadminBlocked: "Akses superadmin tidak dapat dicabut dari halaman ini.",
       },
     },
   },
   en: {
     metadata: {
-      description: "Personal medical record and health journaling MVP",
+      description: "Encrypted medical records with blockchain proof, transparent access logs, and patient AI Journaling.",
     },
     common: {
       brand: "MedProof",
       copyright: "© 2026 MedProof",
+      scrollToTop: "Back to top of page",
       language: "Language",
+      languageToggle: {
+        indonesia: "ID",
+        english: "EN",
+        switchToIndonesian: "Switch to Indonesian",
+        switchToEnglish: "Switch to English",
+      },
       logout: "Log out",
       indonesia: "ID",
       english: "EN",
@@ -1168,6 +1482,287 @@ export const dictionary = {
       ],
       primaryNavLabel: "Main navigation",
       loginCta: "Log in",
+      articlesHub: {
+        listTitle: "Medical Articles & Insights",
+        listDescription:
+          "Find current information, clinical guides, and deeper insight into medical record verification technology and digital health.",
+        searchLabel: "Search articles",
+        searchPlaceholder: "Search article titles, topics, or keywords...",
+        readMore: "Read More",
+        loadMore: "Load More",
+        breadcrumbHome: "Home",
+        breadcrumbArticles: "Medical Articles",
+        publishedMeta: "Published on {date} • {readTime}",
+        relatedTitle: "Related Articles",
+        items: [
+          {
+            slug: "medproof-ai-verifikasi-rekam-medis",
+            category: "Technology",
+            publishedAt: "October 20, 2025",
+            readTime: "5 min read",
+            title: "How MedProof AI Improves Medical Record Verification Accuracy up to 99%",
+            excerpt:
+              "Protecting medical record integrity is critical for diagnosis quality, especially in complex comorbidity cases.",
+            imageAlt: "Modern medical research lab with a digital microscope and glass vials.",
+            detailImageAlt: "Doctor reviewing medical scans on a tablet in a modern clinic.",
+            body: {
+              intro: [
+                "In recent years, artificial intelligence has changed healthcare workflows, especially how medical data is verified and reviewed.",
+                "AI-assisted workflows help accelerate analysis, check record consistency, and reduce human-error risk when patient volume is high.",
+              ],
+              sections: [
+                {
+                  title: "1. Better precision through data analysis",
+                  paragraphs: [
+                    "MedProof AI helps read patterns from authorized patient records, journal summaries, and operational metadata. It does not replace doctors, but adds another review layer for finding inconsistencies faster.",
+                  ],
+                  bullets: [
+                    "Detect record anomalies that need review",
+                    "Reduce administrative review time",
+                    "Support doctors with data-backed second opinions",
+                  ],
+                },
+                {
+                  title: "2. Clinical workflow automation",
+                  paragraphs: [
+                    "Beyond verification, AI can organize patient context before consultation. Doctors receive a more structured summary so appointments can focus on clinical decisions.",
+                  ],
+                  bullets: [],
+                },
+                {
+                  title: "3. Building a sustainable health ecosystem",
+                  paragraphs: [
+                    "MedProof uses AI to empower patients and doctors. Every use remains bounded by patient consent, audit events, and integrity proof so health data stays traceable.",
+                  ],
+                  bullets: [],
+                },
+              ],
+            },
+          },
+          {
+            slug: "standar-enkripsi-privasi-pasien",
+            category: "Data Security",
+            publishedAt: "October 18, 2025",
+            readTime: "4 min read",
+            title: "New Encryption Standards for Protecting Patient Privacy in the Digital Era",
+            excerpt:
+              "Health data security is no longer only a compliance requirement; it is a trust promise to patients.",
+            imageAlt: "Doctor hands reviewing patient files with digital data points.",
+            detailImageAlt: "Medical documents and digital data on a clinical work desk.",
+            body: {
+              intro: [
+                "Health data carries high privacy consequences. Digital platforms should place encryption, audit, and access boundaries as foundations, not add-on features.",
+              ],
+              sections: [
+                {
+                  title: "1. Encrypt before storage",
+                  paragraphs: [
+                    "MedProof stores health content encrypted off-chain. Sensitive data is not read directly from the database without server authorization and valid role context.",
+                  ],
+                  bullets: [
+                    "Medical content is not stored as plaintext",
+                    "Encryption keys stay in server environment variables",
+                    "Blockchain proof uses privacy-preserving hashes only",
+                  ],
+                },
+                {
+                  title: "2. Granular access based on patient consent",
+                  paragraphs: [
+                    "Patients decide which doctor can view data, which scopes are open, whether attachments may be downloaded, and when access expires.",
+                  ],
+                  bullets: [],
+                },
+                {
+                  title: "3. Audit as a trust trail",
+                  paragraphs: [
+                    "Every grant, revoke, doctor view, and proof verification should be recorded so patients can understand what happened to their data.",
+                  ],
+                  bullets: [],
+                },
+              ],
+            },
+          },
+          {
+            slug: "rs-sejahtera-administrasi-40",
+            category: "Case Study",
+            publishedAt: "October 15, 2025",
+            readTime: "6 min read",
+            title: "How RS Sejahtera Cut Administrative Time by 40%",
+            excerpt:
+              "High administrative load often reduces valuable doctor time with patients.",
+            imageAlt: "Medical symbols and network nodes over a minimalist background.",
+            detailImageAlt: "Abstract medical network symbols for hospital workflow integration.",
+            body: {
+              intro: [
+                "Many healthcare facilities still spend significant time checking documents, preparing patient context, and confirming that access permissions are valid.",
+              ],
+              sections: [
+                {
+                  title: "1. Unify context before consultation",
+                  paragraphs: [
+                    "With structured summaries and clear access boundaries, doctors do not need to manually review every record before understanding the patient's starting context.",
+                  ],
+                  bullets: [
+                    "Access history is easier to audit",
+                    "Related documents are organized by permission scope",
+                    "Proof status helps prioritize review",
+                  ],
+                },
+                {
+                  title: "2. Reduce repeated work",
+                  paragraphs: [
+                    "Automating status checks, journal summaries, and proof indicators helps staff reduce repeated administrative steps.",
+                  ],
+                  bullets: [],
+                },
+                {
+                  title: "3. Keep privacy boundaries intact",
+                  paragraphs: [
+                    "Efficiency must not weaken patient consent. Every flow remains bounded by role, access time, and the scopes selected by the patient.",
+                  ],
+                  bullets: [],
+                },
+              ],
+            },
+          },
+          {
+            slug: "hak-akses-rekam-medis-elektronik",
+            category: "Patient Education",
+            publishedAt: "October 10, 2025",
+            readTime: "4 min read",
+            title: "Why Patients Should Understand Access Rights for Electronic Medical Records",
+            excerpt:
+              "Transparency in healthcare starts with patients understanding their rights over personal data.",
+            imageAlt: "Healthcare professionals discussing a tablet in a minimalist clinic corridor.",
+            detailImageAlt: "Healthcare professional explaining digital data to a patient.",
+            body: {
+              intro: [
+                "Electronic medical records make healthcare more practical, but patients still need to understand who can access data and for what purpose.",
+              ],
+              sections: [
+                {
+                  title: "1. Control belongs to the patient",
+                  paragraphs: [
+                    "In MedProof, patients can select the doctor, information scope, and access expiry. This model avoids broad all-or-nothing access.",
+                  ],
+                  bullets: [
+                    "Choose Scope 1, Scope 2 mental, or Scope 2 physical",
+                    "Decide whether attachments can be downloaded",
+                    "Revoke access when consultation is complete",
+                  ],
+                },
+                {
+                  title: "2. Access history should be readable",
+                  paragraphs: [
+                    "Patients need to see grant, revoke, doctor-view, and proof-status activity in language that is easy to understand.",
+                  ],
+                  bullets: [],
+                },
+                {
+                  title: "3. Transparency strengthens trust",
+                  paragraphs: [
+                    "When patients can monitor permission and integrity proof, communication with doctors becomes clearer and more measurable.",
+                  ],
+                  bullets: [],
+                },
+              ],
+            },
+          },
+        ],
+      },
+      landing: {
+        mobileMenuLabel: "Open navigation",
+        nav: [
+          { label: "About Us", href: "#about" },
+          { label: "Advantages", href: "#features" },
+          { label: "Articles", href: "#articles" },
+          { label: "Workflow", href: "#workflow" },
+        ],
+        hero: {
+          title: "Secure Medical Records, AI Journaling for Better Consultations",
+          description:
+            "MedProof helps patients store encrypted medical records, track who accessed data through an audit trail, and summarize mental or physical complaints with AI Journaling before doctor consultations.",
+          primaryCta: "Start Now",
+          imageAlt: "MedProof health AI interface",
+        },
+        about: {
+          title: "About",
+          accent: "MedProof",
+          description:
+            "MedProof is built for patients as the primary owners of their health data. Medical records are stored securely off-chain with blockchain proof for integrity verification, while doctors only access patient-approved records and complaint summaries.",
+          imageAlt: "Doctor using a tablet to review health data",
+          cards: [
+            {
+              title: "For Patients",
+              description:
+                "Store medical records, set doctor access scopes and expiry, review access history, and use AI Journaling to describe mental and physical complaints more clearly.",
+            },
+            {
+              title: "For Doctors",
+              description:
+                "Approved doctors can view patient-authorized medical records and complaint summaries, then add new medical record notes or corrections as follow-up notes without changing the original record.",
+            },
+          ],
+        },
+        features: {
+          title: "Why Choose",
+          accent: "MedProof?",
+          description:
+            "MedProof focuses on medical record security, transparent access tracking, and AI Journaling that helps patients prepare consultation context without replacing doctor judgment.",
+          items: [
+            {
+              title: "Blockchain-Verified Medical Records",
+              description:
+                "Store medical records and attachments encrypted off-chain. Privacy-preserving hashes provide blockchain proof to help verify data integrity.",
+            },
+            {
+              title: "Doctor Access Audit Trail",
+              description:
+                "Patients can review approved doctors, activity time, permission scope, and action types such as grant, revoke, view, RAG, or mismatch through audit logs.",
+            },
+            {
+              title: "Patient Complaint AI Journal",
+              description:
+                "Patients can chat with AI to describe mental and physical complaints. Summaries help information reach doctors faster and more clearly during consultation.",
+            },
+          ],
+        },
+        articles: {
+          title: "Latest",
+          accent: "Articles",
+          description:
+            "Explore insights on medical record security, blockchain proof, access audits, and AI Journaling for MedProof demo data.",
+          readMore: "Read more",
+          viewAll: "View More",
+        },
+        workflow: {
+          title: "How It",
+          accent: "Works",
+          description:
+            "MedProof starts with the patient: store medical records, capture complaints through AI Journaling, then grant doctors limited access for consultation.",
+          steps: [
+            {
+              title: "Patient Records Complaints",
+              description:
+                "Patients use AI Journaling to describe physical symptoms, mental state, sleep, activity, or other concerns in everyday language.",
+            },
+            {
+              title: "Summaries & Proof Prepared",
+              description:
+                "MedProof prepares Scope 2 summaries for consultation and maintains blockchain proof for relevant records, consent, and audit events.",
+            },
+            {
+              title: "Doctor Accesses With Consent",
+              description:
+                "Doctors view records and summaries only while patient permission is active, within selected scopes and time limits.",
+            },
+          ],
+        },
+        footer: {
+          description:
+            "MedProof helps patients store blockchain-verified medical records, track doctor access, and prepare mental or physical complaints through AI Journaling.",
+        },
+      },
       login: {
         features: [
           {
@@ -1603,6 +2198,7 @@ export const dictionary = {
         messagePlaceholder: "Share symptoms, feelings, sleep, or activities from today...",
         disclosure: "Data is processed by DeepSeek for demo/test use. Do not enter production clinical data.",
         sendTitle: "Send message",
+        sendDisabledTitle: "Wait for the AI response to finish",
         send: "Send",
         aiContactFailed: "Could not contact AI",
       },
@@ -1822,6 +2418,7 @@ export const dictionary = {
       },
       dashboard: {
         title: "Doctor Dashboard",
+        sidebarSection: "Doctor",
         qrTitle: "Doctor QR",
         qrDescription: "Show this QR to patients when requesting access.",
         qrAlt: "MedProof doctor QR",
@@ -2177,11 +2774,28 @@ export const dictionary = {
         emailPlaceholder: "Enter the new admin email address",
         submit: "Add Admin",
         submitting: "Adding...",
-        success: "New admin added successfully.",
+        success: "Admin invitation created and notification email sent.",
+        emailSendFailed: "Admin invitation created, but the notification email failed to send. Share the login link manually.",
         duplicate: "This email is already registered as an admin.",
         emailRequired: "Email is required.",
         emailInvalid: "Email format is invalid.",
         adminRequired: "Admin access is required.",
+        superadminRequired: "Only the superadmin can add or revoke admins.",
+        listTitle: "Added Admins",
+        listDescription: "Admin invitations created by the current superadmin.",
+        noAdmins: "No admins have been added yet.",
+        fetchError: "Admin list failed to load. Refresh the page and try again.",
+        statusPending: "Pending login",
+        statusActive: "Active",
+        createdAt: "Created",
+        acceptedAt: "Accepted",
+        revoke: "Revoke",
+        revoking: "Revoking...",
+        revokeSuccess: "Admin access revoked successfully.",
+        revokeMissing: "Admin invitation is invalid.",
+        revokeNotFound: "Admin invitation was not found or has already been revoked.",
+        revokeSelfBlocked: "Superadmin cannot revoke their own access.",
+        revokeSuperadminBlocked: "Superadmin access cannot be revoked from this page.",
       },
     },
   },

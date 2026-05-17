@@ -125,12 +125,13 @@ values (
   '660601'
 );
 
-insert into public.medical_admins (admin_id, auth_user_id, full_name, email)
+insert into public.medical_admins (admin_id, auth_user_id, full_name, email, admin_role)
 values (
   '30000000-0000-0000-0000-000000006001',
   '00000000-0000-0000-0000-000000006301',
   'Feature 06 Admin',
-  'feature06-admin@example.test'
+  'feature06-admin@example.test',
+  'superadmin'
 );
 
 insert into public.doctors (

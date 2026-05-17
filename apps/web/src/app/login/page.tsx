@@ -1,7 +1,7 @@
 import { AlertTriangle, Bot, FileText, ShieldCheck } from "lucide-react";
 
-import { MarketingFooter } from "@/components/marketing-chrome";
 import { SharedHeader } from "@/components/shared-header";
+import { SiteFooter } from "@/components/site-footer";
 import { redirectAuthenticatedUserFromPublicRoute } from "@/lib/auth/session";
 import { getDictionary } from "@/lib/i18n/server";
 
@@ -32,8 +32,8 @@ export default async function LoginPage({
 
   return (
     <div className="flex min-h-screen flex-col bg-[var(--color-warm-canvas)] text-[var(--color-graphite)]">
-      <SharedHeader authMode="public" />
-      <main className="flex flex-1 flex-col">
+      <SharedHeader authMode="public" navigationItems={[]} showAuthAction={false} />
+      <main className="flex min-h-screen flex-1 flex-col">
         <section className="hidden flex-1 items-center justify-center px-6 pt-16 md:flex">
           <div className="mx-auto grid w-full max-w-[1100px] grid-cols-2 items-center gap-[120px]">
             <div className="flex flex-col gap-12">
@@ -76,7 +76,7 @@ export default async function LoginPage({
           </div>
         </section>
       </main>
-      <MarketingFooter />
+      <SiteFooter />
     </div>
   );
 }

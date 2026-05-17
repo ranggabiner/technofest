@@ -10,6 +10,25 @@ describe("env parsing", () => {
     ]);
   });
 
+  it("requires exactly one superadmin email in the admin allowlist", () => {
+    const parsed = parseEnv(
+      {
+        NEXT_PUBLIC_SUPABASE_URL: "http://127.0.0.1:54321",
+        NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "sb_publishable_local",
+        SUPABASE_SERVICE_ROLE_KEY: "service-role",
+        ADMIN_EMAIL_ALLOWLIST: "admin@example.com, second@example.com",
+        ENCRYPTION_MASTER_KEY: Buffer.alloc(32, 1).toString("base64"),
+        HASH_PEPPER: "local-pepper-value",
+      },
+      ["core"],
+    );
+
+    expect(parsed.ok).toBe(false);
+    if (!parsed.ok) {
+      expect(parsed.errors).toContain("ADMIN_EMAIL_ALLOWLIST: must contain exactly one superadmin email");
+    }
+  });
+
   it("requires feature-scoped env groups only when requested", () => {
     const base = {
       NEXT_PUBLIC_SUPABASE_URL: "http://127.0.0.1:54321",

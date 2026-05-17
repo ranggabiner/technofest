@@ -1,6 +1,7 @@
 import { Check } from "lucide-react";
 
 import { SharedHeader } from "@/components/shared-header";
+import { SiteFooter } from "@/components/site-footer";
 import { cn } from "@/lib/utils";
 
 import { getPatientOnboardingProgressItems } from "./patient-onboarding-progress";
@@ -33,13 +34,14 @@ export async function PatientOnboardingShell({
     return (
       <div className="flex min-h-screen flex-col bg-[var(--color-warm-canvas)] text-[var(--color-graphite)]">
         <SharedHeader authMode="authenticated" isAuthenticated position="sticky" />
-        <main className="flex flex-1 items-center justify-center px-6 py-20">
+        <main className="flex min-h-screen flex-1 items-center justify-center px-6 py-20">
           <section className="w-full max-w-2xl rounded-xl bg-[var(--color-card)] p-8 shadow-[var(--shadow-subtle)] md:p-12">
             <PatientOnboardingProgress steps={steps} activeStep={activeStep} variant="compact" />
             <PatientOnboardingHeading title={title} description={description} />
             {children}
           </section>
         </main>
+        <SiteFooter />
       </div>
     );
   }
@@ -47,7 +49,7 @@ export async function PatientOnboardingShell({
   return (
     <div className="flex min-h-screen flex-col bg-[var(--color-warm-canvas)] text-[var(--color-graphite)]">
       <SharedHeader authMode="authenticated" isAuthenticated position="sticky" />
-      <main className="flex flex-1 items-center justify-center px-6 py-20 md:py-24">
+      <main className="flex min-h-screen flex-1 items-center justify-center px-6 py-20 md:py-24">
         <div className="mx-auto w-full max-w-[720px]">
           <header className="mb-20 text-center">
             <PatientOnboardingProgress steps={steps} activeStep={activeStep} variant="bar" />
@@ -59,6 +61,7 @@ export async function PatientOnboardingShell({
           </section>
         </div>
       </main>
+      <SiteFooter />
     </div>
   );
 }

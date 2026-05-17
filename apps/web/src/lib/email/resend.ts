@@ -4,6 +4,8 @@ import { Resend } from "resend";
 
 import { parseEnv } from "@/lib/config/env";
 
+import { buildAdminInvitationEmail } from "./admin-invitation";
+
 export async function sendDoctorStatusEmail(input: {
   to: string;
   doctorName: string;
@@ -30,6 +32,35 @@ export async function sendDoctorStatusEmail(input: {
     to: input.to,
     subject,
     text,
+  });
+
+  if (error) {
+    return { ok: false as const, reason: "resend_send_failed" };
+  }
+
+  return { ok: true as const };
+}
+
+export async function sendAdminInvitationEmail(input: {
+  to: string;
+  loginUrl: string;
+}) {
+  const env = parseEnv(process.env, ["email"]);
+  if (!env.ok) {
+    return { ok: false as const, reason: "email_env_missing" };
+  }
+
+  const resend = new Resend(env.data.RESEND_API_KEY);
+  const email = buildAdminInvitationEmail({
+    invitedEmail: input.to,
+    loginUrl: input.loginUrl,
+  });
+
+  const { error } = await resend.emails.send({
+    from: env.data.RESEND_FROM_EMAIL,
+    to: input.to,
+    subject: email.subject,
+    text: email.text,
   });
 
   if (error) {

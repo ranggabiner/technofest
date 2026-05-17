@@ -1,48 +1,48 @@
 "use client";
 
+import { Languages } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
-import { localeCookieName, supportedLocales, type Locale } from "@/lib/i18n/locales";
-import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { getNextLocale, localeCookieName, type Locale } from "@/lib/i18n/locales";
 
 export function LanguageSwitcher({
   locale,
-  label,
+  labels,
 }: {
   locale: Locale;
-  label: string;
+  labels: {
+    indonesia: string;
+    english: string;
+    switchToIndonesian: string;
+    switchToEnglish: string;
+  };
 }) {
   const router = useRouter();
-  const [pendingLocale, setPendingLocale] = useState<Locale | null>(null);
+  const [currentLocale, setCurrentLocale] = useState<Locale>(locale);
 
-  useEffect(() => {
-    if (!pendingLocale) return;
-    window.document.cookie = `${localeCookieName}=${pendingLocale}; path=/; max-age=31536000; samesite=lax`;
+  const nextLocale = getNextLocale(currentLocale);
+  const label = currentLocale === "id" ? labels.indonesia : labels.english;
+  const ariaLabel = nextLocale === "id" ? labels.switchToIndonesian : labels.switchToEnglish;
+
+  function handleClick() {
+    setCurrentLocale(nextLocale);
+    window.document.cookie = `${localeCookieName}=${nextLocale}; path=/; max-age=31536000; samesite=lax`;
     router.refresh();
-  }, [pendingLocale, router]);
+  }
 
   return (
-    <div
-      className="inline-flex items-center rounded-full bg-[var(--color-stone-surface)] p-1"
-      aria-label={label}
+    <Button
+      type="button"
+      variant="ghost"
+      className="min-h-9 rounded-full px-3 text-xs"
+      aria-label={ariaLabel}
+      title={ariaLabel}
+      onClick={handleClick}
     >
-      {supportedLocales.map((option) => (
-        <button
-          key={option}
-          type="button"
-          onClick={() => setPendingLocale(option)}
-          aria-pressed={locale === option}
-          className={cn(
-            "min-h-7 rounded-full px-3 text-xs font-semibold transition",
-            locale === option
-              ? "bg-[var(--color-card)] text-[var(--color-midnight)] shadow-[var(--shadow-subtle)]"
-              : "text-[var(--color-ash)] hover:text-[var(--color-midnight)]",
-          )}
-        >
-          {option.toUpperCase()}
-        </button>
-      ))}
-    </div>
+      <Languages size={15} aria-hidden="true" />
+      <span className="hidden sm:inline">{label}</span>
+    </Button>
   );
 }

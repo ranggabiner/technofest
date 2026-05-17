@@ -29,10 +29,16 @@ describe("patient layout shell", () => {
   it("mounts the shared patient shell in the persistent portal layout", () => {
     const layoutPath = new URL("./(portal)/layout.tsx", import.meta.url);
     const source = readFileSync(layoutPath, "utf8");
+    const patientLayoutSource = readFileSync(new URL("./_components/patient-layout.tsx", import.meta.url), "utf8");
+    const sharedLayoutSource = readFileSync(new URL("../_components/portal-layout.tsx", import.meta.url), "utf8");
 
     expect(existsSync(layoutPath)).toBe(true);
     expect(source).toContain("PatientLayout");
     expect(source).toContain("children");
+    expect(patientLayoutSource).toContain("PortalLayout");
+    expect(patientLayoutSource).toContain("PortalForbiddenLayout");
+    expect(sharedLayoutSource).toContain("data-portal-layout");
+    expect(sharedLayoutSource).toContain("data-portal-sidebar");
   });
 
   it.each(patientRouteFiles)("%s keeps route UI content-only", (relativePath) => {
@@ -94,7 +100,7 @@ describe("patient layout shell", () => {
   });
 
   it("keeps profile logout visually secondary", () => {
-    const source = readFileSync(new URL("./_components/patient-layout.tsx", import.meta.url), "utf8");
+    const source = readFileSync(new URL("../_components/portal-layout.tsx", import.meta.url), "utf8");
 
     expect(source).toContain("text-[var(--color-ash)] transition hover:border-[var(--color-stone-surface)]");
     expect(source).not.toContain("gap-2 rounded-full bg-[var(--color-midnight)] px-4 py-2 text-xs font-semibold uppercase");
