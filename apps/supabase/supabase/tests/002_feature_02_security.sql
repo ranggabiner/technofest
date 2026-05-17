@@ -2,7 +2,7 @@ create extension if not exists pgtap with schema extensions;
 
 begin;
 
-select plan(18);
+select plan(21);
 
 select is(
   exists(select 1 from pg_extension where extname = 'pg_graphql'),
@@ -26,13 +26,13 @@ select is(
 
 drop table public.__feature02_default_privilege_probe;
 
-select isnt_empty(
+select is_empty(
   $$select 1
     from pg_proc p
     join pg_namespace n on n.oid = p.pronamespace
     where n.nspname = 'public'
       and p.proname = 'replace_active_access_grant'$$,
-  'replace active access grant RPC exists'
+  'legacy grant replacement RPC is removed'
 );
 
 select is(
@@ -47,8 +47,8 @@ select is(
     ),
     false
   ),
-  true,
-  'authenticated can execute grant replacement RPC'
+  false,
+  'authenticated cannot execute legacy grant replacement RPC'
 );
 
 select is(
@@ -64,13 +64,19 @@ select is(
     false
   ),
   false,
-  'anon cannot execute grant replacement RPC'
+  'anon cannot execute legacy grant replacement RPC'
 );
 
 select is(
   has_schema_privilege('authenticated', 'private', 'usage'),
   false,
   'authenticated cannot use private helper schema'
+);
+
+select is(
+  has_table_privilege('anon', 'public.admin_invitations', 'select'),
+  false,
+  'anon cannot read admin invitations'
 );
 
 insert into auth.users (id, aud, role, email)
@@ -221,6 +227,12 @@ set local request.jwt.claim.sub = '90000000-0000-0000-0000-000000000301';
 select is((select count(*)::int from public.patients), 0, 'medical admin cannot see patient rows');
 select is((select count(*)::int from public.secure_files), 1, 'medical admin sees only KYC file metadata');
 
+select lives_ok(
+  $$insert into public.admin_invitations (email, invited_by)
+    values ('new-admin@example.test', '30000000-0000-0000-0000-000000000001')$$,
+  'medical admin can invite another admin'
+);
+
 set local request.jwt.claim.sub = '90000000-0000-0000-0000-000000000101';
 
 select throws_ok(
@@ -243,7 +255,7 @@ select throws_ok(
   'direct access grant insert without RPC marker is blocked'
 );
 
-select lives_ok(
+select throws_ok(
   $$select public.replace_active_access_grant(
       '10000000-0000-0000-0000-000000000001',
       '20000000-0000-0000-0000-000000000001',
@@ -254,7 +266,29 @@ select lives_ok(
       now() + interval '2 days',
       'new-consent-hash'
     )$$,
-  'grant replacement RPC can create replacement grant'
+  '42883',
+  null,
+  'legacy grant replacement RPC call is blocked'
+);
+
+select lives_ok(
+  $$select public.replace_active_access_grant_v2(
+      '80000000-0000-0000-0000-000000000002',
+      '10000000-0000-0000-0000-000000000001',
+      '20000000-0000-0000-0000-000000000001',
+      false,
+      false,
+      true,
+      false,
+      now(),
+      now() + interval '2 days',
+      repeat('d', 64),
+      repeat('e', 64),
+      '91000000-0000-0000-0000-000000000001',
+      repeat('f', 64),
+      '127.0.0.1'::inet
+    )$$,
+  'grant replacement uses audited v2 RPC'
 );
 
 reset role;

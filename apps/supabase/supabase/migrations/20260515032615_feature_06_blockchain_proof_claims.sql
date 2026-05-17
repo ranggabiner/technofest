@@ -37,7 +37,13 @@ begin
       null::boolean,
       r.blockchain_tx_hash
     from (
-      select *
+      select
+        record_id,
+        record_hash,
+        patient_id,
+        doctor_id,
+        blockchain_tx_hash,
+        created_at
       from public.scope_1_medical_records
       where blockchain_status in ('pending', 'failed')
       order by created_at
@@ -62,7 +68,15 @@ begin
       g.is_revoked,
       g.blockchain_tx_hash
     from (
-      select *
+      select
+        grant_id,
+        consent_hash,
+        patient_id,
+        doctor_id,
+        expires_at,
+        is_revoked,
+        blockchain_tx_hash,
+        created_at
       from public.access_grants
       where blockchain_status in ('pending', 'failed')
       order by created_at
@@ -87,7 +101,16 @@ begin
       null::boolean,
       a.blockchain_tx_hash
     from (
-      select *
+      select
+        log_id,
+        audit_event_hash,
+        patient_id,
+        doctor_id,
+        actor_auth_user_id,
+        target_id,
+        action,
+        blockchain_tx_hash,
+        created_at
       from public.audit_logs
       where blockchain_status in ('pending', 'failed')
       order by created_at

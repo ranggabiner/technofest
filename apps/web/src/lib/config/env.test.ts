@@ -25,4 +25,20 @@ describe("env parsing", () => {
     expect(parseEnv(base, ["core", "email"]).ok).toBe(true);
     expect(parseEnv(base, ["blockchain"]).ok).toBe(false);
   });
+
+  it("accepts NEXT_PUBLIC contract address as blockchain runtime fallback", () => {
+    const parsed = parseEnv(
+      {
+        AMOY_RPC_URL: "https://polygon-amoy.example.test",
+        RELAYER_PRIVATE_KEY: `0x${"1".repeat(64)}`,
+        NEXT_PUBLIC_MEDPROOF_CONTRACT_ADDRESS: `0x${"a".repeat(40)}`,
+      },
+      ["blockchain"],
+    );
+
+    expect(parsed.ok).toBe(true);
+    if (parsed.ok) {
+      expect(parsed.data.MEDPROOF_CONTRACT_ADDRESS).toBe(`0x${"a".repeat(40)}`);
+    }
+  });
 });

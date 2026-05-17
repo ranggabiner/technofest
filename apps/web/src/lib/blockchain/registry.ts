@@ -87,6 +87,8 @@ export type ClaimedBlockchainProof = {
   expiresAt?: string | null;
   isRevoked?: boolean | null;
   blockchainTxHash?: string | null;
+  blockchainStatus?: "pending" | "confirmed" | "failed" | null;
+  claimedBy?: string | null;
 };
 
 export type ProofContractCall =
@@ -102,6 +104,22 @@ export type ProofContractCall =
       functionName: "recordAuditEvent";
       args: readonly [Hex, Hex, Hex, Hex];
     };
+
+export const proofContractGasLimit = BigInt(60_000);
+
+export type ProofContractWrite = ProofContractCall & {
+  gas: typeof proofContractGasLimit;
+};
+
+export function buildProofContractWrite(
+  proof: ClaimedBlockchainProof,
+  hashPepper: string,
+): ProofContractWrite {
+  return {
+    ...buildProofContractCall(proof, hashPepper),
+    gas: proofContractGasLimit,
+  };
+}
 
 export function buildProofContractCall(
   proof: ClaimedBlockchainProof,

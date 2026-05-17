@@ -2,11 +2,12 @@ create extension if not exists pgtap with schema extensions;
 
 begin;
 
-select plan(14);
+select plan(17);
 
 select has_table('public', 'patients', 'patients table exists');
 select has_table('public', 'doctors', 'doctors table exists');
 select has_table('public', 'medical_admins', 'medical_admins table exists');
+select has_table('public', 'admin_invitations', 'admin_invitations table exists');
 select has_table('public', 'secure_files', 'secure_files table exists');
 select has_table('public', 'doctor_kyc_documents', 'doctor_kyc_documents table exists');
 select has_table('public', 'audit_logs', 'audit_logs table exists');
@@ -28,6 +29,12 @@ select is(
   'audit logs RLS enabled'
 );
 
+select is(
+  (select relrowsecurity from pg_class where oid = 'public.admin_invitations'::regclass),
+  true,
+  'admin invitations RLS enabled'
+);
+
 select isnt_empty(
   $$select 1 from storage.buckets where id = 'encrypted-kyc-documents' and public = false$$,
   'encrypted KYC bucket is private'
@@ -40,6 +47,13 @@ select isnt_empty(
       and table_name = 'patients'
       and privilege_type = 'SELECT'$$,
   'patients has explicit authenticated grant'
+);
+
+select ok(
+  has_table_privilege('service_role', 'public.admin_invitations', 'select')
+  and has_table_privilege('service_role', 'public.admin_invitations', 'insert')
+  and has_table_privilege('service_role', 'public.admin_invitations', 'update'),
+  'admin invitations has service role grants for server role resolution'
 );
 
 select * from finish();

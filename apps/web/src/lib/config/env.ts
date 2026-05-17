@@ -44,10 +44,11 @@ export function parseEnv(
 ): ParsedEnv {
   const errors: string[] = [];
   const data: Record<string, string> = {};
+  const normalizedSource = normalizeEnvAliases(source);
 
   for (const group of groups) {
     const schema = envSchemas[group];
-    const result = schema.safeParse(source);
+    const result = schema.safeParse(normalizedSource);
 
     if (!result.success) {
       for (const issue of result.error.issues) {
@@ -79,6 +80,14 @@ export function requireEnv(groups: EnvGroup[] = ["core"]) {
   }
 
   return parsed;
+}
+
+function normalizeEnvAliases(source: NodeJS.ProcessEnv | Record<string, string | undefined>) {
+  return {
+    ...source,
+    MEDPROOF_CONTRACT_ADDRESS:
+      source.MEDPROOF_CONTRACT_ADDRESS ?? source.NEXT_PUBLIC_MEDPROOF_CONTRACT_ADDRESS,
+  };
 }
 
 function isBase64AesKey(value: string) {

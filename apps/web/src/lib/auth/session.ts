@@ -15,6 +15,7 @@ import {
   roleEntryPath,
   type AuthIntent,
   type AdminRow,
+  type AdminInvitationRow,
   type DoctorRow,
   type PatientRow,
   type ResolvedRole,
@@ -24,6 +25,7 @@ type RoleRows = {
   patient: PatientRow | null;
   doctor: DoctorRow | null;
   admin: AdminRow | null;
+  adminInvitation: AdminInvitationRow | null;
 };
 
 export async function getCurrentUser(): Promise<User | null> {
@@ -98,19 +100,21 @@ export async function resolveRoleForUser(
   const cookieStore = await cookies();
   const email = user.email?.toLowerCase();
   const fullName = displayNameFromUser(user);
+  const avatarUrl = avatarUrlFromUser(user);
 
   if (!email) {
     throw new Error("Google account did not return an email");
   }
 
   const admin = createAdminClient();
-  const rows = await loadRoleRows(user.id);
+  const rows = await loadRoleRows(user.id, email);
   const adminAllowlist = parseAdminEmailAllowlist(env.data.ADMIN_EMAIL_ALLOWLIST);
   let shouldReloadAdminProfile = false;
   let role = resolveRoleFromRows({
     authUserId: user.id,
     email,
     fullName,
+    avatarUrl,
     adminAllowlist,
     intent: null,
     ...rows,
@@ -126,17 +130,31 @@ export async function resolveRoleForUser(
     shouldReloadAdminProfile = true;
   }
 
+  if (role?.kind === "medical_admin" && rows.adminInvitation && !rows.adminInvitation.accepted_at) {
+    const { error } = await admin
+      .from("admin_invitations")
+      .update({
+        accepted_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .eq("invitation_id", rows.adminInvitation.invitation_id);
+
+    if (error) throw error;
+    shouldReloadAdminProfile = true;
+  }
+
   if (options.clearIntentCookie) {
     cookieStore.delete(roleIntentCookie);
   }
 
   if (shouldReloadAdminProfile) {
-    const refreshed = await loadRoleRows(user.id);
+    const refreshed = await loadRoleRows(user.id, email);
 
     role = resolveRoleFromRows({
       authUserId: user.id,
       email,
       fullName,
+      avatarUrl,
       adminAllowlist,
       intent: null,
       ...refreshed,
@@ -157,6 +175,7 @@ export async function completeRoleForUser(
   const env = requireEnv(["core"]);
   const email = user.email?.toLowerCase();
   const fullName = displayNameFromUser(user);
+  const avatarUrl = avatarUrlFromUser(user);
 
   if (!email) {
     throw new Error("Google account did not return an email");
@@ -191,11 +210,12 @@ export async function completeRoleForUser(
     throw insert.error;
   }
 
-  const rows = await loadRoleRows(user.id);
+  const rows = await loadRoleRows(user.id, email);
   const role = resolveRoleFromRows({
     authUserId: user.id,
     email,
     fullName,
+    avatarUrl,
     adminAllowlist: parseAdminEmailAllowlist(env.data.ADMIN_EMAIL_ALLOWLIST),
     intent,
     ...rows,
@@ -213,9 +233,10 @@ export async function redirectToRoleHome() {
   redirect(roleEntryPath(role));
 }
 
-async function loadRoleRows(authUserId: string): Promise<RoleRows> {
+async function loadRoleRows(authUserId: string, email: string): Promise<RoleRows> {
   const admin = createAdminClient();
-  const [patient, doctor, medicalAdmin] = await Promise.all([
+  const normalizedEmail = email.trim().toLowerCase();
+  const [patient, doctor, medicalAdmin, adminInvitation] = await Promise.all([
     admin
       .from("patients")
       .select("patient_id,email,full_name,onboarding_step,onboarding_completed_at")
@@ -231,16 +252,25 @@ async function loadRoleRows(authUserId: string): Promise<RoleRows> {
       .select("admin_id,email,full_name")
       .eq("auth_user_id", authUserId)
       .maybeSingle(),
+    admin
+      .from("admin_invitations")
+      .select("invitation_id,email,accepted_at")
+      .eq("email", normalizedEmail)
+      .maybeSingle(),
   ]);
 
   if (patient.error) throw patient.error;
   if (doctor.error) throw doctor.error;
   if (medicalAdmin.error) throw medicalAdmin.error;
+  if (adminInvitation.error && adminInvitation.error.code !== "PGRST205") {
+    throw new Error(adminInvitation.error.message);
+  }
 
   return {
     patient: patient.data as PatientRow | null,
     doctor: doctor.data as DoctorRow | null,
     admin: medicalAdmin.data as AdminRow | null,
+    adminInvitation: adminInvitation.error ? null : (adminInvitation.data as AdminInvitationRow | null),
   };
 }
 
@@ -249,4 +279,10 @@ function displayNameFromUser(user: User) {
   const name = metadata.full_name ?? metadata.name;
   if (typeof name === "string" && name.trim()) return name.trim();
   return user.email?.split("@")[0] ?? "Pengguna MedProof";
+}
+
+function avatarUrlFromUser(user: User) {
+  const metadata = user.user_metadata as Record<string, unknown>;
+  const avatarUrl = metadata.avatar_url ?? metadata.picture;
+  return typeof avatarUrl === "string" && avatarUrl.trim() ? avatarUrl.trim() : null;
 }
