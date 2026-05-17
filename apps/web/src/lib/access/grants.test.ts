@@ -1,8 +1,11 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  ActiveDoctorAccessSessionError,
+  assertNoActiveDoctorAccessSession,
   buildAccessGrantProof,
   getDoctorLookupLimitState,
+  isActiveDoctorAccessSessionError,
   parseDoctorLookupInput,
 } from "./grants";
 
@@ -64,6 +67,25 @@ describe("doctor lookup rate limits", () => {
   });
 });
 
+describe("doctor access grant action errors", () => {
+  it("blocks creating another active session for the same doctor", () => {
+    expect(() => assertNoActiveDoctorAccessSession({ grantId: "active-grant" })).toThrow(
+      ActiveDoctorAccessSessionError,
+    );
+  });
+
+  it("classifies duplicate active grant invariant failures", () => {
+    expect(isActiveDoctorAccessSessionError({ message: "active grant invariant failed" })).toBe(true);
+    expect(isActiveDoctorAccessSessionError({ details: "active grant invariant failed" })).toBe(true);
+    expect(isActiveDoctorAccessSessionError({ message: "replacement consent_hash is required" })).toBe(true);
+  });
+
+  it("does not classify unrelated Supabase or RPC errors", () => {
+    expect(isActiveDoctorAccessSessionError({ message: "scope2 filter mode is invalid" })).toBe(false);
+    expect(isActiveDoctorAccessSessionError(new Error("Akses dokter gagal disimpan"))).toBe(false);
+  });
+});
+
 describe("access grant proof hashing", () => {
   const baseInput = {
     pepper: "test-pepper-with-enough-length",
@@ -118,6 +140,7 @@ describe("access grant proof hashing", () => {
       "expires_at",
       "grant_ref_hash",
       "granted_at",
+      "granular_scope_hash",
       "is_revoked",
       "patient_hash",
       "proof_type",

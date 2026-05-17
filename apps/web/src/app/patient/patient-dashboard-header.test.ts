@@ -11,6 +11,7 @@ describe("patient dashboard header", () => {
     expect(layoutSource).toContain("<SharedHeader");
     expect(layoutSource).toContain('authMode="authenticated"');
     expect(layoutSource).toContain("isAuthenticated");
+    expect(layoutSource).toContain("showAuthAction={false}");
     expect(source).not.toContain("<header className=");
   });
 });

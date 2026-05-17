@@ -2,12 +2,13 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ArrowLeft, FileText, UserRound } from "lucide-react";
 
-import { KycDocumentPreview } from "@/components/kyc-document-preview";
+import { KycDocumentCompactPreview } from "@/components/kyc-document-preview";
 import { OnboardingShell } from "@/components/onboarding-shell";
 import { Button } from "@/components/ui/button";
 import { roleEntryPath } from "@/lib/auth/roles";
 import { requireRole } from "@/lib/auth/session";
 import { getDictionary } from "@/lib/i18n/server";
+import { getKycDocumentPreviewUrl } from "@/lib/kyc/preview";
 import { loadKycDocumentSummaries } from "@/lib/kyc/service";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -90,22 +91,25 @@ export default async function DoctorOnboardingStep3Page() {
                 {copy.doctor.onboarding.step3.documentsTitle}
               </h2>
             </div>
-            <div className="space-y-6">
-              {documentSummaries.map((document) => (
-                document.documentId ? (
+            <div className="mx-auto w-full max-w-xl space-y-6">
+              {documentSummaries.map((document) => {
+                const previewUrl = getKycDocumentPreviewUrl(document);
+
+                return previewUrl ? (
                   <div key={document.documentType} className="space-y-3">
                     <h3 className="text-[19px] font-medium leading-[1.38] tracking-[-0.25px] text-[var(--color-charcoal-primary)]">
                       {copy.doctor.onboarding.step2.documentTitles[document.documentType]}
                     </h3>
-                    <KycDocumentPreview
+                    <KycDocumentCompactPreview
+                      key={previewUrl}
                       document={document}
                       title={copy.doctor.onboarding.step2.documentTitles[document.documentType]}
-                      previewUrl={`/doctor/onboarding/documents/${document.documentId}`}
+                      previewUrl={previewUrl}
                       labels={copy.doctor.onboarding.uploadPreview}
                     />
                   </div>
-                ) : null
-              ))}
+                ) : null;
+              })}
             </div>
           </div>
         </section>

@@ -103,6 +103,81 @@ export type Database = {
           },
         ]
       }
+      access_grant_attachment_permissions: {
+        Row: {
+          created_at: string
+          grant_id: string
+          record_id: string
+        }
+        Insert: {
+          created_at?: string
+          grant_id: string
+          record_id: string
+        }
+        Update: {
+          created_at?: string
+          grant_id?: string
+          record_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "access_grant_attachment_permissions_grant_id_fkey"
+            columns: ["grant_id"]
+            isOneToOne: false
+            referencedRelation: "access_grants"
+            referencedColumns: ["grant_id"]
+          },
+          {
+            foreignKeyName: "access_grant_attachment_permissions_record_id_fkey"
+            columns: ["record_id"]
+            isOneToOne: false
+            referencedRelation: "scope_1_medical_records"
+            referencedColumns: ["record_id"]
+          },
+        ]
+      }
+      access_grant_scope2_filters: {
+        Row: {
+          created_at: string
+          grant_id: string
+          mode: string
+          scope_kind: string
+          session_id: string | null
+          window_days: number | null
+        }
+        Insert: {
+          created_at?: string
+          grant_id: string
+          mode: string
+          scope_kind: string
+          session_id?: string | null
+          window_days?: number | null
+        }
+        Update: {
+          created_at?: string
+          grant_id?: string
+          mode?: string
+          scope_kind?: string
+          session_id?: string | null
+          window_days?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "access_grant_scope2_filters_grant_id_fkey"
+            columns: ["grant_id"]
+            isOneToOne: false
+            referencedRelation: "access_grants"
+            referencedColumns: ["grant_id"]
+          },
+          {
+            foreignKeyName: "access_grant_scope2_filters_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "ai_sessions"
+            referencedColumns: ["session_id"]
+          },
+        ]
+      }
       ai_messages: {
         Row: {
           created_at: string
@@ -147,83 +222,6 @@ export type Database = {
           },
           {
             foreignKeyName: "ai_messages_session_id_fkey"
-            columns: ["session_id"]
-            isOneToOne: false
-            referencedRelation: "ai_sessions"
-            referencedColumns: ["session_id"]
-          },
-        ]
-      }
-      ai_message_attachments: {
-        Row: {
-          attachment_id: string
-          created_at: string
-          extracted_text_ciphertext: string
-          extracted_text_iv: string
-          extracted_text_tag: string
-          extracted_text_truncated: boolean
-          extraction_method: "pdf_text" | "image_ocr"
-          file_id: string
-          file_size_bytes: number
-          key_version: string
-          message_id: string
-          patient_id: string
-          session_id: string
-        }
-        Insert: {
-          attachment_id?: string
-          created_at?: string
-          extracted_text_ciphertext: string
-          extracted_text_iv: string
-          extracted_text_tag: string
-          extracted_text_truncated?: boolean
-          extraction_method: "pdf_text" | "image_ocr"
-          file_id: string
-          file_size_bytes: number
-          key_version?: string
-          message_id: string
-          patient_id: string
-          session_id: string
-        }
-        Update: {
-          attachment_id?: string
-          created_at?: string
-          extracted_text_ciphertext?: string
-          extracted_text_iv?: string
-          extracted_text_tag?: string
-          extracted_text_truncated?: boolean
-          extraction_method?: "pdf_text" | "image_ocr"
-          file_id?: string
-          file_size_bytes?: number
-          key_version?: string
-          message_id?: string
-          patient_id?: string
-          session_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "ai_message_attachments_file_id_fkey"
-            columns: ["file_id"]
-            isOneToOne: false
-            referencedRelation: "secure_files"
-            referencedColumns: ["file_id"]
-          },
-          {
-            foreignKeyName: "ai_message_attachments_message_id_fkey"
-            columns: ["message_id"]
-            isOneToOne: false
-            referencedRelation: "ai_messages"
-            referencedColumns: ["message_id"]
-          },
-          {
-            foreignKeyName: "ai_message_attachments_patient_id_fkey"
-            columns: ["patient_id"]
-            isOneToOne: false
-            referencedRelation: "patients"
-            referencedColumns: ["patient_id"]
-          },
-          {
-            foreignKeyName: "ai_message_attachments_session_id_fkey"
             columns: ["session_id"]
             isOneToOne: false
             referencedRelation: "ai_sessions"
@@ -430,6 +428,7 @@ export type Database = {
           onboarding_completed_at: string | null
           onboarding_step: string
           phone_number: string | null
+          profile_photo_url: string | null
           qr_code_token: string | null
           rejection_reason: string | null
           specialization: string | null
@@ -450,6 +449,7 @@ export type Database = {
           onboarding_completed_at?: string | null
           onboarding_step?: string
           phone_number?: string | null
+          profile_photo_url?: string | null
           qr_code_token?: string | null
           rejection_reason?: string | null
           specialization?: string | null
@@ -470,6 +470,7 @@ export type Database = {
           onboarding_completed_at?: string | null
           onboarding_step?: string
           phone_number?: string | null
+          profile_photo_url?: string | null
           qr_code_token?: string | null
           rejection_reason?: string | null
           specialization?: string | null
@@ -1097,6 +1098,50 @@ export type Database = {
           target_granted_at: string
           target_ip_address?: unknown | null
           target_patient_id: string
+        }
+        Returns: {
+          blockchain_last_error: string | null
+          blockchain_status: string
+          blockchain_tx_hash: string | null
+          can_download_attachments: boolean
+          can_view_scope1: boolean
+          can_view_scope2_mental: boolean
+          can_view_scope2_physical: boolean
+          consent_hash: string
+          created_at: string
+          doctor_id: string
+          expires_at: string
+          grant_id: string
+          granted_at: string
+          is_revoked: boolean
+          patient_id: string
+          replaced_by_grant_id: string | null
+          revoked_at: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "access_grants"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      replace_active_access_grant_v3: {
+        Args: {
+          allow_scope1: boolean
+          allow_scope2_mental: boolean
+          allow_scope2_physical: boolean
+          prior_replacement_consent_hash: string | null
+          target_attachment_record_ids: string[]
+          target_audit_event_hash: string
+          target_audit_log_id: string
+          target_consent_hash: string
+          target_doctor_id: string
+          target_expires_at: string
+          target_grant_id: string
+          target_granted_at: string
+          target_ip_address?: unknown | null
+          target_patient_id: string
+          target_scope2_filters: Json
         }
         Returns: {
           blockchain_last_error: string | null

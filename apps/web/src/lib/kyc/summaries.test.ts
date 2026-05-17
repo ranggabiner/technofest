@@ -9,6 +9,7 @@ describe("normalizeKycDocumentSummaries", () => {
         {
           documentType: "ktp",
           documentId: "ktp-doc",
+          fileId: "ktp-file-v2",
           filename: "ktp-demo.png",
           mimeType: "image/png",
           fileSizeBytes: 2048,
@@ -16,6 +17,7 @@ describe("normalizeKycDocumentSummaries", () => {
         {
           documentType: "str",
           documentId: "str-doc",
+          fileId: "str-file-v1",
           filename: "str-demo.pdf",
           mimeType: "application/pdf",
           fileSizeBytes: 4096,
@@ -25,6 +27,7 @@ describe("normalizeKycDocumentSummaries", () => {
       {
         documentType: "str",
         documentId: "str-doc",
+        fileId: "str-file-v1",
         filename: "str-demo.pdf",
         mimeType: "application/pdf",
         fileSizeBytes: 4096,
@@ -33,6 +36,7 @@ describe("normalizeKycDocumentSummaries", () => {
       {
         documentType: "sip",
         documentId: null,
+        fileId: null,
         filename: null,
         mimeType: null,
         fileSizeBytes: null,
@@ -41,6 +45,7 @@ describe("normalizeKycDocumentSummaries", () => {
       {
         documentType: "ktp",
         documentId: "ktp-doc",
+        fileId: "ktp-file-v2",
         filename: "ktp-demo.png",
         mimeType: "image/png",
         fileSizeBytes: 2048,

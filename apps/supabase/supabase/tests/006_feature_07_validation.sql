@@ -2,7 +2,7 @@ create extension if not exists pgtap with schema extensions;
 
 begin;
 
-select plan(16);
+select plan(13);
 
 select is(
   (
@@ -20,11 +20,12 @@ select is(
         'doctor_kyc_documents',
         'ai_sessions',
         'ai_messages',
-        'ai_message_attachments',
         'scope_2_mental',
         'scope_2_physical',
         'scope_1_medical_records',
         'access_grants',
+        'access_grant_attachment_permissions',
+        'access_grant_scope2_filters',
         'audit_logs'
       )
       and c.relrowsecurity = false
@@ -46,11 +47,12 @@ select is(
         ('doctor_kyc_documents'),
         ('ai_sessions'),
         ('ai_messages'),
-        ('ai_message_attachments'),
         ('scope_2_mental'),
         ('scope_2_physical'),
         ('scope_1_medical_records'),
         ('access_grants'),
+        ('access_grant_attachment_permissions'),
+        ('access_grant_scope2_filters'),
         ('audit_logs')
     ) as t(table_name)
     where has_table_privilege('anon', format('public.%I', table_name), 'select')
@@ -75,17 +77,32 @@ select is(
         ('doctor_kyc_documents'),
         ('ai_sessions'),
         ('ai_messages'),
-        ('ai_message_attachments'),
         ('scope_2_mental'),
         ('scope_2_physical'),
         ('scope_1_medical_records'),
         ('access_grants'),
+        ('access_grant_attachment_permissions'),
+        ('access_grant_scope2_filters'),
         ('audit_logs')
     ) as t(table_name)
     where not has_table_privilege('authenticated', format('public.%I', table_name), 'select')
   ),
   0,
   'authenticated has explicit select grants only where RLS remains authoritative'
+);
+
+select is(
+  (
+    select count(*)::int
+    from (
+      values
+        ('access_grant_attachment_permissions'),
+        ('access_grant_scope2_filters')
+    ) as t(table_name)
+    where not has_table_privilege('service_role', format('public.%I', table_name), 'select')
+  ),
+  0,
+  'service_role has explicit select grants for granular server-side Data API reads'
 );
 
 select is(
@@ -109,7 +126,6 @@ select is(
         'patients',
         'ai_sessions',
         'ai_messages',
-        'ai_message_attachments',
         'scope_2_mental',
         'scope_2_physical',
         'scope_1_medical_records'
@@ -168,39 +184,7 @@ select isnt_empty(
   'AI sessions track summary generation status'
 );
 
-select has_table('public', 'ai_message_attachments', 'AI message attachments table exists');
-
-select is(
-  has_table_privilege('service_role', 'public.ai_message_attachments', 'select'),
-  true,
-  'service role can read AI message attachment metadata for server-side decryption'
-);
-
-select is(
-  has_table_privilege('service_role', 'public.ai_message_attachments', 'insert'),
-  true,
-  'service role can insert AI message attachment metadata after server-side encryption'
-);
-
-select isnt_empty(
-  $$select 1
-    from information_schema.columns
-    where table_schema = 'public'
-      and table_name = 'ai_message_attachments'
-      and column_name in ('extracted_text_ciphertext', 'extracted_text_iv', 'extracted_text_tag')
-    group by table_name
-    having count(*) = 3$$,
-  'AI message attachment extracted text is stored as encrypted triplets'
-);
-
-select is_empty(
-  $$select 1
-    from information_schema.columns
-    where table_schema = 'public'
-      and table_name = 'ai_message_attachments'
-      and column_name in ('extracted_text', 'raw_text', 'plaintext')$$,
-  'AI message attachments do not expose plaintext extracted text columns'
-);
+select hasnt_table('public', 'ai_message_attachments', 'AI message attachments table is removed');
 
 select is(
   (

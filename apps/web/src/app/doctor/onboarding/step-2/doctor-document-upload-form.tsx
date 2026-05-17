@@ -1,25 +1,27 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, type DragEvent, type KeyboardEvent } from "react";
 import { useRouter } from "next/navigation";
 import {
   AlertCircle,
   ArrowRight,
   Badge,
-  CheckCircle2,
   FileText,
-  FileWarning,
   Loader2,
-  RotateCcw,
   Upload,
 } from "lucide-react";
 
-import type { KycDocumentPreviewLabels } from "@/components/kyc-document-preview";
+import {
+  KycDocumentCompactPreviewContent,
+  kycDocumentCompactPreviewSurfaceClassName,
+  type KycDocumentPreviewLabels,
+} from "@/components/kyc-document-preview";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/form";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { formatFileSize, getFileTypeLabel, getKycPreviewKind } from "@/lib/kyc/preview";
+import { validateKycFile } from "@/lib/kyc/files";
+import { getKycDocumentPreviewUrl } from "@/lib/kyc/preview";
 import type { KycDocumentSummary } from "@/lib/kyc/summaries";
 import type { KycDocumentType } from "@/lib/kyc/service";
 import { kycUploadErrorMessage } from "@/lib/kyc/upload-errors";
@@ -74,6 +76,22 @@ export function DoctorDocumentUploadForm({
   const hasError = Object.values(errors).some(Boolean);
   const allUploaded = documents.every((document) => document.uploaded);
   const canContinue = allUploaded && !isUploading && !isContinuing && !hasError;
+
+  async function processSelectedFile(documentType: KycDocumentType, file: File) {
+    if (uploadInFlightRef.current || isContinuing) return;
+
+    const validation = validateKycFile(file);
+    if (!validation.ok) {
+      setErrors((current) => ({
+        ...current,
+        [documentType]: copy.uploadErrors[validation.reason],
+      }));
+      setContinueError(null);
+      return;
+    }
+
+    await uploadDocument(documentType, file);
+  }
 
   async function uploadDocument(documentType: KycDocumentType, file: File) {
     if (uploadInFlightRef.current || isContinuing) return;
@@ -144,7 +162,7 @@ export function DoctorDocumentUploadForm({
               disabled={isUploading || isContinuing}
               isUploading={uploadingDocumentType === document.documentType}
               error={errors[document.documentType]}
-              onUpload={uploadDocument}
+              onUpload={processSelectedFile}
             />
           </div>
         ))}
@@ -207,21 +225,65 @@ function DocumentUploadField({
   onUpload: (documentType: KycDocumentType, file: File) => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
-  const previewUrl = document.documentId
-    ? `/doctor/onboarding/documents/${document.documentId}`
-    : null;
+  const [isDraggingOver, setIsDraggingOver] = useState(false);
+  const previewUrl = getKycDocumentPreviewUrl(document);
   const surfaceDisabled = disabled || isUploading;
 
-  function chooseFile() {
-    if (surfaceDisabled) return;
+  function processSelectedFile(file: File) {
+    void onUpload(document.documentType, file);
+  }
+
+  const inputId = `${document.documentType}-file`;
+
+  function handleSurfaceKeyDown(event: KeyboardEvent<HTMLLabelElement>) {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    event.preventDefault();
     inputRef.current?.click();
+  }
+
+  function handleDragEnter(event: DragEvent<HTMLLabelElement>) {
+    event.preventDefault();
+    event.stopPropagation();
+    if (surfaceDisabled) return;
+
+    event.dataTransfer.dropEffect = "copy";
+    setIsDraggingOver(true);
+  }
+
+  function handleDragOver(event: DragEvent<HTMLLabelElement>) {
+    event.preventDefault();
+    event.stopPropagation();
+    if (surfaceDisabled) return;
+
+    event.dataTransfer.dropEffect = "copy";
+    setIsDraggingOver(true);
+  }
+
+  function handleDragLeave(event: DragEvent<HTMLLabelElement>) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const nextTarget = event.relatedTarget;
+    if (!(nextTarget instanceof Node) || !event.currentTarget.contains(nextTarget)) {
+      setIsDraggingOver(false);
+    }
+  }
+
+  function handleDrop(event: DragEvent<HTMLLabelElement>) {
+    event.preventDefault();
+    event.stopPropagation();
+    setIsDraggingOver(false);
+    if (surfaceDisabled) return;
+
+    const file = event.dataTransfer.files.item(0);
+    if (file) void processSelectedFile(file);
   }
 
   return (
     <div>
       <div className="mb-2 flex items-baseline justify-between gap-4">
         <Label
-          htmlFor={`${document.documentType}-file`}
+          htmlFor={inputId}
           className="text-[19px] font-medium leading-[1.38] tracking-[-0.25px] text-[var(--color-charcoal-primary)]"
         >
           {title}
@@ -234,42 +296,56 @@ function DocumentUploadField({
         {description}
       </p>
 
-      <input
-        ref={inputRef}
-        id={`${document.documentType}-file`}
-        name={`${document.documentType}-file`}
-        type="file"
-        accept="application/pdf,image/jpeg,image/png"
-        className="sr-only"
-        disabled={surfaceDisabled}
-        onChange={(event) => {
-          const file = event.currentTarget.files?.[0];
-          event.currentTarget.value = "";
-          if (file) onUpload(document.documentType, file);
-        }}
-      />
-      <div
+      <label
+        htmlFor={inputId}
         data-upload-surface="doctor-kyc-document"
+        role="button"
+        tabIndex={surfaceDisabled ? -1 : 0}
+        aria-disabled={surfaceDisabled}
         aria-busy={isUploading}
         aria-live={isUploading || error ? "polite" : undefined}
+        onKeyDown={handleSurfaceKeyDown}
+        onDragEnter={handleDragEnter}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDragEnd={() => setIsDraggingOver(false)}
+        onDrop={handleDrop}
         className={cn(
-          "relative h-[140px] w-full overflow-hidden rounded-lg border bg-[var(--color-warm-canvas)] transition",
+          kycDocumentCompactPreviewSurfaceClassName,
+          "cursor-pointer transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-teal-deep)] focus-visible:ring-offset-2",
           previewUrl ? "border-solid border-[var(--color-stone-surface)]" : "border-dashed border-[var(--color-stone-surface)]",
           error && "border-[var(--color-error-red)] bg-[var(--color-error-surface)]",
-          surfaceDisabled && !isUploading && "opacity-60",
+          isDraggingOver &&
+            "border-[var(--color-teal-deep)] bg-[color-mix(in_srgb,var(--color-teal-deep)_10%,var(--color-warm-canvas))] ring-2 ring-[var(--color-teal-deep)]",
+          surfaceDisabled && !isUploading && "cursor-not-allowed opacity-60",
         )}
       >
+        <input
+          ref={inputRef}
+          id={inputId}
+          name={inputId}
+          type="file"
+          accept="application/pdf,image/jpeg,image/png"
+          aria-label={uploadLabel}
+          className="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-[0.01] disabled:cursor-not-allowed"
+          disabled={surfaceDisabled}
+          onChange={(event) => {
+            const file = event.currentTarget.files?.[0];
+            event.currentTarget.value = "";
+            if (file) processSelectedFile(file);
+          }}
+        />
         {isUploading ? (
           <UploadLoadingState label={labels.uploading} />
         ) : previewUrl ? (
-          <UploadedDocumentState
+          <KycDocumentCompactPreviewContent
+            key={previewUrl}
             document={document}
             title={title}
             previewUrl={previewUrl}
             labels={labels}
-            disabled={surfaceDisabled}
             error={error}
-            onReplace={chooseFile}
+            actionLabel={error ? labels.retry : labels.replace}
           />
         ) : (
           <EmptyDocumentUploadState
@@ -277,12 +353,10 @@ function DocumentUploadField({
             uploadLabel={uploadLabel}
             uploadHint={uploadHint}
             retryLabel={labels.retry}
-            disabled={surfaceDisabled}
             error={error}
-            onUpload={chooseFile}
           />
         )}
-      </div>
+      </label>
     </div>
   );
 }
@@ -299,111 +373,22 @@ function UploadLoadingState({ label }: { label: string }) {
   );
 }
 
-function UploadedDocumentState({
-  document,
-  title,
-  previewUrl,
-  labels,
-  disabled,
-  error,
-  onReplace,
-}: {
-  document: KycDocumentSummary;
-  title: string;
-  previewUrl: string;
-  labels: DoctorDocumentUploadCopy["uploadPreview"];
-  disabled: boolean;
-  error?: string;
-  onReplace: () => void;
-}) {
-  const previewKind = getKycPreviewKind(document.mimeType);
-
-  return (
-    <div className="grid h-full w-full grid-cols-[minmax(88px,42%)_minmax(0,1fr)]">
-      <div className="flex min-w-0 items-center justify-center overflow-hidden bg-[var(--color-parchment-card)]">
-        {previewKind === "image" ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={previewUrl}
-            alt={title}
-            className="h-full w-full object-contain"
-          />
-        ) : null}
-        {previewKind === "pdf" ? (
-          <iframe
-            src={previewUrl}
-            title={title}
-            tabIndex={-1}
-            className="h-full w-full border-0"
-          >
-            {labels.pdfFallback}
-          </iframe>
-        ) : null}
-        {previewKind === "fallback" ? (
-          <FileWarning size={30} className="text-[var(--color-ash)]" aria-hidden="true" />
-        ) : null}
-      </div>
-      <div className="flex min-w-0 flex-col justify-between gap-2 p-3">
-        <div className="min-w-0 space-y-1">
-          <p className="truncate text-[13px] font-medium leading-[1.35] tracking-[-0.16px] text-[var(--color-charcoal-primary)]">
-            {document.filename ?? title}
-          </p>
-          <p className="truncate text-[11px] leading-[1.45] text-[var(--color-ash)]">
-            {getFileTypeLabel(document.mimeType, document.filename)}
-            {" · "}
-            {formatFileSize(document.fileSizeBytes)}
-          </p>
-          <p
-            className={cn(
-              "inline-flex max-w-full items-center gap-1.5 truncate text-[11px] font-semibold leading-[1.45]",
-              error ? "text-[var(--color-error-red)]" : "text-[var(--color-valid-green)]",
-            )}
-          >
-            {error ? (
-              <AlertCircle size={13} className="shrink-0" aria-hidden="true" />
-            ) : (
-              <CheckCircle2 size={13} className="shrink-0" fill="currentColor" aria-hidden="true" />
-            )}
-            <span className="truncate">{error ?? labels.uploadSuccess}</span>
-          </p>
-        </div>
-        <button
-          type="button"
-          disabled={disabled}
-          onClick={onReplace}
-          className="inline-flex min-h-8 w-fit cursor-pointer items-center gap-2 rounded-full border border-[var(--color-stone-surface)] bg-[var(--color-card)] px-3 text-[11px] font-medium leading-[1.45] tracking-[-0.12px] text-[var(--color-midnight)] transition hover:bg-[var(--color-parchment-card)] disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          <RotateCcw size={13} aria-hidden="true" />
-          {error ? labels.retry : labels.replace}
-        </button>
-      </div>
-    </div>
-  );
-}
-
 function EmptyDocumentUploadState({
   documentType,
   uploadLabel,
   uploadHint,
   retryLabel,
-  disabled,
   error,
-  onUpload,
 }: {
   documentType: KycDocumentType;
   uploadLabel: string;
   uploadHint: string;
   retryLabel: string;
-  disabled: boolean;
   error?: string;
-  onUpload: () => void;
 }) {
   return (
-    <button
-      type="button"
-      disabled={disabled}
-      onClick={onUpload}
-      className="group flex h-full w-full cursor-pointer flex-col items-center justify-center p-6 text-center transition hover:bg-[var(--color-parchment-card)] disabled:cursor-not-allowed disabled:opacity-60"
+    <div
+      className="flex h-full w-full flex-col items-center justify-center p-6 text-center transition group-hover:bg-[var(--color-parchment-card)]"
     >
       <span
         className={cn(
@@ -432,6 +417,6 @@ function EmptyDocumentUploadState({
       <span className="mt-1 max-w-full truncate text-[11px] leading-[1.5] text-[var(--color-ash)]">
         {error ? retryLabel : uploadHint}
       </span>
-    </button>
+    </div>
   );
 }

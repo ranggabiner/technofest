@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { formatFileSize, getFileTypeLabel, getKycPreviewKind } from "./preview";
+import { formatFileSize, getFileTypeLabel, getKycDocumentPreviewUrl, getKycPreviewKind } from "./preview";
 
 describe("KYC preview helpers", () => {
   it("classifies image and PDF files for direct previews", () => {
@@ -27,5 +27,13 @@ describe("KYC preview helpers", () => {
     expect(getFileTypeLabel("image/jpeg", "ktp.jpg")).toBe("JPG");
     expect(getFileTypeLabel(null, "scan.png")).toBe("PNG");
     expect(getFileTypeLabel(null, null)).toBe("-");
+  });
+
+  it("builds preview URLs from both document id and latest file id", () => {
+    expect(getKycDocumentPreviewUrl({ documentId: null, fileId: null })).toBeNull();
+    expect(getKycDocumentPreviewUrl({ documentId: "doc-1", fileId: null })).toBeNull();
+    expect(getKycDocumentPreviewUrl({ documentId: "doc-1", fileId: "file-v2" })).toBe(
+      "/doctor/onboarding/documents/doc-1?v=file-v2",
+    );
   });
 });

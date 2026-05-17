@@ -95,6 +95,7 @@ describe("admin pages contract", () => {
     expect(source).toContain("create unique index if not exists admin_invitations_email_key");
     expect(source).toContain("alter table public.admin_invitations enable row level security");
     expect(source).toContain("grant select, insert on public.admin_invitations to authenticated");
+    expect(source).toContain("grant select, insert, update on public.admin_invitations to service_role");
     expect(source).not.toContain("grant all on public.admin_invitations");
   });
 

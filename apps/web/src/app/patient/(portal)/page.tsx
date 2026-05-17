@@ -9,7 +9,6 @@ import { ProofStatus } from "@/components/proof-status";
 import { EmptyState } from "@/components/state-panel";
 import { StatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
-import { loadPatientAccessState } from "@/lib/access/doctor-access";
 import { requireRole } from "@/lib/auth/session";
 import { roleOnboardingPath } from "@/lib/auth/roles";
 import { loadPatientJournalState } from "@/lib/ai/journal-service";
@@ -23,7 +22,6 @@ import {
 import { getDictionary, getLocale } from "@/lib/i18n/server";
 import { loadPatientDashboardState } from "@/lib/patient/dashboard";
 
-import { DoctorAccessStatusLog } from "../_components/doctor-access-client";
 import { DashboardCard } from "../_components/patient-layout";
 import { PatientDashboardQuickAccess } from "../_components/patient-dashboard-quick-access";
 import { PatientTransitionLink } from "../_components/patient-navigation-transition";
@@ -40,9 +38,8 @@ export default async function PatientDashboardPage() {
   const onboardingPath = roleOnboardingPath(role);
   if (!role.patientId || onboardingPath) redirect(onboardingPath ?? "/login/role");
 
-  const [journalState, accessState, dashboardState] = await Promise.all([
+  const [journalState, dashboardState] = await Promise.all([
     loadPatientJournalState(role),
-    loadPatientAccessState(role),
     loadPatientDashboardState(role),
   ]);
 
@@ -70,26 +67,9 @@ export default async function PatientDashboardPage() {
             </div>
       </section>
 
-        <section className="grid gap-6 lg:grid-cols-2">
+        <section className="grid gap-6 lg:grid-cols-[minmax(0,620px)]">
           <DashboardCard>
             <PatientDashboardQuickAccess copy={copy} />
-          </DashboardCard>
-
-          <DashboardCard>
-            <div className="mb-6 flex items-center justify-between gap-4">
-              <h2 className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-ash)]">
-                {copy.patient.dashboard.accessLogTitle}
-              </h2>
-              <PatientTransitionLink
-                href="/patient/access-history"
-                className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-[0.12em] text-[var(--color-teal-deep)] hover:underline"
-              >
-                {copy.patient.dashboard.moreDetails}
-                <ChevronRight size={14} aria-hidden="true" />
-              </PatientTransitionLink>
-            </div>
-
-            <DoctorAccessStatusLog items={accessState.accessLog} locale={locale} copy={copy} />
           </DashboardCard>
         </section>
 
@@ -110,7 +90,7 @@ export default async function PatientDashboardPage() {
                   </p>
                 </div>
                 <PatientTransitionLink
-                  href="/patient/access-history"
+                  href="/patient/health-history#records"
                   className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-[0.12em] text-[var(--color-teal-deep)] hover:underline"
                 >
                   {copy.patient.dashboard.moreDetails}
@@ -172,7 +152,7 @@ export default async function PatientDashboardPage() {
                   </p>
                 </div>
                 <PatientTransitionLink
-                  href="/patient/chat"
+                  href="/patient/health-history#journal"
                   className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-[0.12em] text-[var(--color-teal-deep)] hover:underline"
                 >
                   {copy.patient.dashboard.moreDetails}

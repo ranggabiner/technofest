@@ -1,4 +1,4 @@
-import { Grid2X2, History, MessageCircle, Stethoscope, type LucideIcon } from "lucide-react";
+import { ClipboardList, Grid2X2, MessageCircle, Stethoscope, type LucideIcon } from "lucide-react";
 
 import type { Dictionary } from "@/lib/i18n/dictionary";
 
@@ -14,7 +14,7 @@ export function patientNavItems(activePath: string, copy: Dictionary): PatientNa
     { href: "/patient", label: copy.patient.nav.dashboard, icon: Grid2X2 },
     { href: "/patient/chat", label: copy.patient.nav.journal, icon: MessageCircle },
     { href: "/patient/access", label: copy.patient.nav.access, icon: Stethoscope },
-    { href: "/patient/access-history", label: copy.patient.nav.history, icon: History },
+    { href: "/patient/health-history", label: copy.patient.nav.healthHistory, icon: ClipboardList },
   ];
 
   return items.map((item) => ({

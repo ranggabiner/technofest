@@ -25,7 +25,7 @@ import type { Database } from "@/lib/supabase/database.types";
 
 import { sanitizeBlockchainError, toBytes32, type ProofType, type VerifyStatus } from "./proofs";
 import {
-  buildProofContractCall,
+  buildProofContractWrite,
   medProofProofRegistryAbi,
   type ClaimedBlockchainProof,
 } from "./registry";
@@ -267,12 +267,13 @@ async function processClaimedProof(
       return "pending";
     }
 
-    const call = buildProofContractCall(proof, hashPepper);
+    const call = buildProofContractWrite(proof, hashPepper);
     const hash = await clients.walletClient.writeContract({
       address: clients.contractAddress,
       abi: medProofProofRegistryAbi,
       functionName: call.functionName,
       args: call.args,
+      gas: call.gas,
     } as never);
     await updateProofStatus(admin, proof, {
       blockchain_status: "pending",

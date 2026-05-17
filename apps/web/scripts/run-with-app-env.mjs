@@ -25,10 +25,19 @@ if (!command) {
   process.exit(1);
 }
 
-const child = spawn(command, args, {
+let spawnCmd = command;
+let spawnArgs = args;
+
+if (command === "supabase") {
+  spawnCmd = process.platform === "win32" ? "npx.cmd" : "npx";
+  spawnArgs = ["supabase", ...args];
+}
+
+const child = spawn(spawnCmd, spawnArgs, {
   cwd: appRoot,
   env,
   stdio: "inherit",
+  shell: process.platform === "win32",
 });
 
 child.on("exit", (code, signal) => {

@@ -2,7 +2,7 @@ create extension if not exists pgtap with schema extensions;
 
 begin;
 
-select plan(16);
+select plan(17);
 
 select has_table('public', 'patients', 'patients table exists');
 select has_table('public', 'doctors', 'doctors table exists');
@@ -47,6 +47,13 @@ select isnt_empty(
       and table_name = 'patients'
       and privilege_type = 'SELECT'$$,
   'patients has explicit authenticated grant'
+);
+
+select ok(
+  has_table_privilege('service_role', 'public.admin_invitations', 'select')
+  and has_table_privilege('service_role', 'public.admin_invitations', 'insert')
+  and has_table_privilege('service_role', 'public.admin_invitations', 'update'),
+  'admin invitations has service role grants for server role resolution'
 );
 
 select * from finish();

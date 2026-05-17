@@ -24,7 +24,12 @@ next-env.d.ts
 
 # Test and coverage output
 coverage/
+coverage.json
 .nyc_output/
+.vitest/
+test-results/
+playwright-report/
+blob-report/
 
 # Environment files
 .env
@@ -44,15 +49,24 @@ supabase/.shadow/
 **/supabase/.shadow/
 
 # EVM blockchain build and deployment output
-artifacts/
-cache/
-typechain/
-typechain-types/
-broadcast/
-deployments/
-deployment-artifacts/
-deploy-artifacts/
-ignition/deployments/
+/artifacts/
+/cache/
+/typechain/
+/typechain-types/
+/broadcast/
+/deployments/
+/deployment-artifacts/
+/deploy-artifacts/
+/ignition/deployments/
+/apps/web/artifacts/
+/apps/web/cache/
+/apps/web/typechain/
+/apps/web/typechain-types/
+/apps/web/broadcast/
+/apps/web/deployments/
+/apps/web/deployment-artifacts/
+/apps/web/deploy-artifacts/
+/apps/web/ignition/deployments/
 
 # Blockchain secrets, keys, wallets, and keystores
 *.pem

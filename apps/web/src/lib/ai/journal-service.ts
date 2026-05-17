@@ -16,40 +16,11 @@ import { buildScope2PersistencePayload, encryptedColumns } from "./extraction";
 import { buildChatModelMessages } from "./prompts";
 import type { JournalAiMessage, JournalAiProvider } from "./providers";
 import { buildSessionTitleFromMessage, filterChatHistory } from "./chat-history";
-import {
-  attachPatientChatAttachmentToMessage,
-  buildAttachmentContextForAi,
-  preparePatientChatAttachment,
-  type PreparedPatientChatAttachment,
-} from "./patient-chat-attachments";
 
 type PatientRow = Database["public"]["Tables"]["patients"]["Row"];
 type PatientUpdate = Database["public"]["Tables"]["patients"]["Update"];
 type AiSessionRow = Database["public"]["Tables"]["ai_sessions"]["Row"];
 type AiMessageRow = Database["public"]["Tables"]["ai_messages"]["Row"];
-type AiMessageAttachmentRow = Database["public"]["Tables"]["ai_message_attachments"]["Row"];
-type SecureFileRow = Pick<
-  Database["public"]["Tables"]["secure_files"]["Row"],
-  | "file_id"
-  | "file_size_bytes"
-  | "key_version"
-  | "mime_type"
-  | "original_filename_ciphertext"
-  | "original_filename_iv"
-  | "original_filename_tag"
->;
-type AiMessageAttachmentWithFile = AiMessageAttachmentRow & {
-  secure_files: SecureFileRow | SecureFileRow[] | null;
-};
-type JournalMessageAttachmentForModel = JournalMessageAttachmentView & {
-  extractedText: string;
-  extractedTextTruncated: boolean;
-  extractionMethod: "pdf_text" | "image_ocr";
-};
-type AttachmentMaps = {
-  viewByMessageId: Map<string, JournalMessageAttachmentView>;
-  modelByMessageId: Map<string, JournalMessageAttachmentForModel>;
-};
 type PatientProfilePatch = Record<string, unknown>;
 
 export type SummaryGenerationStatus = "pending" | "generating" | "completed" | "failed";
@@ -58,22 +29,12 @@ const AI_SESSION_COLUMNS =
   "session_id,patient_id,session_title_ciphertext,session_title_iv,session_title_tag,summary_text_ciphertext,summary_text_iv,summary_text_tag,ended_at,end_reason,summary_generated_at,summary_generation_status,key_version,created_at,updated_at";
 const AI_MESSAGE_COLUMNS =
   "message_id,session_id,patient_id,sender_role,message_text_ciphertext,message_text_iv,message_text_tag,key_version,created_at";
-const AI_MESSAGE_ATTACHMENT_COLUMNS =
-  "attachment_id,message_id,session_id,patient_id,file_id,file_size_bytes,extracted_text_ciphertext,extracted_text_iv,extracted_text_tag,extracted_text_truncated,extraction_method,key_version,created_at,secure_files(file_id,original_filename_ciphertext,original_filename_iv,original_filename_tag,mime_type,file_size_bytes,key_version)";
-
-export type JournalMessageAttachmentView = {
-  id: string;
-  fileName: string | null;
-  fileType: string | null;
-  fileSizeBytes: number | null;
-};
 
 export type JournalMessageView = {
   id: string;
   role: "user" | "assistant";
   content: string;
   createdAt: string;
-  attachment: JournalMessageAttachmentView | null;
 };
 
 export type JournalSummaryView = {
@@ -208,13 +169,7 @@ export async function loadPatientJournalState(role: ResolvedRole): Promise<Patie
     activeSessionId: selectedSession?.session_id ?? null,
     activeSessionClosed: Boolean(selectedSession?.ended_at),
     activePatientMessageCount: messages.filter((message) => message.role === "user").length,
-    messages: messages.map((message) => ({
-      id: message.id,
-      role: message.role,
-      content: message.content,
-      createdAt: message.createdAt,
-      attachment: message.attachment,
-    })),
+    messages,
     latestSummary: selectedSession
       ? selectedSummary
       : recentSummaries[0]
@@ -368,7 +323,6 @@ export async function preparePatientChatTurn(input: {
   role: ResolvedRole;
   message: string;
   requestedSessionId?: string | null;
-  attachment?: File | null;
 }): Promise<{
   patientId: string;
   sessionId: string;
@@ -376,7 +330,7 @@ export async function preparePatientChatTurn(input: {
 }> {
   const patientId = requirePatientId(input.role);
   const latestMessage = input.message.trim();
-  if (!latestMessage && !input.attachment) throw new Error("Pesan wajib diisi");
+  if (!latestMessage) throw new Error("Pesan wajib diisi");
   if (latestMessage.length > 2000) throw new Error("Pesan terlalu panjang");
 
   await assertConsentAndProfileAccess(input.role.authUserId, patientId, { requireProfile: true });
@@ -384,29 +338,13 @@ export async function preparePatientChatTurn(input: {
 
   const session = await getOrCreateActiveSession(patientId, input.requestedSessionId);
   const conversationBeforeInsert = await loadConversation(session.session_id, patientId);
-  const preparedAttachment = input.attachment
-    ? await preparePatientChatAttachment({
-      authUserId: input.role.authUserId,
-      patientId,
-      file: input.attachment,
-    })
-    : null;
-  const storedMessage = latestMessage || buildAttachmentOnlyMessage(preparedAttachment);
-  const insertedMessage = await insertEncryptedMessage({
+  const storedMessage = latestMessage;
+  await insertEncryptedMessage({
     patientId,
     sessionId: session.session_id,
     role: "patient",
     content: storedMessage,
   });
-
-  if (preparedAttachment) {
-    await attachPatientChatAttachmentToMessage({
-      patientId,
-      sessionId: session.session_id,
-      messageId: insertedMessage.message_id,
-      attachment: preparedAttachment,
-    });
-  }
 
   if (!conversationBeforeInsert.some((message) => message.role === "user")) {
     await updateSessionTitle({
@@ -422,7 +360,7 @@ export async function preparePatientChatTurn(input: {
     modelMessages: buildChatModelMessages({
       profilingContext: await loadProfilingContext(patientId),
       conversation: conversationBeforeInsert,
-      latestMessage: buildLatestMessageForModel(storedMessage, preparedAttachment),
+      latestMessage: storedMessage,
     }),
   };
 }
@@ -441,28 +379,6 @@ export async function storeAiAssistantMessage(input: {
     role: "ai",
     content,
   });
-}
-
-function buildAttachmentOnlyMessage(attachment: PreparedPatientChatAttachment | null) {
-  return attachment ? `Saya mengunggah lampiran ${attachment.filename}.` : "";
-}
-
-function buildLatestMessageForModel(
-  content: string,
-  attachment: PreparedPatientChatAttachment | null,
-) {
-  if (!attachment) return content;
-
-  return [
-    content,
-    buildAttachmentContextForAi({
-      filename: attachment.filename,
-      mimeType: attachment.mimeType,
-      sizeBytes: attachment.sizeBytes,
-      extractedText: attachment.extractedText,
-      extractedTextTruncated: attachment.extractedTextTruncated,
-    }),
-  ].filter(Boolean).join("\n\n");
 }
 
 export async function finishActiveAiSession(
@@ -897,11 +813,10 @@ async function loadMessagesBySession(
   if (error) throw error;
 
   const rows = data ?? [];
-  const attachmentMaps = await loadAttachmentMaps(rows.map((row) => row.message_id));
 
   return rows.reduce((groups, row) => {
     const current = groups.get(row.session_id) ?? [];
-    current.push(toJournalMessageView(row, attachmentMaps.viewByMessageId.get(row.message_id) ?? null));
+    current.push(toJournalMessageView(row));
     groups.set(row.session_id, current);
     return groups;
   }, new Map<string, JournalMessageView[]>());
@@ -912,97 +827,25 @@ async function loadDecryptedMessages(
   patientId?: string,
 ): Promise<JournalMessageView[]> {
   const rows = await loadMessageRows(sessionId, patientId);
-  const attachmentMaps = await loadAttachmentMaps(rows.map((row) => row.message_id));
-  return rows.map((row) => toJournalMessageView(row, attachmentMaps.viewByMessageId.get(row.message_id) ?? null));
+  return rows.map((row) => toJournalMessageView(row));
 }
 
-function toJournalMessageView(
-  row: AiMessageRow,
-  attachment: JournalMessageAttachmentView | null,
-): JournalMessageView {
+function toJournalMessageView(row: AiMessageRow): JournalMessageView {
   return {
     id: row.message_id,
     role: row.sender_role === "ai" ? "assistant" : "user",
     content: decryptFromColumns(row, "message_text") ?? "",
     createdAt: row.created_at,
-    attachment,
   };
 }
 
 async function loadConversation(sessionId: string, patientId?: string): Promise<JournalAiMessage[]> {
   const rows = await loadMessageRows(sessionId, patientId);
-  const attachmentMaps = await loadAttachmentMaps(rows.map((row) => row.message_id));
 
   return rows.map((row) => ({
     role: row.sender_role === "ai" ? "assistant" : "user",
-    content: buildStoredMessageForModel(
-      decryptFromColumns(row, "message_text") ?? "",
-      row.sender_role === "patient" ? attachmentMaps.modelByMessageId.get(row.message_id) ?? null : null,
-    ),
+    content: decryptFromColumns(row, "message_text") ?? "",
   }));
-}
-
-async function loadAttachmentMaps(messageIds: string[]): Promise<AttachmentMaps> {
-  if (messageIds.length === 0) {
-    return {
-      viewByMessageId: new Map(),
-      modelByMessageId: new Map(),
-    };
-  }
-
-  const { data, error } = await createAdminClient()
-    .from("ai_message_attachments")
-    .select(AI_MESSAGE_ATTACHMENT_COLUMNS)
-    .in("message_id", messageIds)
-    .order("created_at", { ascending: true });
-
-  if (error) throw error;
-
-  const viewByMessageId = new Map<string, JournalMessageAttachmentView>();
-  const modelByMessageId = new Map<string, JournalMessageAttachmentForModel>();
-
-  for (const row of (data ?? []) as unknown as AiMessageAttachmentWithFile[]) {
-    const secureFile = firstSecureFile(row.secure_files);
-    const fileName = secureFile ? decryptFromColumns(secureFile, "original_filename") : null;
-    const viewAttachment: JournalMessageAttachmentView = {
-      id: row.attachment_id,
-      fileName,
-      fileType: secureFile?.mime_type ?? null,
-      fileSizeBytes: row.file_size_bytes,
-    };
-
-    viewByMessageId.set(row.message_id, viewAttachment);
-    modelByMessageId.set(row.message_id, {
-      ...viewAttachment,
-      extractedText: decryptFromColumns(row, "extracted_text") ?? "",
-      extractedTextTruncated: row.extracted_text_truncated,
-      extractionMethod: row.extraction_method,
-    });
-  }
-
-  return { viewByMessageId, modelByMessageId };
-}
-
-function firstSecureFile(value: SecureFileRow | SecureFileRow[] | null) {
-  return Array.isArray(value) ? value[0] ?? null : value;
-}
-
-function buildStoredMessageForModel(
-  content: string,
-  attachment: JournalMessageAttachmentForModel | null,
-) {
-  if (!attachment) return content;
-
-  return [
-    content,
-    buildAttachmentContextForAi({
-      filename: attachment.fileName ?? "lampiran",
-      mimeType: attachment.fileType ?? "application/octet-stream",
-      sizeBytes: attachment.fileSizeBytes ?? 0,
-      extractedText: attachment.extractedText,
-      extractedTextTruncated: attachment.extractedTextTruncated,
-    }),
-  ].filter(Boolean).join("\n\n");
 }
 
 async function loadMessageRows(sessionId: string, patientId?: string): Promise<AiMessageRow[]> {

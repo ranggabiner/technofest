@@ -16,12 +16,14 @@ describe("patient layout shell", () => {
   const patientRouteFiles = [
     "(portal)/page.tsx",
     "(portal)/access/page.tsx",
-    "(portal)/access-history/page.tsx",
+    "(portal)/health-history/page.tsx",
+    "(portal)/health-history/records/page.tsx",
   ];
   const patientLoadingFiles = [
     "(portal)/loading.tsx",
     "(portal)/access/loading.tsx",
-    "(portal)/access-history/loading.tsx",
+    "(portal)/health-history/loading.tsx",
+    "(portal)/health-history/records/loading.tsx",
   ];
 
   it("mounts the shared patient shell in the persistent portal layout", () => {
@@ -82,25 +84,47 @@ describe("patient layout shell", () => {
 
     expect(dashboardHtml).toContain('data-patient-layout="portal-shell"');
     expect(dashboardHtml).toContain('data-patient-sidebar="profile"');
+    expect(dashboardHtml).toContain('data-patient-sidebar="mobile-profile"');
     expect(dashboardHtml).toContain("Dashboard");
     expect(dashboardHtml).toContain("Jurnal AI");
+    expect(dashboardHtml).toContain("Akses Dokter");
+    expect(dashboardHtml).toContain("Riwayat Kesehatan");
+    expect(dashboardHtml).toContain("Keluar akun");
+    expect(dashboardHtml).not.toContain("Riwayat Akses");
+  });
+
+  it("keeps profile logout visually secondary", () => {
+    const source = readFileSync(new URL("./_components/patient-layout.tsx", import.meta.url), "utf8");
+
+    expect(source).toContain("text-[var(--color-ash)] transition hover:border-[var(--color-stone-surface)]");
+    expect(source).not.toContain("gap-2 rounded-full bg-[var(--color-midnight)] px-4 py-2 text-xs font-semibold uppercase");
   });
 
   it("resolves only patient portal navigation targets for optimistic loading", () => {
     expect(resolvePatientNavigationPath("/patient/chat", "/patient")).toBeNull();
     expect(resolvePatientNavigationPath("/patient/access?access_status=granted", "/patient/chat")).toBe("/patient/access");
-    expect(resolvePatientNavigationPath("/patient/access-history", "/patient/access")).toBe("/patient/access-history");
+    expect(resolvePatientNavigationPath("/patient/health-history", "/patient")).toBe("/patient/health-history");
+    expect(resolvePatientNavigationPath("/patient/health-history/records", "/patient/health-history")).toBe("/patient/health-history/records");
+    expect(resolvePatientNavigationPath("/patient/access-history", "/patient/access")).toBeNull();
     expect(resolvePatientNavigationPath("/patient", "/patient")).toBeNull();
     expect(resolvePatientNavigationPath("/doctor", "/patient")).toBeNull();
     expect(resolvePatientNavigationPath("https://example.com/patient/chat", "/patient")).toBeNull();
   });
 
-  it("maps patient portal targets to content-only skeletons without confusing access history with access", () => {
+  it("maps only active patient portal targets to content-only skeletons", () => {
     expect(patientPendingSkeletonKey("/patient")).toBe("dashboard");
     expect(patientPendingSkeletonKey("/patient/chat")).toBeNull();
     expect(patientPendingSkeletonKey("/patient/access")).toBe("access");
-    expect(patientPendingSkeletonKey("/patient/access-history")).toBe("history");
-    expect(patientPendingSkeletonKey("/patient/access-history/detail")).toBe("history");
+    expect(patientPendingSkeletonKey("/patient/health-history")).toBe("health-history");
+    expect(patientPendingSkeletonKey("/patient/health-history/records")).toBe("health-history");
+    expect(patientPendingSkeletonKey("/patient/health-history/detail")).toBeNull();
+    expect(patientPendingSkeletonKey("/patient/access-history")).toBeNull();
+    expect(patientPendingSkeletonKey("/patient/access-history/detail")).toBeNull();
     expect(patientPendingSkeletonKey("/patient/unknown")).toBeNull();
+  });
+
+  it("removes the retired access history route from the patient portal", () => {
+    expect(existsSync(new URL("./(portal)/access-history/page.tsx", import.meta.url))).toBe(false);
+    expect(existsSync(new URL("./(portal)/access-history/loading.tsx", import.meta.url))).toBe(false);
   });
 });

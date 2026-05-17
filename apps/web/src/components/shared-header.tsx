@@ -34,6 +34,7 @@ type SharedHeaderProps = {
   isAuthenticated?: boolean;
   maxWidth?: "content" | "none";
   position?: "fixed" | "sticky" | "static";
+  showAuthAction?: boolean;
 };
 
 export async function SharedHeader({
@@ -44,6 +45,7 @@ export async function SharedHeader({
   isAuthenticated = false,
   maxWidth = "content",
   position = "fixed",
+  showAuthAction = true,
 }: SharedHeaderProps) {
   const [{ getDictionary, getLocale }, { getMarketingHeaderLinks, landingLoginHref }, { signOutAction }] =
     await Promise.all([
@@ -130,7 +132,7 @@ export async function SharedHeader({
               {contextAction.label}
             </Link>
           ) : null}
-          {action === "logout" ? (
+          {showAuthAction && action === "logout" ? (
             <form action={signOutAction}>
               <button
                 type="submit"
@@ -140,14 +142,15 @@ export async function SharedHeader({
                 <LogOut size={15} aria-hidden="true" />
               </button>
             </form>
-          ) : (
+          ) : null}
+          {showAuthAction && action === "login" ? (
             <Link
               href={landingLoginHref}
               className="inline-flex min-h-9 cursor-pointer items-center justify-center rounded-full bg-[var(--color-midnight)] px-4 py-2 text-[12px] font-semibold text-[var(--color-inverted)] transition hover:bg-[var(--color-charcoal-primary)] hover:text-[var(--color-warm-canvas)]"
             >
               {copy.marketing.loginCta}
             </Link>
-          )}
+          ) : null}
         </div>
       </div>
     </header>
