@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { SharedHeader } from "@/components/shared-header";
+import { SiteFooterContent } from "@/components/site-footer";
 import { getDictionary } from "@/lib/i18n/server";
 import { cn } from "@/lib/utils";
 
@@ -51,6 +52,7 @@ export async function AppShell({
           <div className="mx-auto max-w-[860px] px-6 py-8">{children}</div>
         </main>
       </div>
+      <SiteFooterContent copy={copy} />
     </div>
   );
 }

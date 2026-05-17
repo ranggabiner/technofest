@@ -1,5 +1,15 @@
 @import "tailwindcss";
 
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
 :root {
   --color-warm-canvas: #fbfaf9;
   --color-stone-surface: #f2f0ed;
@@ -66,6 +76,30 @@
 body {
   font-family: var(--font-inter), Arial, Helvetica, sans-serif;
   letter-spacing: 0;
+}
+
+html[data-scroll-reveal-ready="true"] [data-scroll-reveal] {
+  opacity: 0;
+  transform: translate3d(0, 18px, 0);
+  transition:
+    opacity 560ms ease,
+    transform 560ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: var(--scroll-reveal-delay, 0ms);
+  will-change: opacity, transform;
+}
+
+html[data-scroll-reveal-ready="true"] [data-scroll-reveal][data-scroll-reveal-visible="true"] {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+  will-change: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-scroll-reveal-ready="true"] [data-scroll-reveal] {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
 }
 
 button,

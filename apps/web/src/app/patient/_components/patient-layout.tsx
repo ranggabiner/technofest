@@ -4,6 +4,7 @@ import type { HTMLAttributes, ReactNode } from "react";
 
 import { signOutAction } from "@/app/auth/actions";
 import { SharedHeader } from "@/components/shared-header";
+import { SiteFooter, SiteFooterContent } from "@/components/site-footer";
 import { ForbiddenState } from "@/components/state-panel";
 import type { ResolvedRole } from "@/lib/auth/roles";
 import type { Dictionary } from "@/lib/i18n/dictionary";
@@ -49,7 +50,7 @@ export function PatientLayout({
         />
       )}
       <PatientNavigationTransitionProvider>
-        <main className="mx-auto grid max-w-[1400px] grid-cols-1 gap-6 px-6 pb-[120px] pt-[100px] md:grid-cols-12">
+        <main className="mx-auto grid min-h-screen max-w-[1400px] grid-cols-1 gap-6 px-6 pb-[120px] pt-[100px] md:grid-cols-12">
           <aside className="hidden md:col-span-3 md:block">
             <div className="sticky top-[100px] flex flex-col gap-6">
               <PatientProfileCard
@@ -81,6 +82,7 @@ export function PatientLayout({
           </div>
         </main>
       </PatientNavigationTransitionProvider>
+      <SiteFooterContent copy={copy} />
     </div>
   );
 }
@@ -168,9 +170,10 @@ export async function PatientForbiddenLayout({
         position="fixed"
         className="shadow-none"
       />
-      <main className="mx-auto max-w-[860px] px-6 pb-[120px] pt-[100px]">
+      <main className="mx-auto min-h-screen max-w-[860px] px-6 pb-[120px] pt-[100px]">
         <ForbiddenState role={role} />
       </main>
+      <SiteFooter />
     </div>
   );
 }

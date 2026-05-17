@@ -1,6 +1,7 @@
 import { Check } from "lucide-react";
 
 import { SharedHeader } from "@/components/shared-header";
+import { SiteFooter } from "@/components/site-footer";
 import { cn } from "@/lib/utils";
 
 import {
@@ -34,12 +35,13 @@ export async function OnboardingShell({
         position="sticky"
       />
 
-      <main className="mx-auto w-full max-w-[1100px] flex-1 px-6 py-20">
+      <main className="mx-auto flex min-h-screen w-full max-w-[1100px] flex-1 flex-col px-6 py-20">
         <OnboardingProgress steps={steps} activeStep={activeStep} />
         {children}
       </main>
 
       {footer}
+      <SiteFooter />
     </div>
   );
 }

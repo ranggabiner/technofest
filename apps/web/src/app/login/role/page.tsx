@@ -1,8 +1,8 @@
 import { AlertTriangle, Stethoscope, UserRound } from "lucide-react";
 import { redirect } from "next/navigation";
 
-import { MarketingFooter } from "@/components/marketing-chrome";
 import { SharedHeader } from "@/components/shared-header";
+import { SiteFooter } from "@/components/site-footer";
 import { roleEntryPath } from "@/lib/auth/roles";
 import { getCurrentUser, resolveRoleForUser } from "@/lib/auth/session";
 import { getLocale } from "@/lib/i18n/server";
@@ -36,7 +36,7 @@ export default async function RoleSelectionPage({
   return (
     <div className="flex min-h-screen flex-col bg-[var(--color-warm-canvas)] text-[var(--color-graphite)]">
       <SharedHeader authMode="authenticated" isAuthenticated />
-      <main className="flex flex-1 items-center justify-center px-6 pb-24 pt-32">
+      <main className="flex min-h-screen flex-1 items-center justify-center px-6 pb-24 pt-32">
         <form
           action={completeRoleSelectionAction}
           className="relative w-full max-w-[640px] overflow-hidden rounded-xl bg-[var(--color-card)] p-8 shadow-[inset_0_0_0_1px_var(--color-stone-surface)] md:p-20"
@@ -104,7 +104,7 @@ export default async function RoleSelectionPage({
           <div className="pointer-events-none absolute -bottom-10 -right-10 hidden size-48 rounded-full bg-[var(--color-stone-surface)] opacity-40 lg:block" />
         </form>
       </main>
-      <MarketingFooter />
+      <SiteFooter />
     </div>
   );
 }

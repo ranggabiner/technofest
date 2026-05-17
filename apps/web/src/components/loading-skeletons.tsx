@@ -9,7 +9,7 @@ export function HeaderSkeleton({ position = "sticky" }: { position?: "fixed" | "
         position === "fixed" && "fixed inset-x-0 top-0 z-50",
         position === "sticky" && "sticky top-0 z-40",
         position === "static" && "relative z-40",
-        "border-b border-[var(--color-stone-surface)] bg-[var(--color-warm-canvas)] shadow-[0_1px_2px_rgba(0,0,0,0.04)]",
+        "border-b border-[var(--color-stone-surface)] bg-[var(--color-warm-canvas)] shadow-[var(--shadow-subtle)]",
       )}
     >
       <div className="mx-auto flex h-16 w-full max-w-none items-center justify-between gap-3 px-4 md:px-6">
@@ -457,11 +457,225 @@ export function AdminDoctorDetailSkeleton() {
 
 export function HomeSkeleton() {
   return (
-    <div className="min-h-screen bg-[var(--color-warm-canvas)]">
-      <HeaderSkeleton position="fixed" />
-      <main className="grid min-h-screen place-items-center px-6 pt-16">
-        <Skeleton className="h-20 w-72 md:h-24 md:w-96" />
+    <div className="min-h-screen bg-[var(--color-warm-canvas)] text-[var(--color-graphite)]" data-loading-pattern="home">
+      <LandingHeaderSkeleton />
+      <main className="flex flex-col items-center pt-20">
+        <LandingHeroSkeleton />
+        <LandingAboutSkeleton />
+        <LandingFeatureSkeleton />
+        <LandingArticleSkeleton />
+        <LandingWorkflowSkeleton />
       </main>
+      <LandingFooterSkeleton />
+    </div>
+  );
+}
+
+function LandingHeaderSkeleton() {
+  return (
+    <header className="fixed inset-x-0 top-0 z-50 border-b border-[var(--color-stone-surface)] bg-[color-mix(in_srgb,var(--color-warm-canvas)_90%,transparent)] shadow-[var(--shadow-subtle)] backdrop-blur-md">
+      <div className="mx-auto flex h-20 w-full max-w-[1100px] items-center justify-between gap-4 px-6">
+        <div className="flex min-w-0 items-center gap-3">
+          <Skeleton className="h-10 w-10 shrink-0 rounded-full" />
+          <Skeleton className="h-8 w-32 rounded-full" />
+        </div>
+        <nav className="hidden items-center gap-6 lg:flex" aria-hidden="true">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <Skeleton key={index} className="h-4 w-20 rounded-full" />
+          ))}
+        </nav>
+        <div className="flex shrink-0 items-center gap-2">
+          <Skeleton className="h-11 w-14 rounded-full" />
+          <Skeleton className="h-11 w-11 rounded-full" />
+          <Skeleton className="hidden h-11 w-28 rounded-full lg:block" />
+          <Skeleton className="h-11 w-11 rounded-full lg:hidden" />
+        </div>
+      </div>
+    </header>
+  );
+}
+
+function LandingHeroSkeleton() {
+  return (
+    <section
+      className="w-full overflow-hidden bg-[linear-gradient(135deg,color-mix(in_srgb,var(--color-teal-surface)_70%,var(--color-warm-canvas))_0%,var(--color-warm-canvas)_100%)] px-6 py-20 lg:py-32"
+      data-home-skeleton-section="hero"
+    >
+      <div className="mx-auto flex w-full max-w-[1100px] flex-col items-center gap-12 lg:flex-row">
+        <div className="z-10 flex flex-1 flex-col items-center gap-4 text-center lg:items-start lg:text-left">
+          <Skeleton className="h-28 w-full max-w-2xl rounded-3xl sm:h-32 lg:h-40" />
+          <div className="mx-auto mt-2 grid w-full max-w-xl gap-3 lg:mx-0">
+            <Skeleton className="h-4 w-full rounded-full" />
+            <Skeleton className="h-4 w-11/12 rounded-full" />
+            <Skeleton className="h-4 w-3/4 rounded-full" />
+          </div>
+          <Skeleton className="mt-4 h-12 w-44 rounded-full" />
+        </div>
+        <div className="w-full flex-1">
+          <div className="mx-auto max-w-lg">
+            <Skeleton className="aspect-square w-full rounded-3xl shadow-[var(--shadow-elevated)]" />
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function LandingAboutSkeleton() {
+  return (
+    <section
+      className="w-full scroll-mt-24 bg-[var(--color-card)] px-6 py-20 lg:py-32"
+      data-home-skeleton-section="about"
+    >
+      <LandingSectionIntroSkeleton />
+      <div className="mx-auto grid w-full max-w-[1100px] items-center gap-12 lg:grid-cols-[5fr_7fr]">
+        <Skeleton className="aspect-square w-full rounded-3xl shadow-[var(--shadow-elevated)]" />
+        <div className="flex flex-col gap-6">
+          {Array.from({ length: 2 }).map((_, index) => (
+            <LandingInfoCardSkeleton key={index} align="left" />
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function LandingFeatureSkeleton() {
+  return (
+    <section
+      className="w-full scroll-mt-24 bg-[var(--color-parchment-card)] px-6 py-20 lg:py-32"
+      data-home-skeleton-section="features"
+    >
+      <LandingSectionIntroSkeleton />
+      <div className="mx-auto grid w-full max-w-[1100px] gap-8 md:grid-cols-3">
+        {Array.from({ length: 3 }).map((_, index) => (
+          <LandingInfoCardSkeleton key={index} />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function LandingArticleSkeleton() {
+  return (
+    <section
+      className="w-full scroll-mt-24 bg-[var(--color-card)] px-6 py-20 lg:py-32"
+      data-home-skeleton-section="articles"
+    >
+      <LandingSectionIntroSkeleton />
+      <div className="mx-auto grid w-full max-w-[1100px] gap-8 md:grid-cols-3">
+        {Array.from({ length: 3 }).map((_, index) => (
+          <div
+            key={index}
+            className="flex overflow-hidden rounded-3xl border border-[var(--color-stone-surface)] bg-[var(--color-card)] shadow-[var(--shadow-elevated)]"
+          >
+            <article className="flex w-full flex-col">
+              <Skeleton className="h-48 w-full rounded-none" />
+              <div className="flex flex-1 flex-col p-6">
+                <Skeleton className="mb-3 h-6 w-4/5 rounded-full" />
+                <div className="mb-5 grid flex-1 gap-3">
+                  <Skeleton className="h-4 w-full rounded-full" />
+                  <Skeleton className="h-4 w-11/12 rounded-full" />
+                  <Skeleton className="h-4 w-2/3 rounded-full" />
+                </div>
+                <Skeleton className="h-4 w-32 rounded-full" />
+              </div>
+            </article>
+          </div>
+        ))}
+      </div>
+      <div className="mx-auto mt-10 flex w-full max-w-[1100px] justify-end">
+        <Skeleton className="h-5 w-28 rounded-full" />
+      </div>
+    </section>
+  );
+}
+
+function LandingWorkflowSkeleton() {
+  return (
+    <section
+      className="w-full scroll-mt-24 bg-[var(--color-parchment-card)] px-6 py-20 lg:py-32"
+      data-home-skeleton-section="workflow"
+    >
+      <LandingSectionIntroSkeleton />
+      <div className="relative mx-auto w-full max-w-4xl px-4">
+        <div className="absolute left-12 right-12 top-12 z-0 hidden h-1 rounded-full bg-[var(--color-stone-surface)] md:block" />
+        <div className="relative z-10 grid gap-10 md:grid-cols-3">
+          {Array.from({ length: 3 }).map((_, index) => (
+            <div key={index} className="flex flex-col items-center text-center">
+              <Skeleton className="mb-4 h-24 w-24 rounded-full" />
+              <Skeleton className="mb-2 h-6 w-36 rounded-full" />
+              <div className="grid w-full gap-3">
+                <Skeleton className="mx-auto h-4 w-full max-w-[220px] rounded-full" />
+                <Skeleton className="mx-auto h-4 w-4/5 max-w-[180px] rounded-full" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function LandingFooterSkeleton() {
+  return (
+    <footer className="w-full bg-[var(--color-card)] px-6 pb-10 pt-20 text-[var(--color-graphite)]" data-home-skeleton-section="footer">
+      <div className="mx-auto mb-10 flex w-full max-w-[1100px] flex-col items-start justify-between gap-10 border-b border-[var(--color-stone-surface)] pb-10 md:flex-row">
+        <div className="flex w-full max-w-md flex-col gap-6">
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-10 w-10 rounded-full" />
+            <Skeleton className="h-8 w-32 rounded-full" />
+          </div>
+          <div className="grid gap-3">
+            <Skeleton className="h-4 w-full rounded-full" />
+            <Skeleton className="h-4 w-5/6 rounded-full" />
+          </div>
+        </div>
+      </div>
+      <Skeleton className="mx-auto h-4 w-72 max-w-full rounded-full" />
+    </footer>
+  );
+}
+
+function LandingSectionIntroSkeleton() {
+  return (
+    <div className="mx-auto mb-16 w-full max-w-[1100px] text-center">
+      <Skeleton className="mx-auto h-12 w-full max-w-xl rounded-3xl lg:h-14" />
+      <div className="mx-auto mt-4 grid max-w-3xl gap-3">
+        <Skeleton className="mx-auto h-4 w-full rounded-full" />
+        <Skeleton className="mx-auto h-4 w-4/5 rounded-full" />
+      </div>
+    </div>
+  );
+}
+
+function LandingInfoCardSkeleton({ align = "center" }: { align?: "center" | "left" }) {
+  const left = align === "left";
+
+  return (
+    <div
+      className={
+        left
+          ? "flex flex-col items-center gap-6 rounded-3xl border border-[var(--color-stone-surface)] bg-[var(--color-warm-canvas)] p-8 text-center shadow-[var(--shadow-elevated)] lg:flex-row lg:items-start lg:text-left"
+          : "flex flex-col items-center rounded-3xl border border-[var(--color-stone-surface)] bg-[var(--color-card)] p-8 text-center shadow-[var(--shadow-elevated)]"
+      }
+    >
+      <LandingIconSkeleton className={left ? "shrink-0" : "mb-6"} />
+      <div className="w-full">
+        <Skeleton className={left ? "mb-2 h-4 w-32 rounded-full" : "mx-auto mb-4 h-6 w-40 rounded-full"} />
+        <div className="grid gap-3">
+          <Skeleton className={left ? "h-4 w-full rounded-full" : "mx-auto h-4 w-full rounded-full"} />
+          <Skeleton className={left ? "h-4 w-4/5 rounded-full" : "mx-auto h-4 w-4/5 rounded-full"} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function LandingIconSkeleton({ className = "" }: { className?: string }) {
+  return (
+    <div className={`flex h-16 w-16 items-center justify-center rounded-full bg-[var(--color-teal-surface)] ${className}`}>
+      <Skeleton className="h-8 w-8 rounded-full bg-[var(--color-teal-muted)]" />
     </div>
   );
 }
