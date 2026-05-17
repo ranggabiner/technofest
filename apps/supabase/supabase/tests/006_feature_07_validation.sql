@@ -2,7 +2,7 @@ create extension if not exists pgtap with schema extensions;
 
 begin;
 
-select plan(13);
+select plan(14);
 
 select is(
   (
@@ -96,13 +96,41 @@ select is(
     select count(*)::int
     from (
       values
+        ('patients'),
+        ('secure_files'),
+        ('ai_sessions'),
+        ('ai_messages'),
+        ('scope_2_mental'),
+        ('scope_2_physical'),
+        ('scope_1_medical_records'),
+        ('audit_logs'),
         ('access_grant_attachment_permissions'),
         ('access_grant_scope2_filters')
     ) as t(table_name)
     where not has_table_privilege('service_role', format('public.%I', table_name), 'select')
   ),
   0,
-  'service_role has explicit select grants for granular server-side Data API reads'
+  'service_role has explicit select grants for server-side Data API validation reads'
+);
+
+select is(
+  (
+    select count(*)::int
+    from (
+      values
+        ('patients'),
+        ('secure_files'),
+        ('ai_sessions'),
+        ('ai_messages'),
+        ('scope_2_mental'),
+        ('scope_2_physical'),
+        ('scope_1_medical_records'),
+        ('audit_logs')
+    ) as t(table_name)
+    where not has_table_privilege('service_role', format('public.%I', table_name), 'select')
+  ),
+  0,
+  'privacy validation tables are visible to service_role through Data API'
 );
 
 select is(

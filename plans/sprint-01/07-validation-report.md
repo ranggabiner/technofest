@@ -16,6 +16,7 @@ Run from `apps/web`:
 
 - [ ] RLS verified for anonymous, Patient, approved Doctor, pending Doctor, rejected Doctor, and Medical Admin.
 - [ ] Data API grants checked: `anon` has no direct table grants; `authenticated` access remains RLS-controlled.
+- [ ] Remote privacy validation checked: service-role read grants exist for required validation tables, and PostgREST schema cache refresh runs after migrations.
 - [ ] Plaintext database check passes after seeded demo flows.
 - [ ] KYC storage bytes are encrypted and private.
 - [ ] Medical attachment storage bytes are encrypted and private.
