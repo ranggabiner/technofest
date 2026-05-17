@@ -1,0 +1,141 @@
+@import "tailwindcss";
+
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+:root {
+  --color-warm-canvas: #fbfaf9;
+  --color-stone-surface: #f2f0ed;
+  --color-parchment-card: #f8f7f4;
+  --color-card: #ffffff;
+  --color-graphite: #474645;
+  --color-charcoal-primary: #343433;
+  --color-midnight: #121212;
+  --color-inverted: #ffffff;
+  --color-ash: #848281;
+  --color-fog: #c6c6c6;
+  --color-teal-primary: #2dd4bf;
+  --color-teal-deep: #0d9488;
+  --color-teal-muted: #ccfbf1;
+  --color-teal-surface: #f0fdfa;
+  --color-error-red: #ef4444;
+  --color-error-surface: #fef2f2;
+  --color-warning-amber: #f59e0b;
+  --color-warning-surface: #fffbeb;
+  --color-warning-text: #b45309;
+  --color-valid-green: #00c454;
+  --color-success-surface: #f0fdfa;
+  --color-success-text: #0f766e;
+  --shadow-subtle: color(display-p3 0.949 0.941 0.929) 0 0 0 1px inset;
+  --shadow-elevated: rgba(0, 0, 0, 0.04) 0 1px 6px 0, rgba(0, 0, 0, 0.05) 0 0 24px 0;
+  color-scheme: light;
+}
+
+[data-theme="dark"] {
+  --color-warm-canvas: #171615;
+  --color-stone-surface: #282624;
+  --color-parchment-card: #211f1d;
+  --color-card: #1d1b1a;
+  --color-graphite: #ded8cf;
+  --color-charcoal-primary: #f4efe7;
+  --color-midnight: #fbfaf9;
+  --color-inverted: #121212;
+  --color-ash: #afa79e;
+  --color-fog: #504b45;
+  --color-teal-primary: #5eead4;
+  --color-teal-deep: #2dd4bf;
+  --color-teal-muted: #134e4a;
+  --color-teal-surface: #0f2f2c;
+  --color-error-red: #f87171;
+  --color-error-surface: #3a1d1d;
+  --color-warning-amber: #fbbf24;
+  --color-warning-surface: #38290f;
+  --color-warning-text: #fcd34d;
+  --color-valid-green: #34d399;
+  --color-success-surface: #102f2a;
+  --color-success-text: #5eead4;
+  --shadow-subtle: rgba(255, 255, 255, 0.08) 0 0 0 1px inset;
+  --shadow-elevated: rgba(0, 0, 0, 0.35) 0 12px 32px 0;
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-background: var(--color-warm-canvas);
+  --color-foreground: var(--color-graphite);
+  --font-sans: var(--font-inter);
+  --font-serif: var(--font-fraunces);
+}
+
+body {
+  font-family: var(--font-inter), Arial, Helvetica, sans-serif;
+  letter-spacing: 0;
+}
+
+html[data-scroll-reveal-ready="true"] [data-scroll-reveal] {
+  opacity: 0;
+  transform: translate3d(0, 18px, 0);
+  transition:
+    opacity 560ms ease,
+    transform 560ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: var(--scroll-reveal-delay, 0ms);
+  will-change: opacity, transform;
+}
+
+html[data-scroll-reveal-ready="true"] [data-scroll-reveal][data-scroll-reveal-visible="true"] {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+  will-change: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-scroll-reveal-ready="true"] [data-scroll-reveal] {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+:where(
+  a[href],
+  button:not(:disabled),
+  select:not(:disabled),
+  summary,
+  [role="button"]:not([aria-disabled="true"]),
+  [role="link"]:not([aria-disabled="true"]),
+  [role="tab"]:not([aria-disabled="true"]),
+  [role="menuitem"]:not([aria-disabled="true"]),
+  input[type="button"]:not(:disabled),
+  input[type="submit"]:not(:disabled),
+  input[type="reset"]:not(:disabled),
+  input[type="checkbox"]:not(:disabled),
+  input[type="radio"]:not(:disabled),
+  input[type="file"]:not(:disabled),
+  input[type="date"]:not(:disabled),
+  input[type="datetime-local"]:not(:disabled)
+) {
+  cursor: pointer;
+}
+
+:where(
+  button:disabled,
+  select:disabled,
+  input:disabled,
+  textarea:disabled,
+  [aria-disabled="true"]
+) {
+  cursor: not-allowed;
+}

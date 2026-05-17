@@ -1,0 +1,261 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - development
+      - main
+      - master
+  push:
+    branches:
+      - development
+      - main
+      - master
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  CI: "true"
+  NEXT_TELEMETRY_DISABLED: "1"
+  PNPM_VERSION: "10.23.0"
+  SUPABASE_CLI_VERSION: "2.90.0"
+
+jobs:
+  secret-file-guard:
+    name: Secret file guard
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Block committed real env files
+        shell: bash
+        run: |
+          bad_files=()
+
+          while IFS= read -r file; do
+            case "$file" in
+              *.example)
+                continue
+                ;;
+            esac
+
+            case "$file" in
+              .env|.env.*|*/.env|*/.env.*|env.local|*/env.local)
+                bad_files+=("$file")
+                ;;
+            esac
+          done < <(git ls-files)
+
+          if [ "${#bad_files[@]}" -gt 0 ]; then
+            printf 'Real env files must not be committed:\n'
+            printf ' - %s\n' "${bad_files[@]}"
+            exit 1
+          fi
+
+  web-pr:
+    name: Web validation with local placeholder env
+    runs-on: ubuntu-latest
+    needs: secret-file-guard
+    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
+    env:
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+      NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:55321
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_ci_placeholder
+      SUPABASE_SERVICE_ROLE_KEY: ci-service-role-key-placeholder
+      SUPABASE_PROJECT_REF: local
+      ADMIN_EMAIL_ALLOWLIST: admin@example.com
+      ENCRYPTION_MASTER_KEY: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+      HASH_PEPPER: ci-hash-pepper-at-least-16-chars
+      SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID: ci-google-client-id.apps.googleusercontent.com
+      SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_SECRET: ci-google-client-secret
+      RESEND_API_KEY: re_ci_placeholder
+      RESEND_FROM_EMAIL: MedProof CI <noreply@example.com>
+      DEEPSEEK_API_KEY: ci-deepseek-placeholder
+      AMOY_RPC_URL: https://rpc.ankr.com/polygon_amoy
+      RELAYER_PRIVATE_KEY: "0x1111111111111111111111111111111111111111111111111111111111111111"
+      MEDPROOF_CONTRACT_ADDRESS: "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      NEXT_PUBLIC_MEDPROOF_CONTRACT_ADDRESS: "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Enable pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@${PNPM_VERSION} --activate
+
+      - name: Install dependencies
+        working-directory: apps/web
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        working-directory: apps/web
+        run: pnpm typecheck
+
+      - name: Lint
+        working-directory: apps/web
+        run: pnpm lint
+
+      - name: Test
+        working-directory: apps/web
+        run: pnpm test
+
+      - name: Build
+        working-directory: apps/web
+        run: pnpm build
+
+  web-staging:
+    name: Web validation for staging
+    runs-on: ubuntu-latest
+    needs: secret-file-guard
+    if: github.event_name == 'push' && github.ref_name == 'development'
+    environment: staging
+    # development branch -> staging Supabase and staging Google OAuth values.
+    env:
+      NEXT_PUBLIC_APP_URL: ${{ vars.NEXT_PUBLIC_APP_URL }}
+      NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ vars.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      SUPABASE_PROJECT_REF: ${{ vars.SUPABASE_PROJECT_REF }}
+      ADMIN_EMAIL_ALLOWLIST: ${{ secrets.ADMIN_EMAIL_ALLOWLIST }}
+      ENCRYPTION_MASTER_KEY: ${{ secrets.ENCRYPTION_MASTER_KEY }}
+      HASH_PEPPER: ${{ secrets.HASH_PEPPER }}
+      SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID: ${{ vars.SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID }}
+      SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_SECRET: ${{ secrets.SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_SECRET }}
+      RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+      RESEND_FROM_EMAIL: ${{ vars.RESEND_FROM_EMAIL }}
+      DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+      AMOY_RPC_URL: ${{ vars.AMOY_RPC_URL }}
+      RELAYER_PRIVATE_KEY: ${{ secrets.RELAYER_PRIVATE_KEY }}
+      MEDPROOF_CONTRACT_ADDRESS: ${{ vars.MEDPROOF_CONTRACT_ADDRESS }}
+      NEXT_PUBLIC_MEDPROOF_CONTRACT_ADDRESS: ${{ vars.NEXT_PUBLIC_MEDPROOF_CONTRACT_ADDRESS }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Enable pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@${PNPM_VERSION} --activate
+
+      - name: Install dependencies
+        working-directory: apps/web
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        working-directory: apps/web
+        run: pnpm typecheck
+
+      - name: Lint
+        working-directory: apps/web
+        run: pnpm lint
+
+      - name: Test
+        working-directory: apps/web
+        run: pnpm test
+
+      - name: Build
+        working-directory: apps/web
+        run: pnpm build
+
+  web-production:
+    name: Web validation for production
+    runs-on: ubuntu-latest
+    needs: secret-file-guard
+    if: github.event_name == 'push' && (github.ref_name == 'main' || github.ref_name == 'master')
+    environment: production
+    # main/master branch -> production Supabase and production Google OAuth values.
+    env:
+      NEXT_PUBLIC_APP_URL: ${{ vars.NEXT_PUBLIC_APP_URL }}
+      NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ vars.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      SUPABASE_PROJECT_REF: ${{ vars.SUPABASE_PROJECT_REF }}
+      ADMIN_EMAIL_ALLOWLIST: ${{ secrets.ADMIN_EMAIL_ALLOWLIST }}
+      ENCRYPTION_MASTER_KEY: ${{ secrets.ENCRYPTION_MASTER_KEY }}
+      HASH_PEPPER: ${{ secrets.HASH_PEPPER }}
+      SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID: ${{ vars.SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID }}
+      SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_SECRET: ${{ secrets.SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_SECRET }}
+      RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+      RESEND_FROM_EMAIL: ${{ vars.RESEND_FROM_EMAIL }}
+      DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+      AMOY_RPC_URL: ${{ vars.AMOY_RPC_URL }}
+      RELAYER_PRIVATE_KEY: ${{ secrets.RELAYER_PRIVATE_KEY }}
+      MEDPROOF_CONTRACT_ADDRESS: ${{ vars.MEDPROOF_CONTRACT_ADDRESS }}
+      NEXT_PUBLIC_MEDPROOF_CONTRACT_ADDRESS: ${{ vars.NEXT_PUBLIC_MEDPROOF_CONTRACT_ADDRESS }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Enable pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@${PNPM_VERSION} --activate
+
+      - name: Install dependencies
+        working-directory: apps/web
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        working-directory: apps/web
+        run: pnpm typecheck
+
+      - name: Lint
+        working-directory: apps/web
+        run: pnpm lint
+
+      - name: Test
+        working-directory: apps/web
+        run: pnpm test
+
+      - name: Build
+        working-directory: apps/web
+        run: pnpm build
+
+  supabase-local:
+    name: Supabase local validation
+    runs-on: ubuntu-latest
+    needs: secret-file-guard
+    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
+    env:
+      OPENAI_API_KEY: ci-openai-placeholder
+      SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID: ci-google-client-id.apps.googleusercontent.com
+      SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_SECRET: ci-google-client-secret
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: ${{ env.SUPABASE_CLI_VERSION }}
+
+      - name: Start local Supabase database
+        run: supabase --workdir apps/supabase/supabase db start
+
+      - name: Reset local database with migrations and seed
+        run: supabase --workdir apps/supabase/supabase db reset
+
+      - name: Run pgTAP tests
+        run: supabase --workdir apps/supabase/supabase test db
+
+      - name: Run local advisors
+        run: supabase --workdir apps/supabase/supabase db advisors --local --type all --fail-on warn

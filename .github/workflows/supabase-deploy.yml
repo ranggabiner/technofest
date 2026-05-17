@@ -1,0 +1,175 @@
+name: Supabase Deploy
+
+on:
+  push:
+    branches:
+      - development
+      - main
+      - master
+  workflow_dispatch:
+    inputs:
+      target_environment:
+        description: Supabase environment to deploy.
+        required: true
+        type: choice
+        options:
+          - staging
+          - production
+
+permissions:
+  contents: read
+
+concurrency:
+  group: supabase-deploy-${{ github.ref_name }}
+  cancel-in-progress: false
+
+env:
+  CI: "true"
+  PNPM_VERSION: "10.23.0"
+  SUPABASE_CLI_VERSION: "2.90.0"
+
+jobs:
+  staging:
+    name: Deploy Supabase migrations to staging
+    runs-on: ubuntu-latest
+    if: (github.event_name == 'push' && github.ref_name == 'development') || (github.event_name == 'workflow_dispatch' && inputs.target_environment == 'staging')
+    environment: staging
+    # development branch -> staging Supabase project and staging Google OAuth config.
+    env:
+      TARGET_ENVIRONMENT: staging
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      SUPABASE_PROJECT_REF: ${{ vars.SUPABASE_PROJECT_REF }}
+      NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      MEDPROOF_PRIVACY_SENTINELS: ${{ vars.MEDPROOF_PRIVACY_SENTINELS }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate target branch and environment
+        shell: bash
+        run: |
+          if [ "$TARGET_ENVIRONMENT" != "staging" ] || [ "$GITHUB_REF_NAME" != "development" ]; then
+            echo "Staging deploys must run from the development branch."
+            exit 1
+          fi
+
+          test -n "$SUPABASE_ACCESS_TOKEN"
+          test -n "$SUPABASE_DB_PASSWORD"
+          test -n "$SUPABASE_PROJECT_REF"
+          test -n "$NEXT_PUBLIC_SUPABASE_URL"
+          test -n "$SUPABASE_SERVICE_ROLE_KEY"
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Enable pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@${PNPM_VERSION} --activate
+
+      - name: Install web dependencies for privacy validation
+        working-directory: apps/web
+        run: pnpm install --frozen-lockfile
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: ${{ env.SUPABASE_CLI_VERSION }}
+
+      - name: Link staging Supabase project
+        run: supabase --workdir apps/supabase/supabase link --project-ref "$SUPABASE_PROJECT_REF"
+
+      - name: Preview migration changes
+        run: supabase --workdir apps/supabase/supabase db push --dry-run
+
+      - name: Apply migrations
+        run: supabase --workdir apps/supabase/supabase db push
+
+      - name: List linked migrations
+        run: supabase --workdir apps/supabase/supabase migration list --linked
+
+      - name: Run linked advisors
+        run: supabase --workdir apps/supabase/supabase db advisors --linked --type all --fail-on warn
+
+      - name: Run remote privacy validation
+        working-directory: apps/web
+        run: pnpm validate:privacy
+
+  production:
+    name: Deploy Supabase migrations to production
+    runs-on: ubuntu-latest
+    if: (github.event_name == 'push' && (github.ref_name == 'main' || github.ref_name == 'master')) || (github.event_name == 'workflow_dispatch' && inputs.target_environment == 'production')
+    environment: production
+    # main/master branch -> production Supabase project and production Google OAuth config.
+    env:
+      TARGET_ENVIRONMENT: production
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      SUPABASE_PROJECT_REF: ${{ vars.SUPABASE_PROJECT_REF }}
+      NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      MEDPROOF_PRIVACY_SENTINELS: ${{ vars.MEDPROOF_PRIVACY_SENTINELS }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate target branch and environment
+        shell: bash
+        run: |
+          if [ "$TARGET_ENVIRONMENT" != "production" ]; then
+            echo "Production deploy job received a non-production target."
+            exit 1
+          fi
+
+          if [ "$GITHUB_REF_NAME" != "main" ] && [ "$GITHUB_REF_NAME" != "master" ]; then
+            echo "Production deploys must run from main or master."
+            exit 1
+          fi
+
+          test -n "$SUPABASE_ACCESS_TOKEN"
+          test -n "$SUPABASE_DB_PASSWORD"
+          test -n "$SUPABASE_PROJECT_REF"
+          test -n "$NEXT_PUBLIC_SUPABASE_URL"
+          test -n "$SUPABASE_SERVICE_ROLE_KEY"
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Enable pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@${PNPM_VERSION} --activate
+
+      - name: Install web dependencies for privacy validation
+        working-directory: apps/web
+        run: pnpm install --frozen-lockfile
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: ${{ env.SUPABASE_CLI_VERSION }}
+
+      - name: Link production Supabase project
+        run: supabase --workdir apps/supabase/supabase link --project-ref "$SUPABASE_PROJECT_REF"
+
+      - name: Preview migration changes
+        run: supabase --workdir apps/supabase/supabase db push --dry-run
+
+      - name: Apply migrations
+        run: supabase --workdir apps/supabase/supabase db push
+
+      - name: List linked migrations
+        run: supabase --workdir apps/supabase/supabase migration list --linked
+
+      - name: Run linked advisors
+        run: supabase --workdir apps/supabase/supabase db advisors --linked --type all --fail-on warn
+
+      - name: Run remote privacy validation
+        working-directory: apps/web
+        run: pnpm validate:privacy
