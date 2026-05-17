@@ -179,7 +179,7 @@ export function PortalProfileCard({
             <form action={signOutAction}>
               <button
                 type="submit"
-                className="inline-flex min-h-9 w-full cursor-pointer items-center justify-center gap-2 rounded-full border border-transparent px-4 py-2 text-xs font-medium text-[var(--color-ash)] transition hover:border-[var(--color-stone-surface)] hover:bg-[var(--color-stone-surface)] hover:text-[var(--color-midnight)]"
+                className="inline-flex min-h-9 w-full cursor-pointer items-center justify-center gap-2 rounded-full border border-[color-mix(in_srgb,var(--color-error-red)_55%,white)] px-4 py-2 text-xs font-medium text-[var(--color-ash)] transition hover:bg-[var(--color-stone-surface)] hover:text-[var(--color-midnight)]"
               >
                 <span>{logoutLabel}</span>
                 <LogOut size={15} aria-hidden="true" />

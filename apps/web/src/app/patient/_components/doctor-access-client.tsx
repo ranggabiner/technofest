@@ -3,7 +3,6 @@
 import type { ClipboardEvent, ReactNode } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  ChevronDown,
   Download,
   Pencil,
   Plus,
@@ -36,7 +35,6 @@ import type {
   DoctorLookupResult,
   PatientAccessPermissionOptions,
   PatientAccessPermissionRecord,
-  PatientAccessPermissionScope2Option,
   PatientAccessState,
 } from "@/lib/access/doctor-access";
 
@@ -50,6 +48,11 @@ import {
 } from "./doctor-code-input";
 import { consumePendingDoctorLookupHandoff } from "./doctor-lookup-handoff";
 import { DoctorQrScannerModal } from "./doctor-qr-scanner-modal";
+
+type Scope2DateRangeState = {
+  startDate: string;
+  endDate: string;
+};
 
 export function DoctorAccessClient({
   copy,
@@ -71,6 +74,12 @@ export function DoctorAccessClient({
   const [canViewScope1, setCanViewScope1] = useState(true);
   const [canViewScope2Mental, setCanViewScope2Mental] = useState(true);
   const [canViewScope2Physical, setCanViewScope2Physical] = useState(false);
+  const [scope2MentalRange, setScope2MentalRange] = useState<Scope2DateRangeState>(() =>
+    defaultScope2DateRange(),
+  );
+  const [scope2PhysicalRange, setScope2PhysicalRange] = useState<Scope2DateRangeState>(() =>
+    defaultScope2DateRange(),
+  );
   const [longExpiryConfirmed, setLongExpiryConfirmed] = useState(false);
   const lookupRequestRef = useRef(0);
   const scannerModalOpenRef = useRef(false);
@@ -79,6 +88,8 @@ export function DoctorAccessClient({
     const expiresMs = new Date(expiresAt).getTime();
     return Number.isFinite(expiresMs) && expiresMs - nowMs > 30 * 24 * 60 * 60 * 1000;
   }, [expiresAt, nowMs]);
+  const scope2MentalRangeInvalid = canViewScope2Mental && !dateRangeIsValid(scope2MentalRange);
+  const scope2PhysicalRangeInvalid = canViewScope2Physical && !dateRangeIsValid(scope2PhysicalRange);
 
   const lookupDoctor = useCallback(
     async (value = lookupValue, options: { requireScannerOpen?: boolean } = {}) => {
@@ -117,6 +128,8 @@ export function DoctorAccessClient({
         setCanViewScope1(true);
         setCanViewScope2Mental(true);
         setCanViewScope2Physical(false);
+        setScope2MentalRange(defaultScope2DateRange());
+        setScope2PhysicalRange(defaultScope2DateRange());
         setTimePreset("30");
         setExpiresAt(expiryValueFromMinutes(30));
         setLongExpiryConfirmed(false);
@@ -293,11 +306,17 @@ export function DoctorAccessClient({
           canViewScope1={canViewScope1}
           canViewScope2Mental={canViewScope2Mental}
           canViewScope2Physical={canViewScope2Physical}
+          scope2MentalRange={scope2MentalRange}
+          scope2PhysicalRange={scope2PhysicalRange}
+          scope2MentalRangeInvalid={scope2MentalRangeInvalid}
+          scope2PhysicalRangeInvalid={scope2PhysicalRangeInvalid}
           longExpiryRequired={longExpiryRequired}
           longExpiryConfirmed={longExpiryConfirmed}
           onCanViewScope1Change={setCanViewScope1}
           onCanViewScope2MentalChange={setCanViewScope2Mental}
           onCanViewScope2PhysicalChange={setCanViewScope2Physical}
+          onScope2MentalRangeChange={setScope2MentalRange}
+          onScope2PhysicalRangeChange={setScope2PhysicalRange}
           onExpiryChange={(value) => {
             setExpiresAt(value);
             setTimePreset("custom");
@@ -328,11 +347,17 @@ function PermissionAccessModal({
   canViewScope1,
   canViewScope2Mental,
   canViewScope2Physical,
+  scope2MentalRange,
+  scope2PhysicalRange,
+  scope2MentalRangeInvalid,
+  scope2PhysicalRangeInvalid,
   longExpiryRequired,
   longExpiryConfirmed,
   onCanViewScope1Change,
   onCanViewScope2MentalChange,
   onCanViewScope2PhysicalChange,
+  onScope2MentalRangeChange,
+  onScope2PhysicalRangeChange,
   onExpiryChange,
   onTimePresetChange,
   onLongExpiryConfirmedChange,
@@ -346,16 +371,27 @@ function PermissionAccessModal({
   canViewScope1: boolean;
   canViewScope2Mental: boolean;
   canViewScope2Physical: boolean;
+  scope2MentalRange: Scope2DateRangeState;
+  scope2PhysicalRange: Scope2DateRangeState;
+  scope2MentalRangeInvalid: boolean;
+  scope2PhysicalRangeInvalid: boolean;
   longExpiryRequired: boolean;
   longExpiryConfirmed: boolean;
   onCanViewScope1Change: (checked: boolean) => void;
   onCanViewScope2MentalChange: (checked: boolean) => void;
   onCanViewScope2PhysicalChange: (checked: boolean) => void;
+  onScope2MentalRangeChange: (range: Scope2DateRangeState) => void;
+  onScope2PhysicalRangeChange: (range: Scope2DateRangeState) => void;
   onExpiryChange: (value: string) => void;
   onTimePresetChange: (preset: "15" | "30" | "60", minutes: number) => void;
   onLongExpiryConfirmedChange: (checked: boolean) => void;
   onCancel: () => void;
 }) {
+  const submitDisabled =
+    (longExpiryRequired && !longExpiryConfirmed) ||
+    scope2MentalRangeInvalid ||
+    scope2PhysicalRangeInvalid;
+
   return (
     <div
       className="fixed inset-0 z-50 grid place-items-center overflow-y-auto bg-[color-mix(in_srgb,var(--color-ash)_28%,transparent)] p-4 backdrop-blur-sm"
@@ -454,11 +490,16 @@ function PermissionAccessModal({
                 onChange={onCanViewScope2MentalChange}
                 dataScope="scope2_mental"
               >
-                <Scope2FilterSelect
-                  name="scope2_mental_filter"
+                <Scope2DateRangeFields
+                  startName="scope2_mental_start_date"
+                  endName="scope2_mental_end_date"
                   disabled={!canViewScope2Mental}
-                  options={permissionOptions.scope2MentalOptions}
+                  range={scope2MentalRange}
+                  invalid={scope2MentalRangeInvalid}
+                  hasData={permissionOptions.scope2MentalOptions.length > 0}
+                  onChange={onScope2MentalRangeChange}
                   copy={copy}
+                  dataScope="scope2_mental"
                 />
                 <button
                   type="button"
@@ -478,12 +519,16 @@ function PermissionAccessModal({
                 onChange={onCanViewScope2PhysicalChange}
                 dataScope="scope2_physical"
               >
-                <Scope2FilterSelect
-                  name="scope2_physical_filter"
+                <Scope2DateRangeFields
+                  startName="scope2_physical_start_date"
+                  endName="scope2_physical_end_date"
                   disabled={!canViewScope2Physical}
-                  options={permissionOptions.scope2PhysicalOptions}
-                  placeholder={copy.patient.access.permissionPhysicalSelectPlaceholder}
+                  range={scope2PhysicalRange}
+                  invalid={scope2PhysicalRangeInvalid}
+                  hasData={permissionOptions.scope2PhysicalOptions.length > 0}
+                  onChange={onScope2PhysicalRangeChange}
                   copy={copy}
+                  dataScope="scope2_physical"
                 />
                 <button
                   type="button"
@@ -573,7 +618,7 @@ function PermissionAccessModal({
             type="submit"
             className="rounded-[10px]"
             data-permission-action="allow"
-            disabled={longExpiryRequired && !longExpiryConfirmed}
+            disabled={submitDisabled}
           >
             <ShieldCheck size={16} aria-hidden="true" />
             {copy.patient.access.permissionModalAllow}
@@ -687,52 +732,69 @@ function MedicalRecordPermissionRow({
   );
 }
 
-function Scope2FilterSelect({
-  name,
+function Scope2DateRangeFields({
+  startName,
+  endName,
   disabled,
-  options,
-  placeholder,
+  range,
+  invalid,
+  hasData,
+  onChange,
   copy,
+  dataScope,
 }: {
-  name: string;
+  startName: string;
+  endName: string;
   disabled: boolean;
-  options: PatientAccessPermissionScope2Option[];
-  placeholder?: string;
+  range: Scope2DateRangeState;
+  invalid: boolean;
+  hasData: boolean;
+  onChange: (range: Scope2DateRangeState) => void;
   copy: Dictionary;
+  dataScope: string;
 }) {
-  if (disabled) {
-    return (
-      <div className="relative mt-4">
-        <div className="flex min-h-11 items-center justify-between rounded-[10px] bg-[var(--color-warm-canvas)] px-3 text-sm font-medium text-[var(--color-ash)] opacity-75">
-          <span>{placeholder ?? copy.patient.access.permissionRecentSummaryOption}</span>
-          <ChevronDown size={16} aria-hidden="true" />
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="relative mt-4">
-      <select
-        name={name}
-        defaultValue="last_n_days:90"
-        disabled={disabled}
-        className="min-h-11 w-full cursor-pointer appearance-none rounded-[10px] border border-[var(--color-fog)] bg-[var(--color-warm-canvas)] px-3 pr-9 text-sm font-medium text-[var(--color-midnight)] outline-none transition focus:border-[var(--color-teal-primary)] disabled:cursor-not-allowed disabled:opacity-55"
-      >
-        <option value="last_n_days:90">{copy.patient.access.permissionRecentSummaryOption}</option>
-        {options.map((option) => (
-          <option key={option.sessionId} value={`selected_session:${option.sessionId}`}>
-            {scope2OptionLabel(option, copy)}
-          </option>
-        ))}
-      </select>
-      <ChevronDown
-        size={16}
-        aria-hidden="true"
-        className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-ash)]"
-      />
-      {options.length === 0 ? (
-        <p className="mt-2 text-xs leading-5 text-[var(--color-ash)]">
+    <div className="mt-4 grid gap-3" data-permission-date-range={dataScope}>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Field>
+          <Label htmlFor={startName}>{copy.patient.access.permissionStartDateLabel}</Label>
+          <Input
+            id={startName}
+            name={startName}
+            type="date"
+            value={range.startDate}
+            max={range.endDate}
+            disabled={disabled}
+            required={!disabled}
+            className="cursor-pointer disabled:cursor-not-allowed"
+            onChange={(event) => onChange({ ...range, startDate: event.target.value })}
+          />
+        </Field>
+        <Field>
+          <Label htmlFor={endName}>{copy.patient.access.permissionEndDateLabel}</Label>
+          <Input
+            id={endName}
+            name={endName}
+            type="date"
+            value={range.endDate}
+            min={range.startDate}
+            disabled={disabled}
+            required={!disabled}
+            className="cursor-pointer disabled:cursor-not-allowed"
+            onChange={(event) => onChange({ ...range, endDate: event.target.value })}
+          />
+        </Field>
+      </div>
+      <p className="rounded-[10px] bg-[var(--color-warm-canvas)] px-3 py-2 text-xs leading-5 text-[var(--color-ash)]">
+        {copy.patient.access.permissionDateRangeSelected} {range.startDate} - {range.endDate}
+      </p>
+      {invalid ? (
+        <p className="text-xs font-semibold leading-5 text-[var(--color-error-red)]">
+          {copy.patient.access.permissionDateRangeInvalid}
+        </p>
+      ) : null}
+      {!hasData ? (
+        <p className="text-xs leading-5 text-[var(--color-ash)]">
           {copy.patient.access.permissionNoScope2Data}
         </p>
       ) : null}
@@ -1001,10 +1063,29 @@ function expiryValueFromMinutes(minutes: number) {
   return date.toISOString().slice(0, 16);
 }
 
-function scope2OptionLabel(option: PatientAccessPermissionScope2Option, copy: Dictionary) {
-  if (option.title) return option.title;
-  const date = option.summaryGeneratedAt ?? option.createdAt;
-  return `${copy.patient.access.permissionSessionOptionPrefix} ${date.slice(0, 10)}`;
+function defaultScope2DateRange(): Scope2DateRangeState {
+  const end = new Date();
+  const start = new Date(end);
+  start.setDate(start.getDate() - 90);
+
+  return {
+    startDate: dateInputValue(start),
+    endDate: dateInputValue(end),
+  };
+}
+
+function dateRangeIsValid(range: Scope2DateRangeState) {
+  return isDateInputValue(range.startDate) && isDateInputValue(range.endDate) && range.endDate >= range.startDate;
+}
+
+function dateInputValue(date: Date) {
+  const localDate = new Date(date);
+  localDate.setMinutes(localDate.getMinutes() - localDate.getTimezoneOffset());
+  return localDate.toISOString().slice(0, 10);
+}
+
+function isDateInputValue(value: string) {
+  return /^\d{4}-\d{2}-\d{2}$/.test(value);
 }
 
 function getInitials(name: string) {

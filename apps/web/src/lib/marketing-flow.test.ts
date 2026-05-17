@@ -4,7 +4,9 @@ import {
   footerLinks,
   headerLinks,
   landingLoginHref,
+  loginDemoHref,
   loginGoogleHref,
+  loginRealHref,
   roleOptions,
   roleSelectionPath,
 } from "./marketing-flow";
@@ -19,7 +21,9 @@ describe("marketing and login flow contracts", () => {
 
   it("starts login from the login screen and keeps role selection as post-auth completion", () => {
     expect(landingLoginHref).toBe("/login");
-    expect(loginGoogleHref).toBe("/login");
+    expect(loginDemoHref).toBe("/login/demo");
+    expect(loginRealHref).toBe("/login/real");
+    expect(loginGoogleHref).toBe("/login/real");
     expect(roleSelectionPath).toBe("/login/role");
   });
 

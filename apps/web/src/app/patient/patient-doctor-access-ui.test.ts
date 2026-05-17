@@ -103,8 +103,11 @@ describe("patient doctor access page", () => {
     expect(client).toContain('dataValue="30"');
     expect(client).toContain("data-permission-time-option={dataValue}");
     expect(client).toContain('name="attachment_record_ids"');
-    expect(client).toContain('name="scope2_mental_filter"');
-    expect(client).toContain('name="scope2_physical_filter"');
+    expect(client).toContain('startName="scope2_mental_start_date"');
+    expect(client).toContain('endName="scope2_mental_end_date"');
+    expect(client).toContain('startName="scope2_physical_start_date"');
+    expect(client).toContain('endName="scope2_physical_end_date"');
+    expect(client).not.toContain('defaultValue="last_n_days:90"');
     expect(client).toContain('data-permission-action="allow"');
     expect(client).toContain('data-permission-action="cancel"');
     expect(pageSource()).toContain("loadPatientAccessPermissionOptions");

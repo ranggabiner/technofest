@@ -14,6 +14,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "validate:privacy": "node scripts/validate-privacy.mjs",
+    "demo:seed-auth": "node scripts/seed-demo-auth-users.mjs",
     "supabase:start": "node scripts/run-with-app-env.mjs supabase --workdir ../supabase start",
     "supabase:stop": "node scripts/run-with-app-env.mjs supabase --workdir ../supabase stop",
     "supabase:status": "node scripts/run-with-app-env.mjs supabase --workdir ../supabase status",

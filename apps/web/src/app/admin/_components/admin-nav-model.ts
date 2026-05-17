@@ -11,8 +11,9 @@ export type AdminNavItem = {
 };
 
 export function adminNavItems(activePath: string, copy: Dictionary, adminLevel: AdminLevel): AdminNavItem[] {
+  const dashboardHref = adminLevel === "superadmin" ? "/superadmin/dashboard" : "/admin/dashboard";
   const items = [
-    { href: "/admin/dashboard", label: copy.admin.nav.dashboard, icon: Grid2X2 },
+    { href: dashboardHref, label: copy.admin.nav.dashboard, icon: Grid2X2 },
     { href: "/admin/approval", label: copy.admin.nav.approvalManagement, icon: ShieldCheck },
     ...(adminLevel === "superadmin"
       ? [{ href: "/admin/add-admin", label: copy.admin.nav.addAdmin, icon: UserPlus }]
@@ -26,7 +27,7 @@ export function adminNavItems(activePath: string, copy: Dictionary, adminLevel: 
 }
 
 function isActiveAdminPath(activePath: string, href: string) {
-  if (href === "/admin/dashboard") return activePath === href;
+  if (href === "/admin/dashboard" || href === "/superadmin/dashboard") return activePath === href;
   if (href === "/admin/approval") {
     return (
       activePath === href ||

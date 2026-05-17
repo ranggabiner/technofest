@@ -4,11 +4,13 @@ import {
   getMarketingHeaderLinks,
   getRoleOptions,
   landingLoginHref,
+  loginDemoHref,
   loginGoogleHref,
+  loginRealHref,
   roleSelectionPath,
 } from "./i18n/marketing";
 
-export { landingLoginHref, loginGoogleHref, roleSelectionPath };
+export { landingLoginHref, loginDemoHref, loginGoogleHref, loginRealHref, roleSelectionPath };
 
 export const headerLinks = getMarketingHeaderLinks(defaultLocale);
 export const footerLinks = getMarketingFooterLinks(defaultLocale);

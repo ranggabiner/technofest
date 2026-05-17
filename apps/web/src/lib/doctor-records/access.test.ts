@@ -94,5 +94,37 @@ describe("doctor grant access evaluation", () => {
         now,
       ),
     ).toBe(true);
+    expect(
+      scope2RowMatchesFilter(
+        {
+          logDate: "2026-04-01",
+          sessionId: "40000000-0000-0000-0000-000000000099",
+        },
+        {
+          mode: "date_range",
+          startDate: "2026-04-01",
+          endDate: "2026-04-30",
+          windowDays: null,
+          sessionId: null,
+        },
+        now,
+      ),
+    ).toBe(true);
+    expect(
+      scope2RowMatchesFilter(
+        {
+          logDate: "2026-05-01",
+          sessionId: "40000000-0000-0000-0000-000000000099",
+        },
+        {
+          mode: "date_range",
+          startDate: "2026-04-01",
+          endDate: "2026-04-30",
+          windowDays: null,
+          sessionId: null,
+        },
+        now,
+      ),
+    ).toBe(false);
   });
 });

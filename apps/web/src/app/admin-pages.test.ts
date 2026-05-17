@@ -54,8 +54,8 @@ describe("admin pages contract", () => {
 
     expect(role).not.toBeNull();
     expect(role).toMatchObject({ kind: "medical_admin", adminLevel: "superadmin" });
-    expect(roleHomePath(role!)).toBe("/admin/dashboard");
-    expect(roleEntryPath(role!)).toBe("/admin/dashboard");
+    expect(roleHomePath(role!)).toBe("/superadmin/dashboard");
+    expect(roleEntryPath(role!)).toBe("/superadmin/dashboard");
     expect(route("admin/doctors/page.tsx")).toContain('redirect("/admin/approval")');
   });
 
@@ -80,6 +80,19 @@ describe("admin pages contract", () => {
     expect(role?.kind).toBe("medical_admin");
     expect(role).toMatchObject({ adminLevel: "admin" });
     expect(roleHomePath(role!)).toBe("/admin/dashboard");
+  });
+
+  it("mounts superadmin dashboard separately while reusing admin portal protections", () => {
+    expect(existsSync(join(appDir, "superadmin/page.tsx"))).toBe(true);
+    expect(existsSync(join(appDir, "superadmin/dashboard/page.tsx"))).toBe(true);
+
+    const superadminIndex = route("superadmin/page.tsx");
+    const superadminDashboard = route("superadmin/dashboard/page.tsx");
+
+    expect(superadminIndex).toContain('redirect("/superadmin/dashboard")');
+    expect(superadminDashboard).toContain("requireSuperAdminRole");
+    expect(superadminDashboard).toContain("AdminLayout");
+    expect(superadminDashboard).toContain("loadAdminDashboardState");
   });
 
   it("mounts the shared admin shell in a persistent portal layout", () => {

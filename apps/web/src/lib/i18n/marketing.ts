@@ -10,8 +10,10 @@ type RoleOption = {
 };
 
 export const landingLoginHref = "/login";
+export const loginDemoHref = "/login/demo";
+export const loginRealHref = "/login/real";
 export const roleSelectionPath = "/login/role";
-export const loginGoogleHref = landingLoginHref;
+export const loginGoogleHref = loginRealHref;
 
 export function getMarketingHeaderLinks(locale: Locale) {
   return [...dictionary[locale].marketing.headerLinks];

@@ -45,7 +45,7 @@ export async function GET(request: Request) {
 }
 
 function redirectToLoginError(request: Request, error: AuthCallbackError, reason?: string | null) {
-  const loginUrl = new URL("/login", request.url);
+  const loginUrl = new URL("/login/real", request.url);
   loginUrl.searchParams.set("error", error);
   if (reason) loginUrl.searchParams.set("reason", reason);
   return NextResponse.redirect(loginUrl);

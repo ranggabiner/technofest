@@ -11,7 +11,7 @@ import {
   revokeDoctorGrant,
 } from "@/lib/access/doctor-access";
 import { isActiveDoctorAccessSessionError } from "@/lib/access/grants";
-import { parseScope2FilterValue } from "@/lib/access/granular-grants";
+import { parseScope2DateRangeFilter } from "@/lib/access/granular-grants";
 import { requireRole } from "@/lib/auth/session";
 import {
   acceptAiConsent,
@@ -88,8 +88,14 @@ export async function grantDoctorAccessAction(formData: FormData) {
         canViewScope2Mental: readCheckbox(formData, "can_view_scope2_mental"),
         canViewScope2Physical: readCheckbox(formData, "can_view_scope2_physical"),
         attachmentRecordIds: readAllText(formData, "attachment_record_ids"),
-        scope2MentalFilter: parseScope2FilterValue(readText(formData, "scope2_mental_filter")),
-        scope2PhysicalFilter: parseScope2FilterValue(readText(formData, "scope2_physical_filter")),
+        scope2MentalFilter: parseScope2DateRangeFilter(
+          readText(formData, "scope2_mental_start_date"),
+          readText(formData, "scope2_mental_end_date"),
+        ),
+        scope2PhysicalFilter: parseScope2DateRangeFilter(
+          readText(formData, "scope2_physical_start_date"),
+          readText(formData, "scope2_physical_end_date"),
+        ),
         expiresAt,
       },
       getRequestIp(headerList),

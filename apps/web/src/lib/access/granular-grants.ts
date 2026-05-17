@@ -8,11 +8,22 @@ export type Scope2GrantFilter =
       mode: "last_n_days";
       windowDays: number;
       sessionId: null;
+      startDate?: null;
+      endDate?: null;
     }
   | {
       mode: "selected_session";
       windowDays: null;
       sessionId: string;
+      startDate?: null;
+      endDate?: null;
+    }
+  | {
+      mode: "date_range";
+      windowDays: null;
+      sessionId: null;
+      startDate: string;
+      endDate: string;
     };
 
 export type GranularGrantInput = {
@@ -52,6 +63,23 @@ export function parseScope2FilterValue(value: string | null | undefined): Scope2
   }
 
   return null;
+}
+
+export function parseScope2DateRangeFilter(
+  startDate: string | null | undefined,
+  endDate: string | null | undefined,
+): Scope2GrantFilter | null {
+  const normalizedStart = normalizeDateInput(startDate);
+  const normalizedEnd = normalizeDateInput(endDate);
+  if (!normalizedStart || !normalizedEnd || normalizedEnd < normalizedStart) return null;
+
+  return {
+    mode: "date_range",
+    windowDays: null,
+    sessionId: null,
+    startDate: normalizedStart,
+    endDate: normalizedEnd,
+  };
 }
 
 export function normalizeGranularGrantInput(
@@ -116,12 +144,25 @@ export function scope2FilterToRpcJson(filter: Scope2GrantFilter | null) {
       mode: filter.mode,
       window_days: filter.windowDays,
       session_id: null,
+      start_date: null,
+      end_date: null,
+    };
+  }
+  if (filter.mode === "selected_session") {
+    return {
+      mode: filter.mode,
+      window_days: null,
+      session_id: filter.sessionId,
+      start_date: null,
+      end_date: null,
     };
   }
   return {
     mode: filter.mode,
     window_days: null,
-    session_id: filter.sessionId,
+    session_id: null,
+    start_date: filter.startDate,
+    end_date: filter.endDate,
   };
 }
 
@@ -142,15 +183,37 @@ function proofFilter(filter: Scope2GrantFilter | null, pepper: string) {
       mode: filter.mode,
       window_days: filter.windowDays,
       session_hash: null,
+      start_date: null,
+      end_date: null,
+    };
+  }
+  if (filter.mode === "selected_session") {
+    return {
+      mode: filter.mode,
+      window_days: null,
+      session_hash: hmacSha256Hex(pepper, filter.sessionId),
+      start_date: null,
+      end_date: null,
     };
   }
   return {
     mode: filter.mode,
     window_days: null,
-    session_hash: hmacSha256Hex(pepper, filter.sessionId),
+    session_hash: null,
+    start_date: filter.startDate,
+    end_date: filter.endDate,
   };
 }
 
 function isUuid(value: string | undefined): value is string {
   return typeof value === "string" && UUID_PATTERN.test(value);
+}
+
+function normalizeDateInput(value: string | null | undefined) {
+  const normalized = value?.trim();
+  if (!normalized || !/^\d{4}-\d{2}-\d{2}$/.test(normalized)) return null;
+
+  const date = new Date(`${normalized}T00:00:00.000Z`);
+  if (!Number.isFinite(date.getTime())) return null;
+  return date.toISOString().slice(0, 10) === normalized ? normalized : null;
 }
