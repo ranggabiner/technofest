@@ -77,6 +77,27 @@ describe("role resolution", () => {
     expect(role).toMatchObject({ kind: "medical_admin", adminId: "admin-invited", adminLevel: "admin" });
   });
 
+  it("does not grant invited admin access to a different Google email", () => {
+    const role = resolveRoleFromRows({
+      authUserId: "other-user",
+      email: "other@example.com",
+      fullName: "Other User",
+      adminAllowlist: [],
+      intent: null,
+      patient: null,
+      doctor: null,
+      admin: null,
+      adminInvitation: {
+        invitation_id: "invite-1",
+        email: "invited@example.com",
+        accepted_at: null,
+        revoked_at: null,
+      },
+    });
+
+    expect(role).toBeNull();
+  });
+
   it("does not resolve revoked invited admins", () => {
     const role = resolveRoleFromRows({
       authUserId: "revoked-user",

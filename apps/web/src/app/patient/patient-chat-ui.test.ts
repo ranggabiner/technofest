@@ -115,6 +115,8 @@ describe("patient chat Stitch redesign contract", () => {
     expect(source).toContain('data-chat-back-menu="patient-navigation"');
     expect(source).toContain('href="/patient"');
     expect(source).toContain('href="/patient/access"');
+    expect(source).toContain('href="/patient/health-history"');
+    expect(source).toContain("ClipboardList");
     expect(source).not.toContain('href="/patient/access-history"');
     expect(source).toContain('event.key === "Escape"');
     expect(source).toContain("contains(event.target as Node)");
@@ -136,6 +138,7 @@ describe("patient chat Stitch redesign contract", () => {
     expect(source).toContain("navigationCopy");
     expect(source).toContain("copy.patient.nav.dashboard");
     expect(source).toContain("copy.patient.nav.access");
+    expect(source).toContain("copy.patient.nav.healthHistory");
     expect(source).not.toContain("copy.patient.nav.history");
   });
 
@@ -170,6 +173,7 @@ describe("patient chat Stitch redesign contract", () => {
     expect(idChat.retrySummary).toBe("Coba lagi");
     expect(idChat.emptyChat).toBe("Mulai chat kesehatan baru. Kamu bisa cerita tentang keluhan fisik, mental, atau keduanya.");
     expect(idChat.bottomDisclosure).toContain("MedProof AI");
+    expect(idChat.sendDisabledTitle).toBe("Tunggu respons AI selesai");
     expect(idChat.backNavigationTitle).toBe("Buka navigasi pasien");
     expect(idChat.backNavigationMenuLabel).toBe("Navigasi pasien");
     expect(idChat).not.toHaveProperty("categoriesLabel");
@@ -215,6 +219,7 @@ describe("patient chat Stitch redesign contract", () => {
     expect(enChat.retrySummary).toBe("Retry");
     expect(enChat.emptyChat).toBe("Start a new health chat. You can talk about physical symptoms, mental concerns, or both.");
     expect(enChat.bottomDisclosure).toContain("MedProof AI");
+    expect(enChat.sendDisabledTitle).toBe("Wait for the AI response to finish");
     expect(enChat.backNavigationTitle).toBe("Open patient navigation");
     expect(enChat.backNavigationMenuLabel).toBe("Patient navigation");
     expect(enChat).not.toHaveProperty("categoriesLabel");
@@ -344,6 +349,22 @@ describe("patient chat Stitch redesign contract", () => {
     expect(source).toContain("bg-[var(--color-warm-canvas)] px-2.5 pb-5 md:px-5 md:pb-8");
   });
 
+  it("keeps the chat input editable while AI is streaming and blocks only send actions", () => {
+    const source = clientSource();
+    const activeComposerIndex = source.indexOf('data-chat-composer="bottom-input"');
+    const activeComposer = source.slice(activeComposerIndex, source.indexOf("</form>", activeComposerIndex));
+
+    expect(activeComposerIndex).toBeGreaterThan(-1);
+    expect(source).toContain("Ban");
+    expect(activeComposer).toContain('id="ai-message"');
+    expect(activeComposer).not.toContain("disabled={isStreaming}");
+    expect(activeComposer).toContain("if (!canSend) return");
+    expect(activeComposer).toContain("if (canSend) void sendMessage()");
+    expect(activeComposer).toContain("disabled={!canSend}");
+    expect(activeComposer).toContain("isStreaming ? copy.sendDisabledTitle : copy.sendTitle");
+    expect(activeComposer).toContain("isStreaming ? <Ban size={20} aria-hidden=\"true\" /> : <ArrowUp size={20} aria-hidden=\"true\" />");
+  });
+
   it("moves chat search from the history sidebar into a centered overlay", () => {
     const source = clientSource();
     const sidebarStart = source.indexOf('data-chat-sidebar="actions"');
@@ -366,6 +387,34 @@ describe("patient chat Stitch redesign contract", () => {
     expect(sidebar).toContain("copy.chatHistoryLabel");
     expect(sidebar).not.toContain('id="chat-history-search"');
     expect(sidebar).not.toContain("copy.searchPlaceholder");
+  });
+
+  it("filters only the search overlay results without changing sidebar history", () => {
+    const source = clientSource();
+    const sidebarStart = source.indexOf('data-chat-sidebar="actions"');
+    const canvasStart = source.indexOf('data-chat-canvas="conversation"');
+    const sidebar = source.slice(sidebarStart, canvasStart);
+    const searchOverlayStart = source.indexOf('data-chat-search-overlay="global"');
+    const searchOverlay = source.slice(searchOverlayStart);
+
+    expect(source).toContain("const [history, setHistory]");
+    expect(source).toContain("const [searchResults, setSearchResults]");
+    expect(source).toContain("const [isSearchHistoryLoading, setIsSearchHistoryLoading]");
+    expect(source).toContain("const sidebarHistoryEmptyMessage = copy.noChatHistory");
+    expect(source).toContain("const searchResultsEmptyMessage = searchQuery.trim() ? copy.noSearchResults : copy.noChatHistory");
+    expect(source).toContain("if (!isSearchOpen) return");
+    expect(source).not.toContain("void loadHistory(searchQuery)");
+
+    expect(sidebar).toContain("history.length === 0");
+    expect(sidebar).toContain("history.map((item)");
+    expect(sidebar).toContain("{sidebarHistoryEmptyMessage}");
+    expect(sidebar).not.toContain("searchQuery.trim()");
+    expect(sidebar).not.toContain("copy.noSearchResults");
+
+    expect(searchOverlay).toContain("isSearchHistoryLoading");
+    expect(searchOverlay).toContain("searchResults.length === 0");
+    expect(searchOverlay).toContain("searchResults.map((item)");
+    expect(searchOverlay).toContain("{searchResultsEmptyMessage}");
   });
 
   it("moves Finish Session from the sidebar to a fixed main-chat action header", () => {

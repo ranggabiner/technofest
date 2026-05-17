@@ -4,8 +4,10 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import {
   ArrowUp,
+  Ban,
   BrainCircuit,
   ChevronLeft,
+  ClipboardList,
   Grid2X2,
   HeartPulse,
   Plus,
@@ -73,6 +75,7 @@ type ChatCopy = {
   messagePlaceholder: string;
   disclosure: string;
   sendTitle: string;
+  sendDisabledTitle: string;
   send: string;
   aiContactFailed: string;
   latestSummaryTitle: string;
@@ -93,6 +96,7 @@ type ChatCopy = {
 type ChatNavigationCopy = {
   dashboard: string;
   access: string;
+  healthHistory: string;
 };
 
 export function AiJournalClient({
@@ -116,12 +120,14 @@ export function AiJournalClient({
 }) {
   const [sessionId, setSessionId] = useState(initialSessionId);
   const [history, setHistory] = useState<JournalSessionHistoryItem[]>(initialHistory);
+  const [searchResults, setSearchResults] = useState<JournalSessionHistoryItem[]>(initialHistory);
   const [searchQuery, setSearchQuery] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
   const [input, setInput] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isStreaming, setIsStreaming] = useState(false);
   const [isHistoryLoading, setIsHistoryLoading] = useState(false);
+  const [isSearchHistoryLoading, setIsSearchHistoryLoading] = useState(false);
   const [isSessionLoading, setIsSessionLoading] = useState(false);
   const [isCreatingNewChat, setIsCreatingNewChat] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -144,10 +150,10 @@ export function AiJournalClient({
     [input, isStreaming, selectedSessionIsClosed],
   );
 
-  const loadHistory = useCallback(async (nextQuery: string) => {
+  const loadHistory = useCallback(async () => {
     setIsHistoryLoading(true);
     try {
-      const response = await fetch("/api/patient/ai/sessions?query=" + encodeURIComponent(nextQuery), {
+      const response = await fetch("/api/patient/ai/sessions", {
         cache: "no-store",
       });
       const body = await response.json().catch(() => null) as
@@ -162,25 +168,45 @@ export function AiJournalClient({
     }
   }, [copy.historyLoadFailed]);
 
+  const loadSearchResults = useCallback(async (nextQuery: string) => {
+    setIsSearchHistoryLoading(true);
+    try {
+      const response = await fetch("/api/patient/ai/sessions?query=" + encodeURIComponent(nextQuery), {
+        cache: "no-store",
+      });
+      const body = await response.json().catch(() => null) as
+        | { sessions?: JournalSessionHistoryItem[]; error?: string }
+        | null;
+      if (!response.ok) throw new Error(body?.error ?? copy.historyLoadFailed);
+      setSearchResults(body?.sessions ?? []);
+    } catch (historyError) {
+      setError(historyError instanceof Error ? historyError.message : copy.historyLoadFailed);
+    } finally {
+      setIsSearchHistoryLoading(false);
+    }
+  }, [copy.historyLoadFailed]);
+
   const openSearchOverlay = useCallback(() => {
     setSearchQuery("");
+    setSearchResults(history);
     setIsSearchOpen(true);
-    void loadHistory("");
-  }, [loadHistory]);
+  }, [history]);
 
   const closeSearchOverlay = useCallback(() => {
     setIsSearchOpen(false);
     setSearchQuery("");
-    void loadHistory("");
-  }, [loadHistory]);
+    setSearchResults(history);
+  }, [history]);
 
   useEffect(() => {
+    if (!isSearchOpen) return;
+
     const timer = window.setTimeout(() => {
-      void loadHistory(searchQuery);
+      void loadSearchResults(searchQuery);
     }, 250);
 
     return () => window.clearTimeout(timer);
-  }, [loadHistory, searchQuery]);
+  }, [isSearchOpen, loadSearchResults, searchQuery]);
 
   useEffect(() => {
     if (!isSearchOpen) return;
@@ -254,7 +280,7 @@ export function AiJournalClient({
       setError(err instanceof Error ? err.message : copy.aiContactFailed);
     } finally {
       setIsStreaming(false);
-      void loadHistory(searchQuery);
+      void loadHistory();
     }
   }
 
@@ -309,7 +335,7 @@ export function AiJournalClient({
       if (!response.ok || !body) throw new Error(body?.error ?? copy.newChatFailed);
       applySessionDetail(body);
       setInput("");
-      void loadHistory(searchQuery);
+      void loadHistory();
       window.setTimeout(() => inputRef.current?.focus(), 0);
     } catch (newChatError) {
       setError(newChatError instanceof Error ? newChatError.message : copy.newChatFailed);
@@ -344,14 +370,15 @@ export function AiJournalClient({
       try {
         const detail = await retryAiSessionSummaryAction(sessionId);
         applySessionDetail(detail);
-        void loadHistory(searchQuery);
+        void loadHistory();
       } catch {
         setError(copy.summaryRetryFailed);
       }
     });
   }
 
-  const historyEmptyMessage = searchQuery.trim() ? copy.noSearchResults : copy.noChatHistory;
+  const sidebarHistoryEmptyMessage = copy.noChatHistory;
+  const searchResultsEmptyMessage = searchQuery.trim() ? copy.noSearchResults : copy.noChatHistory;
 
   return (
     <div className="grid h-full min-h-0 grid-rows-[auto_minmax(0,1fr)] overflow-hidden bg-[var(--color-warm-canvas)] lg:grid-cols-[280px_minmax(0,1fr)] lg:grid-rows-1">
@@ -389,7 +416,7 @@ export function AiJournalClient({
               <HistorySkeleton />
             ) : history.length === 0 ? (
               <p className="rounded-xl bg-[color-mix(in_srgb,var(--color-card)_70%,transparent)] px-3 py-3 text-xs leading-5 text-[var(--color-ash)]">
-                {historyEmptyMessage}
+                {sidebarHistoryEmptyMessage}
               </p>
             ) : (
               <div className="grid gap-1">
@@ -536,6 +563,7 @@ export function AiJournalClient({
             className="shrink-0 bg-[var(--color-warm-canvas)] px-2.5 pb-5 md:px-5 md:pb-8"
             onSubmit={(event) => {
               event.preventDefault();
+              if (!canSend) return;
               void sendMessage();
             }}
           >
@@ -552,22 +580,21 @@ export function AiJournalClient({
                   onKeyDown={(event) => {
                     if (event.key === "Enter" && !event.shiftKey) {
                       event.preventDefault();
-                      void sendMessage();
+                      if (canSend) void sendMessage();
                     }
                   }}
                   maxLength={2000}
-                  disabled={isStreaming}
                   className="min-h-11 min-w-0 flex-1 bg-transparent px-3 text-sm text-[var(--color-charcoal-primary)] outline-none placeholder:text-[var(--color-ash)] disabled:text-[var(--color-ash)]"
                   placeholder={copy.messagePlaceholder}
                 />
                 <button
                   type="submit"
                   disabled={!canSend}
-                  title={copy.sendTitle}
-                  aria-label={copy.sendTitle}
+                  title={isStreaming ? copy.sendDisabledTitle : copy.sendTitle}
+                  aria-label={isStreaming ? copy.sendDisabledTitle : copy.sendTitle}
                   className="inline-flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-full bg-[var(--color-midnight)] text-[var(--color-inverted)] shadow-[var(--shadow-subtle)] transition hover:bg-[var(--color-charcoal-primary)] disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  <ArrowUp size={20} aria-hidden="true" />
+                  {isStreaming ? <Ban size={20} aria-hidden="true" /> : <ArrowUp size={20} aria-hidden="true" />}
                 </button>
               </div>
               <p className="mx-auto mt-4 max-w-[640px] text-center text-[11px] leading-5 text-[var(--color-ash)]">
@@ -616,15 +643,15 @@ export function AiJournalClient({
               />
             </div>
             <div className="max-h-[min(420px,55vh)] overflow-y-auto p-3">
-              {isHistoryLoading ? (
+              {isSearchHistoryLoading ? (
                 <HistorySkeleton />
-              ) : history.length === 0 ? (
+              ) : searchResults.length === 0 ? (
                 <p className="rounded-xl bg-[color-mix(in_srgb,var(--color-card)_70%,transparent)] px-3 py-3 text-sm leading-6 text-[var(--color-ash)]">
-                  {historyEmptyMessage}
+                  {searchResultsEmptyMessage}
                 </p>
               ) : (
                 <div className="grid gap-1">
-                  {history.map((item) => (
+                  {searchResults.map((item) => (
                     <button
                       key={item.id}
                       type="button"
@@ -932,6 +959,12 @@ function BackNavigationMenu({
               href="/patient/access"
               icon={<Stethoscope size={18} aria-hidden="true" />}
               label={navigationCopy.access}
+              onSelect={() => setIsOpen(false)}
+            />
+            <BackNavigationMenuItem
+              href="/patient/health-history"
+              icon={<ClipboardList size={18} aria-hidden="true" />}
+              label={navigationCopy.healthHistory}
               onSelect={() => setIsOpen(false)}
             />
           </div>

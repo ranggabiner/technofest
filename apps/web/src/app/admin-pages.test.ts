@@ -135,12 +135,17 @@ describe("admin pages contract", () => {
     expect(addAdminPage).toContain("AdminInvitationList");
     expect(addAdminPage).toContain("adminLevel");
     expect(addAdmin).toContain("inviteAdminAction");
+    expect(addAdmin).toContain('state.status === "success" || state.status === "warning"');
+    expect(addAdmin).toContain("color-warning-text");
     expect(addAdminList).toContain("useActionState");
     expect(addAdminList).toContain("revokeAdminInvitationAction");
     expect(addAdminList).toContain('from "./form-state"');
     expect(addAdminActions).toContain("requireSuperAdminRole");
+    expect(addAdminActions).toContain("sendAdminInvitationEmail");
+    expect(addAdminActions).toContain("getLoginUrl");
     expect(addAdminActions).toContain("revokeAdminInvitationAction");
     expect(addAdminActions).not.toContain("export const initialRevokeAdminInvitationFormState");
+    expect(addAdminFormState).toContain('"warning"');
     expect(addAdminFormState).toContain("export type RevokeAdminInvitationFormState");
     expect(addAdminFormState).toContain("export const initialRevokeAdminInvitationFormState");
     expect(modal).toContain("data-admin-review-modal");
@@ -191,6 +196,7 @@ describe("admin pages contract", () => {
       expect(dictionary[locale].admin.approval.rowsPerPage).toBeTruthy();
       expect(dictionary[locale].admin.review.acceptApproval).toBeTruthy();
       expect(dictionary[locale].admin.addAdmin.success).toBeTruthy();
+      expect(dictionary[locale].admin.addAdmin.emailSendFailed).toBeTruthy();
       expect(dictionary[locale].admin.addAdmin.noAdmins).toBeTruthy();
       expect(dictionary[locale].admin.addAdmin.revoke).toBeTruthy();
       expect(dictionary[locale].admin.addAdmin.superadminRequired).toBeTruthy();

@@ -15,7 +15,7 @@ export function AddAdminForm({ copy }: { copy: Dictionary["admin"]["addAdmin"] }
   const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
-    if (state.status === "success") {
+    if (state.status === "success" || state.status === "warning") {
       formRef.current?.reset();
     }
   }, [state.status, state.message]);
@@ -36,7 +36,13 @@ export function AddAdminForm({ copy }: { copy: Dictionary["admin"]["addAdmin"] }
       {state.message ? (
         <p
           id="admin-invite-message"
-          className={state.status === "success" ? "text-sm text-[var(--color-success-text)]" : "text-sm text-[var(--color-error-red)]"}
+          className={
+            state.status === "success"
+              ? "text-sm text-[var(--color-success-text)]"
+              : state.status === "warning"
+                ? "text-sm text-[var(--color-warning-text)]"
+                : "text-sm text-[var(--color-error-red)]"
+          }
         >
           {state.message}
         </p>

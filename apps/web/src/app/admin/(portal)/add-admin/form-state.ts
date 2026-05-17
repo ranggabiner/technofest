@@ -1,5 +1,5 @@
 export type InviteAdminFormState = {
-  status: "idle" | "success" | "error";
+  status: "idle" | "success" | "warning" | "error";
   message: string;
 };
 

@@ -1,9 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
 
 import { requireSuperAdminRole } from "@/lib/auth/session";
 import { validateAdminInvitationEmail } from "@/lib/admin/invitations";
+import { sendAdminInvitationEmail } from "@/lib/email/resend";
 import { getDictionary } from "@/lib/i18n/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -72,12 +74,40 @@ export async function inviteAdminAction(
     throw insert.error;
   }
 
+  const emailResult = await sendAdminInvitationEmail({
+    to: validation.email,
+    loginUrl: await getLoginUrl(),
+  });
+
   revalidatePath("/admin/add-admin");
+
+  if (!emailResult.ok) {
+    return {
+      status: "warning",
+      message: copy.admin.addAdmin.emailSendFailed,
+    };
+  }
 
   return {
     status: "success",
     message: copy.admin.addAdmin.success,
   };
+}
+
+async function getLoginUrl() {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL?.trim();
+  if (appUrl) {
+    try {
+      return new URL("/login", appUrl).toString();
+    } catch {
+      // Fall back to request headers when local env is malformed.
+    }
+  }
+
+  const headerStore = await headers();
+  const host = headerStore.get("x-forwarded-host") ?? headerStore.get("host") ?? "localhost:3000";
+  const proto = headerStore.get("x-forwarded-proto") ?? "http";
+  return `${proto}://${host}/login`;
 }
 
 export async function revokeAdminInvitationAction(
