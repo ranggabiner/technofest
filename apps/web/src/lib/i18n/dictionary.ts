@@ -300,7 +300,7 @@ export const dictionary = {
             {
               title: "Untuk Dokter",
               description:
-                "Dokter yang sudah disetujui dapat membuka data sesuai izin pasien dan menerima ringkasan keluhan dari Jurnal AI sebagai konteks awal konsultasi.",
+                "Dokter yang sudah disetujui dapat melihat rekam medis dan ringkasan keluhan yang diizinkan pasien, lalu menambahkan catatan rekam medis baru atau koreksi sebagai catatan lanjutan tanpa mengubah catatan lama.",
             },
           ],
         },
@@ -1455,7 +1455,7 @@ export const dictionary = {
             {
               title: "For Doctors",
               description:
-                "Approved doctors can open patient-approved data and receive AI Journal summaries as early consultation context.",
+                "Approved doctors can view patient-authorized medical records and complaint summaries, then add new medical record notes or corrections as follow-up notes without changing the original record.",
             },
           ],
         },

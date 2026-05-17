@@ -68,6 +68,9 @@ describe("i18n locale contracts", () => {
     expect(dictionary.id.marketing.landing.hero.description).toContain("audit trail");
     expect(dictionary.id.marketing.landing.hero.description).toContain("keluhan mental maupun fisik");
     expect(dictionary.id.marketing.landing.about.accent).toBe("MedProof");
+    expect(dictionary.id.marketing.landing.about.cards[1].description).toContain("catatan rekam medis baru");
+    expect(dictionary.id.marketing.landing.about.cards[1].description).toContain("tanpa mengubah catatan lama");
+    expect(dictionary.id.marketing.landing.about.cards[1].description).not.toContain("Scope");
     expect(dictionary.id.marketing.landing.features.items.map((item) => item.title)).toEqual([
       "Rekam Medis Terverifikasi Blockchain",
       "Audit Trail Akses Dokter",
@@ -84,6 +87,9 @@ describe("i18n locale contracts", () => {
     expect(dictionary.en.marketing.landing.hero.description).toContain("audit trail");
     expect(dictionary.en.marketing.landing.hero.description).toContain("mental or physical complaints");
     expect(dictionary.en.marketing.landing.about.accent).toBe("MedProof");
+    expect(dictionary.en.marketing.landing.about.cards[1].description).toContain("new medical record notes");
+    expect(dictionary.en.marketing.landing.about.cards[1].description).toContain("without changing the original record");
+    expect(dictionary.en.marketing.landing.about.cards[1].description).not.toContain("Scope");
     expect(dictionary.en.marketing.landing.features.items.map((item) => item.title)).toEqual([
       "Blockchain-Verified Medical Records",
       "Doctor Access Audit Trail",

@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, ChevronDown, Search } from "lucide-react";
+import { ArrowRight, Search } from "lucide-react";
 
 import { SharedHeader } from "@/components/shared-header";
 import { SiteFooter } from "@/components/site-footer";
@@ -79,16 +79,6 @@ export default async function ArticlesPage() {
             </Link>
           ))}
         </section>
-
-        <div className="mt-20 flex justify-center">
-          <button
-            type="button"
-            className="inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-full bg-[var(--color-stone-surface)] px-10 text-[15px] font-medium text-[var(--color-graphite)] transition hover:bg-[var(--color-parchment-card)]"
-          >
-            {articlesCopy.loadMore}
-            <ChevronDown aria-hidden="true" className="h-5 w-5" />
-          </button>
-        </div>
       </main>
       <SiteFooter />
     </div>

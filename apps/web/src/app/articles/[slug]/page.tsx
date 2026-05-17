@@ -57,7 +57,6 @@ export default async function ArticleDetailPage({ params }: ArticleDetailPagePro
     <div className="min-h-screen bg-[var(--color-warm-canvas)] text-[var(--color-graphite)]">
       <SharedHeader
         authMode="public"
-        contextAction={{ href: "/articles", label: articlesCopy.breadcrumbArticles }}
         contextTitle={articlesCopy.breadcrumbArticles}
       />
       <main className="mx-auto w-full max-w-[1100px] px-6 pb-24 pt-28 md:pt-32">
