@@ -180,6 +180,8 @@ type Scope2FilterRow = {
   mode: string;
   window_days: number | null;
   session_id: string | null;
+  start_date: string | null;
+  end_date: string | null;
 };
 
 export async function loadPatientAccessState(
@@ -413,6 +415,7 @@ export async function createOrReplaceDoctorGrant(
       scope2PhysicalFilter: input.scope2PhysicalFilter,
     }),
   );
+  validateScope2DateRangeFlags(flags);
   const expiresAt = validateExpiry(input.expiresAt);
   const doctor = await loadApprovedDoctor(input.doctorId);
   if (!doctor) throw new Error(DOCTOR_LOOKUP_GENERIC_ERROR);
@@ -724,7 +727,7 @@ async function loadGranularScopeHashForGrant(grantId: string, pepper: string) {
       .eq("grant_id", grantId),
     admin
       .from("access_grant_scope2_filters")
-      .select("scope_kind,mode,window_days,session_id")
+      .select("scope_kind,mode,window_days,session_id,start_date,end_date")
       .eq("grant_id", grantId),
   ]);
 
@@ -757,6 +760,15 @@ function toScope2GrantFilter(row: Scope2FilterRow | undefined): Scope2GrantFilte
       mode: "selected_session",
       windowDays: null,
       sessionId: row.session_id,
+    };
+  }
+  if (row.mode === "date_range" && row.start_date && row.end_date) {
+    return {
+      mode: "date_range",
+      windowDays: null,
+      sessionId: null,
+      startDate: row.start_date,
+      endDate: row.end_date,
     };
   }
   return null;
@@ -831,6 +843,21 @@ function validateGrantFlags<T extends {
   }
 
   return input;
+}
+
+function validateScope2DateRangeFlags(input: {
+  canViewScope2Mental: boolean;
+  canViewScope2Physical: boolean;
+  scope2MentalFilter: Scope2GrantFilter | null;
+  scope2PhysicalFilter: Scope2GrantFilter | null;
+}) {
+  if (input.canViewScope2Mental && input.scope2MentalFilter?.mode !== "date_range") {
+    throw new Error("Pilih rentang tanggal mental yang valid");
+  }
+
+  if (input.canViewScope2Physical && input.scope2PhysicalFilter?.mode !== "date_range") {
+    throw new Error("Pilih rentang tanggal fisik yang valid");
+  }
 }
 
 function validateExpiry(value: string) {

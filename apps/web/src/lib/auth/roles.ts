@@ -139,7 +139,9 @@ export function resolveRoleFromRows(input: RoleResolutionInput): ResolvedRole | 
 }
 
 export function roleHomePath(role: ResolvedRole): string {
-  if (role.kind === "medical_admin") return "/admin/dashboard";
+  if (role.kind === "medical_admin") {
+    return role.adminLevel === "superadmin" ? "/superadmin/dashboard" : "/admin/dashboard";
+  }
   if (role.kind === "doctor") {
     return role.status === "approved" ? "/doctor" : "/doctor/status";
   }

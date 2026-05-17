@@ -34,8 +34,16 @@ blob-report/
 # Environment files
 .env
 .env.*
+env.local
 !.env.example
 !.env.*.example
+/env.download
+
+# Root project planning files and directories
+/AGENTS.md
+/PLAN.md
+/docs/
+/plans/
 
 # Vercel
 .vercel/

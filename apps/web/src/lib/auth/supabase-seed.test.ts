@@ -24,4 +24,39 @@ describe("Supabase auth seed data", () => {
     expect(seedSource).not.toContain("ranggabiner@gmail.com");
     expect(seedSource).not.toContain("00000000-0000-0000-0000-000000000901");
   });
+
+  it("seeds only documented demo password users through Supabase Auth identities", () => {
+    const seedSource = readFileSync(
+      new URL("../../../../supabase/supabase/seed.sql", import.meta.url),
+      "utf8",
+    );
+
+    for (const email of ["dokter@test.com", "pasien@test.com", "superadmin@test.com", "admin@test.com"]) {
+      expect(seedSource).toContain(email);
+    }
+
+    expect(seedSource).toContain("encrypted_password");
+    expect(seedSource).toContain("extensions.crypt('test123', extensions.gen_salt('bf'))");
+    expect(seedSource).toContain("insert into auth.identities");
+    expect(seedSource).toContain("provider_id");
+    expect(seedSource).toContain("'email'");
+  });
+
+  it("keeps demo auth provisioning as an explicit service-role script for hosted demo projects", () => {
+    const scriptSource = readFileSync(
+      new URL("../../../../web/scripts/seed-demo-auth-users.mjs", import.meta.url),
+      "utf8",
+    );
+    const packageSource = readFileSync(
+      new URL("../../../../web/package.json", import.meta.url),
+      "utf8",
+    );
+
+    expect(scriptSource).toContain("SUPABASE_SERVICE_ROLE_KEY");
+    expect(scriptSource).toContain("auth.admin.createUser");
+    expect(scriptSource).toContain("auth.admin.updateUserById");
+    expect(scriptSource).toContain("test123");
+    expect(scriptSource).toContain("superadmin@test.com");
+    expect(packageSource).toContain("\"demo:seed-auth\"");
+  });
 });

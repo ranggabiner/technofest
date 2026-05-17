@@ -11,6 +11,7 @@ export const adminNavigationTargets: readonly PortalNavigationTarget<AdminPendin
   { href: "/admin/add-admin", skeleton: "add-admin", matchNested: true },
   { href: "/admin/approval", skeleton: "approval", matchNested: true },
   { href: "/admin/dashboard", skeleton: "dashboard", matchNested: false },
+  { href: "/superadmin/dashboard", skeleton: "dashboard", matchNested: false },
 ];
 
 export function resolveAdminNavigationPath(href: string, currentPath: string) {

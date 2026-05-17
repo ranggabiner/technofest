@@ -9,17 +9,21 @@ function readComponent(path: string) {
   return readFileSync(new URL(`./${path}`, import.meta.url), "utf8");
 }
 
+function readLoginSurface(path: string) {
+  return `${readApp(path)}\n${readApp("login/_components/login-content.tsx")}`;
+}
+
 describe("site footer route coverage", () => {
   it("uses the shared site footer on public and auth pages", () => {
-    for (const path of [
-      "page.tsx",
-      "login/page.tsx",
-      "login/role/page.tsx",
-      "articles/page.tsx",
-      "articles/[slug]/page.tsx",
+    for (const source of [
+      readApp("page.tsx"),
+      readLoginSurface("login/page.tsx"),
+      readLoginSurface("login/demo/page.tsx"),
+      readLoginSurface("login/real/page.tsx"),
+      readApp("login/role/page.tsx"),
+      readApp("articles/page.tsx"),
+      readApp("articles/[slug]/page.tsx"),
     ]) {
-      const source = readApp(path);
-
       expect(source).toContain('import { SiteFooter');
       expect(source).toContain("<SiteFooter");
       expect(source).not.toContain("MarketingFooter");
@@ -51,7 +55,7 @@ describe("site footer route coverage", () => {
   });
 
   it("keeps the shared footer below the first viewport on sparse pages", () => {
-    expect(readApp("login/page.tsx")).toContain('className="flex min-h-screen flex-1 flex-col"');
+    expect(readLoginSurface("login/page.tsx")).toContain('className="flex min-h-screen flex-1 flex-col"');
     expect(readApp("login/role/page.tsx")).toContain('className="flex min-h-screen flex-1 items-center justify-center');
     expect(readComponent("onboarding-shell.tsx")).toContain("mx-auto flex min-h-screen w-full max-w-[1100px] flex-1 flex-col px-6 py-20");
     expect(readFileSync(new URL("../app/_components/portal-layout.tsx", import.meta.url), "utf8")).toContain(

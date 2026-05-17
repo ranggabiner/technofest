@@ -99,10 +99,13 @@ describe("patient layout shell", () => {
     expect(dashboardHtml).not.toContain("Riwayat Akses");
   });
 
-  it("keeps profile logout visually secondary", () => {
+  it("keeps profile logout visually secondary with a soft red token border", () => {
     const source = readFileSync(new URL("../_components/portal-layout.tsx", import.meta.url), "utf8");
 
-    expect(source).toContain("text-[var(--color-ash)] transition hover:border-[var(--color-stone-surface)]");
+    expect(source).toContain("border border-[color-mix(in_srgb,var(--color-error-red)_55%,white)] px-4 py-2");
+    expect(source).toContain("text-[var(--color-ash)] transition hover:bg-[var(--color-stone-surface)]");
+    expect(source).not.toContain("border border-transparent");
+    expect(source).not.toContain("hover:border-[var(--color-stone-surface)]");
     expect(source).not.toContain("gap-2 rounded-full bg-[var(--color-midnight)] px-4 py-2 text-xs font-semibold uppercase");
   });
 

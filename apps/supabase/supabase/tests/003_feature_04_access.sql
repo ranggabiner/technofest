@@ -2,7 +2,7 @@ create extension if not exists pgtap with schema extensions;
 
 begin;
 
-select plan(21);
+select plan(22);
 
 select isnt_empty(
   $$select 1
@@ -396,8 +396,8 @@ select lives_ok(
       true,
       array['30000000-0000-0000-0000-000000004001']::uuid[],
       jsonb_build_object(
-        'mental', jsonb_build_object('mode', 'last_n_days', 'window_days', 90),
-        'physical', jsonb_build_object('mode', 'selected_session', 'session_id', '40000000-0000-0000-0000-000000004001')
+        'mental', jsonb_build_object('mode', 'date_range', 'start_date', '2026-05-01', 'end_date', '2026-05-31'),
+        'physical', jsonb_build_object('mode', 'date_range', 'start_date', '2026-05-10', 'end_date', '2026-05-20')
       ),
       '2026-05-15T13:00:00+00'::timestamptz,
       '2026-05-20T13:00:00+00'::timestamptz,
@@ -434,9 +434,10 @@ select isnt_empty(
     from public.access_grant_scope2_filters
     where grant_id = '80000000-0000-0000-0000-000000004003'
       and scope_kind = 'mental'
-      and mode = 'last_n_days'
-      and window_days = 90$$,
-  'granular grant persists mental Scope 2 recency filter'
+      and mode = 'date_range'
+      and start_date = '2026-05-01'::date
+      and end_date = '2026-05-31'::date$$,
+  'granular grant persists mental Scope 2 date range filter'
 );
 
 select isnt_empty(
@@ -444,10 +445,41 @@ select isnt_empty(
     from public.access_grant_scope2_filters
     where grant_id = '80000000-0000-0000-0000-000000004003'
       and scope_kind = 'physical'
-      and mode = 'selected_session'
-      and session_id = '40000000-0000-0000-0000-000000004001'$$,
-  'granular grant persists physical Scope 2 session filter'
+      and mode = 'date_range'
+      and start_date = '2026-05-10'::date
+      and end_date = '2026-05-20'::date$$,
+  'granular grant persists physical Scope 2 date range filter'
 );
+
+set local role authenticated;
+set local request.jwt.claim.sub = '00000000-0000-0000-0000-000000004101';
+
+select throws_ok(
+  $$select public.replace_active_access_grant_v3(
+      '80000000-0000-0000-0000-000000004004',
+      '10000000-0000-0000-0000-000000004001',
+      '20000000-0000-0000-0000-000000004001',
+      false,
+      true,
+      false,
+      array[]::uuid[],
+      jsonb_build_object(
+        'mental', jsonb_build_object('mode', 'date_range', 'start_date', '2026-05-31', 'end_date', '2026-05-01')
+      ),
+      '2026-05-15T13:00:00+00'::timestamptz,
+      '2026-05-20T13:00:00+00'::timestamptz,
+      'consent-invalid-range-hash',
+      null,
+      '90000000-0000-0000-0000-000000004005',
+      'audit-invalid-range-hash',
+      '127.0.0.1'::inet
+    )$$,
+  '23514',
+  'scope2 date range is invalid',
+  'granular grant rejects Scope 2 end date before start date'
+);
+
+reset role;
 
 select * from finish();
 

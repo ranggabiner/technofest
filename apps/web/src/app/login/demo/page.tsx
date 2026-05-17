@@ -1,18 +1,18 @@
 import { redirectAuthenticatedUserFromPublicRoute } from "@/lib/auth/session";
 import { getDictionary } from "@/lib/i18n/server";
-import { loginDemoHref, loginRealHref } from "@/lib/i18n/marketing";
 
 import {
+  BackToLoginOptions,
+  DemoCredentials,
   getAuthErrorMessage,
-  LoginOptionGrid,
   LoginPageShell,
-  type LoginOption,
+  ManualLoginForm,
   type LoginSearchParams,
-} from "./_components/login-content";
+} from "../_components/login-content";
 
 export const dynamic = "force-dynamic";
 
-export default async function LoginPage({
+export default async function DemoLoginPage({
   searchParams,
 }: {
   searchParams?: Promise<LoginSearchParams>;
@@ -23,19 +23,23 @@ export default async function LoginPage({
   const copy = await getDictionary();
   const loginCopy = copy.marketing.login;
   const authError = getAuthErrorMessage(loginCopy.authErrors, params.error);
-  const options: LoginOption[] = loginCopy.optionCards.map((option, index) => ({
-    ...option,
-    href: index === 0 ? loginDemoHref : loginRealHref,
-  }));
 
   return (
     <LoginPageShell
       authError={authError}
       copy={loginCopy}
       copyright={copy.common.copyright}
-      description={loginCopy.chooserDescription}
-      title={loginCopy.chooserTitle}
-      renderContent={() => <LoginOptionGrid options={options} />}
+      description={loginCopy.demoPageDescription}
+      desktopAside={<DemoCredentials copy={loginCopy} />}
+      desktopBreakpoint="lg"
+      title={loginCopy.demoPageTitle}
+      renderContent={(variant) => (
+        <>
+          {variant === "mobile" ? <DemoCredentials copy={loginCopy} /> : null}
+          <ManualLoginForm copy={loginCopy} />
+          <BackToLoginOptions label={loginCopy.backToChooser} />
+        </>
+      )}
     />
   );
 }

@@ -129,6 +129,7 @@ describe("i18n locale contracts", () => {
       oauth_user_missing: expect.any(String),
       oauth_start_failed: expect.any(String),
       oauth_callback_failed: expect.any(String),
+      manual_invalid: expect.any(String),
       unauthorized: expect.any(String),
       unknown: expect.any(String),
     });
@@ -140,9 +141,50 @@ describe("i18n locale contracts", () => {
       oauth_user_missing: expect.any(String),
       oauth_start_failed: expect.any(String),
       oauth_callback_failed: expect.any(String),
+      manual_invalid: expect.any(String),
       unauthorized: expect.any(String),
       unknown: expect.any(String),
     });
+  });
+
+  it("localizes manual login and demo credential copy", () => {
+    for (const locale of ["id", "en"] as const) {
+      const login = dictionary[locale].marketing.login;
+
+      expect(login.chooserTitle).toBeTruthy();
+      expect(login.chooserDescription).toBeTruthy();
+      expect(login.backToChooser).toBeTruthy();
+      expect(login.optionCards).toEqual([
+        expect.objectContaining({
+          title: expect.any(String),
+          description: expect.any(String),
+          actionLabel: expect.any(String),
+        }),
+        expect.objectContaining({
+          title: expect.any(String),
+          description: expect.any(String),
+          actionLabel: expect.any(String),
+        }),
+      ]);
+      expect(login.demoPageTitle).toBeTruthy();
+      expect(login.demoPageDescription).toBeTruthy();
+      expect(login.realPageTitle).toBeTruthy();
+      expect(login.realPageDescription).toBeTruthy();
+      expect(login.manualTitle).toBeTruthy();
+      expect(login.oauthTitle).toBeTruthy();
+      expect(login.emailLabel).toBeTruthy();
+      expect(login.passwordLabel).toBeTruthy();
+      expect(login.manualSubmit).toBeTruthy();
+      expect(login.demoCredentialsTitle).toBeTruthy();
+      expect(login.demoCredentialsDescription).toBeTruthy();
+      expect(login.demoCredentials).toHaveLength(4);
+      expect(login.demoCredentials.map((item) => item.email)).toEqual([
+        "dokter@test.com",
+        "pasien@test.com",
+        "superadmin@test.com",
+        "admin@test.com",
+      ]);
+    }
   });
 
   it("keeps doctor upload error messages short but reason-specific", () => {

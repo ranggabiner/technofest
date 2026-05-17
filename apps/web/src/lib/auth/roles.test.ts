@@ -47,7 +47,7 @@ describe("role resolution", () => {
 
     expect(role).toMatchObject({ kind: "medical_admin", adminId: "admin-ranggabiner", adminLevel: "superadmin" });
     expect(userRoleName(role!)).toBe("admin");
-    expect(roleEntryPath(role!)).toBe("/admin/dashboard");
+    expect(roleEntryPath(role!)).toBe("/superadmin/dashboard");
   });
 
   it("resolves active invited admins as normal admins", () => {
@@ -323,7 +323,7 @@ describe("role resolution", () => {
     });
 
     expect(publicRouteRedirectPath(null)).toBeNull();
-    expect(publicRouteRedirectPath(adminRole)).toBe("/admin/dashboard");
+    expect(publicRouteRedirectPath(adminRole)).toBe("/superadmin/dashboard");
     expect(publicRouteRedirectPath(patientRole)).toBe("/patient");
     expect(publicRouteRedirectPath(approvedDoctorRole)).toBe("/doctor");
     expect(publicRouteRedirectPath(pendingDoctorRole)).toBe("/doctor/status");

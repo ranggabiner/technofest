@@ -1,11 +1,709 @@
 -- Local Supabase seed data for MedProof demo access.
 -- This file is loaded by the Supabase CLI after migrations during local reset.
 -- Real Google OAuth admin users are intentionally not seeded in auth.users.
--- They are created by Supabase Auth on login, then linked through ADMIN_EMAIL_ALLOWLIST.
+-- Demo email/password users below are seeded only for local/demo testing.
+
+-- Demo manual login accounts. Password for all rows: test123.
+insert into auth.users (
+  instance_id,
+  id,
+  aud,
+  role,
+  email,
+  encrypted_password,
+  email_confirmed_at,
+  raw_app_meta_data,
+  raw_user_meta_data,
+  created_at,
+  updated_at
+)
+values
+  (
+    '00000000-0000-0000-0000-000000000000',
+    '00000000-0000-0000-0000-000000009101',
+    'authenticated',
+    'authenticated',
+    'superadmin@test.com',
+    extensions.crypt('test123', extensions.gen_salt('bf')),
+    now(),
+    '{"provider":"email","providers":["email"],"demo_role":"superadmin"}'::jsonb,
+    '{"full_name":"Nadia Paramitha"}'::jsonb,
+    now(),
+    now()
+  ),
+  (
+    '00000000-0000-0000-0000-000000000000',
+    '00000000-0000-0000-0000-000000009102',
+    'authenticated',
+    'authenticated',
+    'admin@test.com',
+    extensions.crypt('test123', extensions.gen_salt('bf')),
+    now(),
+    '{"provider":"email","providers":["email"],"demo_role":"admin"}'::jsonb,
+    '{"full_name":"Dewi Anggraini"}'::jsonb,
+    now(),
+    now()
+  ),
+  (
+    '00000000-0000-0000-0000-000000000000',
+    '00000000-0000-0000-0000-000000009103',
+    'authenticated',
+    'authenticated',
+    'pasien@test.com',
+    extensions.crypt('test123', extensions.gen_salt('bf')),
+    now(),
+    '{"provider":"email","providers":["email"],"demo_role":"patient"}'::jsonb,
+    '{"full_name":"Alya Pramesti"}'::jsonb,
+    now(),
+    now()
+  ),
+  (
+    '00000000-0000-0000-0000-000000000000',
+    '00000000-0000-0000-0000-000000009104',
+    'authenticated',
+    'authenticated',
+    'dokter@test.com',
+    extensions.crypt('test123', extensions.gen_salt('bf')),
+    now(),
+    '{"provider":"email","providers":["email"],"demo_role":"doctor"}'::jsonb,
+    '{"full_name":"dr. Arif Wicaksana, Sp.PD"}'::jsonb,
+    now(),
+    now()
+  )
+on conflict (id) do update
+set
+  instance_id = excluded.instance_id,
+  email = excluded.email,
+  encrypted_password = excluded.encrypted_password,
+  email_confirmed_at = excluded.email_confirmed_at,
+  raw_app_meta_data = excluded.raw_app_meta_data,
+  raw_user_meta_data = excluded.raw_user_meta_data,
+  updated_at = excluded.updated_at;
+
+insert into auth.identities (
+  id,
+  user_id,
+  provider_id,
+  identity_data,
+  provider,
+  last_sign_in_at,
+  created_at,
+  updated_at
+)
+values
+  (
+    '00000000-0000-0000-0000-000000009101',
+    '00000000-0000-0000-0000-000000009101',
+    '00000000-0000-0000-0000-000000009101',
+    '{"sub":"00000000-0000-0000-0000-000000009101","email":"superadmin@test.com"}'::jsonb,
+    'email',
+    now(),
+    now(),
+    now()
+  ),
+  (
+    '00000000-0000-0000-0000-000000009102',
+    '00000000-0000-0000-0000-000000009102',
+    '00000000-0000-0000-0000-000000009102',
+    '{"sub":"00000000-0000-0000-0000-000000009102","email":"admin@test.com"}'::jsonb,
+    'email',
+    now(),
+    now(),
+    now()
+  ),
+  (
+    '00000000-0000-0000-0000-000000009103',
+    '00000000-0000-0000-0000-000000009103',
+    '00000000-0000-0000-0000-000000009103',
+    '{"sub":"00000000-0000-0000-0000-000000009103","email":"pasien@test.com"}'::jsonb,
+    'email',
+    now(),
+    now(),
+    now()
+  ),
+  (
+    '00000000-0000-0000-0000-000000009104',
+    '00000000-0000-0000-0000-000000009104',
+    '00000000-0000-0000-0000-000000009104',
+    '{"sub":"00000000-0000-0000-0000-000000009104","email":"dokter@test.com"}'::jsonb,
+    'email',
+    now(),
+    now(),
+    now()
+  )
+on conflict (provider, provider_id) do update
+set
+  user_id = excluded.user_id,
+  identity_data = excluded.identity_data,
+  updated_at = excluded.updated_at;
+
+insert into public.medical_admins (
+  admin_id,
+  auth_user_id,
+  full_name,
+  email,
+  phone_number,
+  admin_role,
+  revoked_at,
+  revoked_by,
+  created_at,
+  updated_at
+)
+values
+  (
+    '00000000-0000-0000-0000-000000009201',
+    '00000000-0000-0000-0000-000000009101',
+    'Nadia Paramitha',
+    'superadmin@test.com',
+    '+62 812-1000-9101',
+    'superadmin',
+    null,
+    null,
+    now(),
+    now()
+  ),
+  (
+    '00000000-0000-0000-0000-000000009202',
+    '00000000-0000-0000-0000-000000009102',
+    'Dewi Anggraini',
+    'admin@test.com',
+    '+62 812-1000-9102',
+    'admin',
+    null,
+    null,
+    now(),
+    now()
+  )
+on conflict (admin_id) do update
+set
+  auth_user_id = excluded.auth_user_id,
+  full_name = excluded.full_name,
+  email = excluded.email,
+  phone_number = excluded.phone_number,
+  admin_role = excluded.admin_role,
+  revoked_at = excluded.revoked_at,
+  revoked_by = excluded.revoked_by,
+  updated_at = excluded.updated_at;
+
+insert into public.admin_invitations (
+  invitation_id,
+  email,
+  invited_by,
+  accepted_at,
+  revoked_at,
+  revoked_by,
+  created_at,
+  updated_at
+)
+values (
+  '00000000-0000-0000-0000-000000009301',
+  'admin@test.com',
+  '00000000-0000-0000-0000-000000009201',
+  now(),
+  null,
+  null,
+  now(),
+  now()
+)
+on conflict (invitation_id) do update
+set
+  email = excluded.email,
+  invited_by = excluded.invited_by,
+  accepted_at = excluded.accepted_at,
+  revoked_at = excluded.revoked_at,
+  revoked_by = excluded.revoked_by,
+  updated_at = excluded.updated_at;
+
+insert into public.patients (
+  patient_id,
+  auth_user_id,
+  full_name,
+  email,
+  date_of_birth,
+  onboarding_step,
+  onboarding_completed_at,
+  created_at,
+  updated_at
+)
+values (
+  '00000000-0000-0000-0000-000000009401',
+  '00000000-0000-0000-0000-000000009103',
+  'Alya Pramesti',
+  'pasien@test.com',
+  '1993-08-17',
+  'complete',
+  now() - interval '1 day',
+  now() - interval '1 day',
+  now()
+)
+on conflict (patient_id) do update
+set
+  auth_user_id = excluded.auth_user_id,
+  full_name = excluded.full_name,
+  email = excluded.email,
+  date_of_birth = excluded.date_of_birth,
+  onboarding_step = excluded.onboarding_step,
+  onboarding_completed_at = excluded.onboarding_completed_at,
+  updated_at = excluded.updated_at;
+
+insert into public.doctors (
+  doctor_id,
+  auth_user_id,
+  full_name,
+  email,
+  phone_number,
+  age_years,
+  gender,
+  specialization,
+  account_status,
+  verified_by,
+  verified_at,
+  qr_code_token,
+  doctor_access_code,
+  onboarding_step,
+  onboarding_completed_at,
+  created_at,
+  updated_at
+)
+values (
+  '00000000-0000-0000-0000-000000009501',
+  '00000000-0000-0000-0000-000000009104',
+  'dr. Arif Wicaksana, Sp.PD',
+  'dokter@test.com',
+  '+62 812-2200-9501',
+  41,
+  'male',
+  'Spesialis Penyakit Dalam',
+  'approved',
+  '00000000-0000-0000-0000-000000009201',
+  now(),
+  'seed-doctor-qr-demo-manual',
+  '119901',
+  'complete',
+  now() - interval '1 day',
+  now() - interval '1 day',
+  now()
+)
+on conflict (doctor_id) do update
+set
+  auth_user_id = excluded.auth_user_id,
+  full_name = excluded.full_name,
+  email = excluded.email,
+  phone_number = excluded.phone_number,
+  age_years = excluded.age_years,
+  gender = excluded.gender,
+  specialization = excluded.specialization,
+  account_status = excluded.account_status,
+  verified_by = excluded.verified_by,
+  verified_at = excluded.verified_at,
+  qr_code_token = excluded.qr_code_token,
+  doctor_access_code = excluded.doctor_access_code,
+  onboarding_step = excluded.onboarding_step,
+  onboarding_completed_at = excluded.onboarding_completed_at,
+  updated_at = excluded.updated_at;
+
+-- Rich operational demo baseline for the four canonical login accounts.
+-- The service-role seed script adds encrypted journal, Scope 1, Scope 2, and storage objects using the active ENCRYPTION_MASTER_KEY.
+insert into auth.users (
+  instance_id,
+  id,
+  aud,
+  role,
+  email,
+  email_confirmed_at,
+  raw_app_meta_data,
+  raw_user_meta_data,
+  created_at,
+  updated_at
+)
+values
+  ('00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000009111', 'authenticated', 'authenticated', 'ops.admin@medproof.test', now(), '{"provider":"google","providers":["google"],"demo_role":"admin"}'::jsonb, '{"full_name":"Rizky Mahendra"}'::jsonb, now() - interval '35 days', now() - interval '3 days'),
+  ('00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000009112', 'authenticated', 'authenticated', 'audit.admin@medproof.test', now(), '{"provider":"google","providers":["google"],"demo_role":"admin"}'::jsonb, '{"full_name":"Putri Sekar Ayu"}'::jsonb, now() - interval '60 days', now() - interval '7 days'),
+  ('00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000009131', 'authenticated', 'authenticated', 'rafi.maulana@medproof.test', now(), '{"provider":"google","providers":["google"],"demo_role":"patient"}'::jsonb, '{"full_name":"Rafi Maulana"}'::jsonb, now() - interval '44 days', now() - interval '2 days'),
+  ('00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000009132', 'authenticated', 'authenticated', 'siti.aisyah@medproof.test', now(), '{"provider":"google","providers":["google"],"demo_role":"patient"}'::jsonb, '{"full_name":"Siti Nur Aisyah"}'::jsonb, now() - interval '43 days', now() - interval '2 days'),
+  ('00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000009133', 'authenticated', 'authenticated', 'made.aditya@medproof.test', now(), '{"provider":"google","providers":["google"],"demo_role":"patient"}'::jsonb, '{"full_name":"Made Aditya Pranata"}'::jsonb, now() - interval '42 days', now() - interval '2 days'),
+  ('00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000009134', 'authenticated', 'authenticated', 'lestari.wulandari@medproof.test', now(), '{"provider":"google","providers":["google"],"demo_role":"patient"}'::jsonb, '{"full_name":"Lestari Wulandari"}'::jsonb, now() - interval '41 days', now() - interval '2 days'),
+  ('00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000009135', 'authenticated', 'authenticated', 'bayu.satrio@medproof.test', now(), '{"provider":"google","providers":["google"],"demo_role":"patient"}'::jsonb, '{"full_name":"Bayu Satrio"}'::jsonb, now() - interval '40 days', now() - interval '2 days'),
+  ('00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000009136', 'authenticated', 'authenticated', 'melati.kartika@medproof.test', now(), '{"provider":"google","providers":["google"],"demo_role":"patient"}'::jsonb, '{"full_name":"Melati Kartika"}'::jsonb, now() - interval '39 days', now() - interval '2 days'),
+  ('00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000009137', 'authenticated', 'authenticated', 'taufik.hidayat@medproof.test', now(), '{"provider":"google","providers":["google"],"demo_role":"patient"}'::jsonb, '{"full_name":"Taufik Hidayat"}'::jsonb, now() - interval '38 days', now() - interval '2 days'),
+  ('00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000009151', 'authenticated', 'authenticated', 'ratna.lestari@medproof.test', now(), '{"provider":"google","providers":["google"],"demo_role":"doctor"}'::jsonb, '{"full_name":"dr. Ratna Lestari, Sp.JP"}'::jsonb, now() - interval '47 days', now() - interval '2 days'),
+  ('00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000009152', 'authenticated', 'authenticated', 'hendra.saputra@medproof.test', now(), '{"provider":"google","providers":["google"],"demo_role":"doctor"}'::jsonb, '{"full_name":"dr. Hendra Saputra, Sp.S"}'::jsonb, now() - interval '46 days', now() - interval '2 days'),
+  ('00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000009153', 'authenticated', 'authenticated', 'fajar.nugroho@medproof.test', now(), '{"provider":"google","providers":["google"],"demo_role":"doctor"}'::jsonb, '{"full_name":"dr. Fajar Nugroho"}'::jsonb, now() - interval '45 days', now() - interval '2 days'),
+  ('00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000009154', 'authenticated', 'authenticated', 'laila.rahma@medproof.test', now(), '{"provider":"google","providers":["google"],"demo_role":"doctor"}'::jsonb, '{"full_name":"dr. Laila Rahma, Sp.KK"}'::jsonb, now() - interval '44 days', now() - interval '2 days'),
+  ('00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000009155', 'authenticated', 'authenticated', 'wulan.permata@medproof.test', now(), '{"provider":"google","providers":["google"],"demo_role":"doctor"}'::jsonb, '{"full_name":"dr. Wulan Permata, Sp.A"}'::jsonb, now() - interval '43 days', now() - interval '2 days'),
+  ('00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000009156', 'authenticated', 'authenticated', 'ahmad.faris@medproof.test', now(), '{"provider":"google","providers":["google"],"demo_role":"doctor"}'::jsonb, '{"full_name":"dr. Ahmad Faris, Sp.OG"}'::jsonb, now() - interval '42 days', now() - interval '2 days'),
+  ('00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000009157', 'authenticated', 'authenticated', 'maya.prameswari@medproof.test', now(), '{"provider":"google","providers":["google"],"demo_role":"doctor"}'::jsonb, '{"full_name":"dr. Maya Prameswari, Sp.PD"}'::jsonb, now() - interval '41 days', now() - interval '2 days'),
+  ('00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000009158', 'authenticated', 'authenticated', 'bima.santoso@medproof.test', now(), '{"provider":"google","providers":["google"],"demo_role":"doctor"}'::jsonb, '{"full_name":"dr. Bima Santoso"}'::jsonb, now() - interval '40 days', now() - interval '2 days'),
+  ('00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000009159', 'authenticated', 'authenticated', 'citra.dewi@medproof.test', now(), '{"provider":"google","providers":["google"],"demo_role":"doctor"}'::jsonb, '{"full_name":"dr. Citra Dewi, Sp.M"}'::jsonb, now() - interval '39 days', now() - interval '2 days'),
+  ('00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000009160', 'authenticated', 'authenticated', 'yusuf.hanif@medproof.test', now(), '{"provider":"google","providers":["google"],"demo_role":"doctor"}'::jsonb, '{"full_name":"dr. Yusuf Hanif, Sp.THT"}'::jsonb, now() - interval '38 days', now() - interval '2 days'),
+  ('00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000009161', 'authenticated', 'authenticated', 'tania.salsabila@medproof.test', now(), '{"provider":"google","providers":["google"],"demo_role":"doctor"}'::jsonb, '{"full_name":"dr. Tania Salsabila, Sp.KJ"}'::jsonb, now() - interval '37 days', now() - interval '2 days'),
+  ('00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000009162', 'authenticated', 'authenticated', 'bagus.mahendra@medproof.test', now(), '{"provider":"google","providers":["google"],"demo_role":"doctor"}'::jsonb, '{"full_name":"dr. Bagus Mahendra, Sp.OT"}'::jsonb, now() - interval '36 days', now() - interval '2 days'),
+  ('00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000009163', 'authenticated', 'authenticated', 'sekar.larasati@medproof.test', now(), '{"provider":"google","providers":["google"],"demo_role":"doctor"}'::jsonb, '{"full_name":"drg. Sekar Larasati"}'::jsonb, now() - interval '35 days', now() - interval '2 days'),
+  ('00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000009164', 'authenticated', 'authenticated', 'reno.adiputra@medproof.test', now(), '{"provider":"google","providers":["google"],"demo_role":"doctor"}'::jsonb, '{"full_name":"dr. Reno Adiputra, Sp.U"}'::jsonb, now() - interval '34 days', now() - interval '2 days'),
+  ('00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000009165', 'authenticated', 'authenticated', 'nurul.huda@medproof.test', now(), '{"provider":"google","providers":["google"],"demo_role":"doctor"}'::jsonb, '{"full_name":"dr. Nurul Huda, Sp.PD"}'::jsonb, now() - interval '33 days', now() - interval '2 days'),
+  ('00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000009166', 'authenticated', 'authenticated', 'vina.oktaviani@medproof.test', now(), '{"provider":"google","providers":["google"],"demo_role":"doctor"}'::jsonb, '{"full_name":"dr. Vina Oktaviani, Sp.KFR"}'::jsonb, now() - interval '32 days', now() - interval '2 days'),
+  ('00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000009167', 'authenticated', 'authenticated', 'galih.prakoso@medproof.test', now(), '{"provider":"google","providers":["google"],"demo_role":"doctor"}'::jsonb, '{"full_name":"dr. Galih Prakoso, Sp.P"}'::jsonb, now() - interval '31 days', now() - interval '2 days'),
+  ('00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000009168', 'authenticated', 'authenticated', 'intan.puspa@medproof.test', now(), '{"provider":"google","providers":["google"],"demo_role":"doctor"}'::jsonb, '{"full_name":"dr. Intan Puspa, Sp.Rad"}'::jsonb, now() - interval '30 days', now() - interval '2 days'),
+  ('00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000009169', 'authenticated', 'authenticated', 'reza.kurniawan@medproof.test', now(), '{"provider":"google","providers":["google"],"demo_role":"doctor"}'::jsonb, '{"full_name":"dr. Reza Kurniawan, Sp.B"}'::jsonb, now() - interval '29 days', now() - interval '2 days')
+on conflict (id) do update
+set
+  instance_id = excluded.instance_id,
+  email = excluded.email,
+  raw_app_meta_data = excluded.raw_app_meta_data,
+  raw_user_meta_data = excluded.raw_user_meta_data,
+  updated_at = excluded.updated_at;
+
+insert into public.medical_admins (
+  admin_id,
+  auth_user_id,
+  full_name,
+  email,
+  phone_number,
+  admin_role,
+  revoked_at,
+  revoked_by,
+  created_at,
+  updated_at
+)
+values
+  ('00000000-0000-0000-0000-000000009211', '00000000-0000-0000-0000-000000009111', 'Rizky Mahendra', 'ops.admin@medproof.test', '+62 812-1000-9211', 'admin', null, null, now() - interval '35 days', now() - interval '3 days'),
+  ('00000000-0000-0000-0000-000000009212', '00000000-0000-0000-0000-000000009112', 'Putri Sekar Ayu', 'audit.admin@medproof.test', '+62 812-1000-9212', 'admin', now() - interval '7 days', '00000000-0000-0000-0000-000000009201', now() - interval '60 days', now() - interval '7 days')
+on conflict (admin_id) do update
+set
+  auth_user_id = excluded.auth_user_id,
+  full_name = excluded.full_name,
+  email = excluded.email,
+  phone_number = excluded.phone_number,
+  admin_role = excluded.admin_role,
+  revoked_at = excluded.revoked_at,
+  revoked_by = excluded.revoked_by,
+  updated_at = excluded.updated_at;
+
+insert into public.admin_invitations (
+  invitation_id,
+  email,
+  invited_by,
+  accepted_at,
+  revoked_at,
+  revoked_by,
+  created_at,
+  updated_at
+)
+values
+  ('00000000-0000-0000-0000-000000009302', 'ops.admin@medproof.test', '00000000-0000-0000-0000-000000009201', now() - interval '34 days', null, null, now() - interval '35 days', now() - interval '34 days'),
+  ('00000000-0000-0000-0000-000000009303', 'calon.admin@medproof.test', '00000000-0000-0000-0000-000000009201', null, null, null, now() - interval '2 days', now() - interval '2 days'),
+  ('00000000-0000-0000-0000-000000009304', 'audit.admin@medproof.test', '00000000-0000-0000-0000-000000009201', now() - interval '58 days', now() - interval '7 days', '00000000-0000-0000-0000-000000009201', now() - interval '60 days', now() - interval '7 days')
+on conflict (invitation_id) do update
+set
+  email = excluded.email,
+  invited_by = excluded.invited_by,
+  accepted_at = excluded.accepted_at,
+  revoked_at = excluded.revoked_at,
+  revoked_by = excluded.revoked_by,
+  updated_at = excluded.updated_at;
+
+insert into public.patients (
+  patient_id,
+  auth_user_id,
+  full_name,
+  email,
+  date_of_birth,
+  onboarding_step,
+  onboarding_completed_at,
+  created_at,
+  updated_at
+)
+values
+  ('00000000-0000-0000-0000-000000009411', '00000000-0000-0000-0000-000000009131', 'Rafi Maulana', 'rafi.maulana@medproof.test', '1988-04-12', 'complete', now() - interval '24 days', now() - interval '44 days', now() - interval '2 days'),
+  ('00000000-0000-0000-0000-000000009412', '00000000-0000-0000-0000-000000009132', 'Siti Nur Aisyah', 'siti.aisyah@medproof.test', '1997-11-03', 'complete', now() - interval '23 days', now() - interval '43 days', now() - interval '2 days'),
+  ('00000000-0000-0000-0000-000000009413', '00000000-0000-0000-0000-000000009133', 'Made Aditya Pranata', 'made.aditya@medproof.test', '1982-06-29', 'complete', now() - interval '22 days', now() - interval '42 days', now() - interval '2 days'),
+  ('00000000-0000-0000-0000-000000009414', '00000000-0000-0000-0000-000000009134', 'Lestari Wulandari', 'lestari.wulandari@medproof.test', '1990-02-21', 'complete', now() - interval '21 days', now() - interval '41 days', now() - interval '2 days'),
+  ('00000000-0000-0000-0000-000000009415', '00000000-0000-0000-0000-000000009135', 'Bayu Satrio', 'bayu.satrio@medproof.test', '1979-09-08', 'complete', now() - interval '20 days', now() - interval '40 days', now() - interval '2 days'),
+  ('00000000-0000-0000-0000-000000009416', '00000000-0000-0000-0000-000000009136', 'Melati Kartika', 'melati.kartika@medproof.test', '1995-05-16', 'complete', now() - interval '19 days', now() - interval '39 days', now() - interval '2 days'),
+  ('00000000-0000-0000-0000-000000009417', '00000000-0000-0000-0000-000000009137', 'Taufik Hidayat', 'taufik.hidayat@medproof.test', '1985-12-30', 'complete', now() - interval '18 days', now() - interval '38 days', now() - interval '2 days')
+on conflict (patient_id) do update
+set
+  auth_user_id = excluded.auth_user_id,
+  full_name = excluded.full_name,
+  email = excluded.email,
+  date_of_birth = excluded.date_of_birth,
+  onboarding_step = excluded.onboarding_step,
+  onboarding_completed_at = excluded.onboarding_completed_at,
+  updated_at = excluded.updated_at;
+
+insert into public.doctors (
+  doctor_id,
+  auth_user_id,
+  full_name,
+  email,
+  phone_number,
+  age_years,
+  gender,
+  specialization,
+  account_status,
+  rejection_reason,
+  verified_by,
+  verified_at,
+  qr_code_token,
+  doctor_access_code,
+  onboarding_step,
+  onboarding_completed_at,
+  created_at,
+  updated_at
+)
+values
+  ('00000000-0000-0000-0000-000000009511', '00000000-0000-0000-0000-000000009151', 'dr. Ratna Lestari, Sp.JP', 'ratna.lestari@medproof.test', '+62 812-2200-9511', 45, 'female', 'Spesialis Jantung', 'approved', null, '00000000-0000-0000-0000-000000009202', now() - interval '19 days', 'seed-doctor-qr-ratna', '219511', 'complete', now() - interval '29 days', now() - interval '47 days', now() - interval '2 days'),
+  ('00000000-0000-0000-0000-000000009512', '00000000-0000-0000-0000-000000009152', 'dr. Hendra Saputra, Sp.S', 'hendra.saputra@medproof.test', '+62 812-2200-9512', 39, 'male', 'Spesialis Saraf', 'approved', null, '00000000-0000-0000-0000-000000009202', now() - interval '18 days', 'seed-doctor-qr-hendra', '219512', 'complete', now() - interval '28 days', now() - interval '46 days', now() - interval '2 days'),
+  ('00000000-0000-0000-0000-000000009513', '00000000-0000-0000-0000-000000009153', 'dr. Fajar Nugroho', 'fajar.nugroho@medproof.test', '+62 812-2200-9513', 32, 'male', 'Dokter Umum', 'pending', null, null, null, null, null, 'complete', now() - interval '27 days', now() - interval '45 days', now() - interval '2 days'),
+  ('00000000-0000-0000-0000-000000009514', '00000000-0000-0000-0000-000000009154', 'dr. Laila Rahma, Sp.KK', 'laila.rahma@medproof.test', '+62 812-2200-9514', 37, 'female', 'Spesialis Kulit', 'pending', null, null, null, null, null, 'complete', now() - interval '26 days', now() - interval '44 days', now() - interval '2 days'),
+  ('00000000-0000-0000-0000-000000009515', '00000000-0000-0000-0000-000000009155', 'dr. Wulan Permata, Sp.A', 'wulan.permata@medproof.test', '+62 812-2200-9515', 42, 'female', 'Spesialis Anak', 'approved', null, '00000000-0000-0000-0000-000000009202', now() - interval '16 days', 'seed-doctor-qr-wulan', '219515', 'complete', now() - interval '25 days', now() - interval '43 days', now() - interval '2 days'),
+  ('00000000-0000-0000-0000-000000009516', '00000000-0000-0000-0000-000000009156', 'dr. Ahmad Faris, Sp.OG', 'ahmad.faris@medproof.test', '+62 812-2200-9516', 44, 'male', 'Spesialis Obstetri dan Ginekologi', 'rejected', 'Dokumen SIP tidak sesuai fasilitas praktik yang diajukan.', '00000000-0000-0000-0000-000000009202', now() - interval '15 days', null, null, 'complete', now() - interval '24 days', now() - interval '42 days', now() - interval '2 days'),
+  ('00000000-0000-0000-0000-000000009517', '00000000-0000-0000-0000-000000009157', 'dr. Maya Prameswari, Sp.PD', 'maya.prameswari@medproof.test', '+62 812-2200-9517', 40, 'female', 'Spesialis Penyakit Dalam', 'approved', null, '00000000-0000-0000-0000-000000009202', now() - interval '14 days', 'seed-doctor-qr-maya-prameswari', '219517', 'complete', now() - interval '23 days', now() - interval '41 days', now() - interval '2 days'),
+  ('00000000-0000-0000-0000-000000009518', '00000000-0000-0000-0000-000000009158', 'dr. Bima Santoso', 'bima.santoso@medproof.test', '+62 812-2200-9518', 36, 'male', 'Dokter Umum', 'approved', null, '00000000-0000-0000-0000-000000009202', now() - interval '13 days', 'seed-doctor-qr-bima', '219518', 'complete', now() - interval '22 days', now() - interval '40 days', now() - interval '2 days'),
+  ('00000000-0000-0000-0000-000000009519', '00000000-0000-0000-0000-000000009159', 'dr. Citra Dewi, Sp.M', 'citra.dewi@medproof.test', '+62 812-2200-9519', 38, 'female', 'Spesialis Mata', 'approved', null, '00000000-0000-0000-0000-000000009202', now() - interval '12 days', 'seed-doctor-qr-citra', '219519', 'complete', now() - interval '21 days', now() - interval '39 days', now() - interval '2 days'),
+  ('00000000-0000-0000-0000-000000009520', '00000000-0000-0000-0000-000000009160', 'dr. Yusuf Hanif, Sp.THT', 'yusuf.hanif@medproof.test', '+62 812-2200-9520', 43, 'male', 'Spesialis THT', 'pending', null, null, null, null, null, 'complete', now() - interval '20 days', now() - interval '38 days', now() - interval '2 days'),
+  ('00000000-0000-0000-0000-000000009521', '00000000-0000-0000-0000-000000009161', 'dr. Tania Salsabila, Sp.KJ', 'tania.salsabila@medproof.test', '+62 812-2200-9521', 35, 'female', 'Psikiater', 'approved', null, '00000000-0000-0000-0000-000000009202', now() - interval '10 days', 'seed-doctor-qr-tania', '219521', 'complete', now() - interval '19 days', now() - interval '37 days', now() - interval '2 days'),
+  ('00000000-0000-0000-0000-000000009522', '00000000-0000-0000-0000-000000009162', 'dr. Bagus Mahendra, Sp.OT', 'bagus.mahendra@medproof.test', '+62 812-2200-9522', 46, 'male', 'Spesialis Ortopedi', 'approved', null, '00000000-0000-0000-0000-000000009202', now() - interval '9 days', 'seed-doctor-qr-bagus', '219522', 'complete', now() - interval '18 days', now() - interval '36 days', now() - interval '2 days'),
+  ('00000000-0000-0000-0000-000000009523', '00000000-0000-0000-0000-000000009163', 'drg. Sekar Larasati', 'sekar.larasati@medproof.test', '+62 812-2200-9523', 34, 'female', 'Dokter Gigi', 'rejected', 'Foto KTP tidak terbaca jelas pada unggahan demo.', '00000000-0000-0000-0000-000000009202', now() - interval '8 days', null, null, 'complete', now() - interval '17 days', now() - interval '35 days', now() - interval '2 days'),
+  ('00000000-0000-0000-0000-000000009524', '00000000-0000-0000-0000-000000009164', 'dr. Reno Adiputra, Sp.U', 'reno.adiputra@medproof.test', '+62 812-2200-9524', 47, 'male', 'Spesialis Urologi', 'pending', null, null, null, null, null, 'complete', now() - interval '16 days', now() - interval '34 days', now() - interval '2 days'),
+  ('00000000-0000-0000-0000-000000009525', '00000000-0000-0000-0000-000000009165', 'dr. Nurul Huda, Sp.PD', 'nurul.huda@medproof.test', '+62 812-2200-9525', 48, 'female', 'Spesialis Penyakit Dalam', 'approved', null, '00000000-0000-0000-0000-000000009202', now() - interval '7 days', 'seed-doctor-qr-nurul', '219525', 'complete', now() - interval '15 days', now() - interval '33 days', now() - interval '2 days'),
+  ('00000000-0000-0000-0000-000000009526', '00000000-0000-0000-0000-000000009166', 'dr. Vina Oktaviani, Sp.KFR', 'vina.oktaviani@medproof.test', '+62 812-2200-9526', 39, 'female', 'Rehabilitasi Medik', 'approved', null, '00000000-0000-0000-0000-000000009202', now() - interval '6 days', 'seed-doctor-qr-vina', '219526', 'complete', now() - interval '14 days', now() - interval '32 days', now() - interval '2 days'),
+  ('00000000-0000-0000-0000-000000009527', '00000000-0000-0000-0000-000000009167', 'dr. Galih Prakoso, Sp.P', 'galih.prakoso@medproof.test', '+62 812-2200-9527', 42, 'male', 'Spesialis Paru', 'pending', null, null, null, null, null, 'complete', now() - interval '13 days', now() - interval '31 days', now() - interval '2 days'),
+  ('00000000-0000-0000-0000-000000009528', '00000000-0000-0000-0000-000000009168', 'dr. Intan Puspa, Sp.Rad', 'intan.puspa@medproof.test', '+62 812-2200-9528', 37, 'female', 'Spesialis Radiologi', 'approved', null, '00000000-0000-0000-0000-000000009202', now() - interval '5 days', 'seed-doctor-qr-intan', '219528', 'complete', now() - interval '12 days', now() - interval '30 days', now() - interval '2 days'),
+  ('00000000-0000-0000-0000-000000009529', '00000000-0000-0000-0000-000000009169', 'dr. Reza Kurniawan, Sp.B', 'reza.kurniawan@medproof.test', '+62 812-2200-9529', 50, 'male', 'Spesialis Bedah', 'rejected', 'Nomor STR tidak cocok dengan nama pada dokumen identitas.', '00000000-0000-0000-0000-000000009202', now() - interval '4 days', null, null, 'complete', now() - interval '11 days', now() - interval '29 days', now() - interval '2 days')
+on conflict (doctor_id) do update
+set
+  auth_user_id = excluded.auth_user_id,
+  full_name = excluded.full_name,
+  email = excluded.email,
+  phone_number = excluded.phone_number,
+  age_years = excluded.age_years,
+  gender = excluded.gender,
+  specialization = excluded.specialization,
+  account_status = excluded.account_status,
+  rejection_reason = excluded.rejection_reason,
+  verified_by = excluded.verified_by,
+  verified_at = excluded.verified_at,
+  qr_code_token = excluded.qr_code_token,
+  doctor_access_code = excluded.doctor_access_code,
+  onboarding_step = excluded.onboarding_step,
+  onboarding_completed_at = excluded.onboarding_completed_at,
+  updated_at = excluded.updated_at;
+
+with demo_doctors (doctor_id, auth_user_id) as (
+  values
+    ('00000000-0000-0000-0000-000000009501'::uuid, '00000000-0000-0000-0000-000000009104'::uuid),
+    ('00000000-0000-0000-0000-000000009511'::uuid, '00000000-0000-0000-0000-000000009151'::uuid),
+    ('00000000-0000-0000-0000-000000009512'::uuid, '00000000-0000-0000-0000-000000009152'::uuid),
+    ('00000000-0000-0000-0000-000000009513'::uuid, '00000000-0000-0000-0000-000000009153'::uuid),
+    ('00000000-0000-0000-0000-000000009514'::uuid, '00000000-0000-0000-0000-000000009154'::uuid),
+    ('00000000-0000-0000-0000-000000009520'::uuid, '00000000-0000-0000-0000-000000009160'::uuid),
+    ('00000000-0000-0000-0000-000000009524'::uuid, '00000000-0000-0000-0000-000000009164'::uuid),
+    ('00000000-0000-0000-0000-000000009527'::uuid, '00000000-0000-0000-0000-000000009167'::uuid)
+),
+doc_types (document_type, offset_value) as (
+  values ('str'::text, 1), ('sip'::text, 2), ('ktp'::text, 3)
+),
+seed_files as (
+  select
+    ('00000000-0000-0000-0000-' || lpad((970000 + right(d.doctor_id::text, 4)::integer * 10 + t.offset_value)::text, 12, '0'))::uuid as file_id,
+    d.doctor_id,
+    d.auth_user_id,
+    t.document_type,
+    t.offset_value,
+    (md5(d.doctor_id::text || ':' || t.document_type) || md5(t.document_type || ':' || d.doctor_id::text)) as file_hash
+  from demo_doctors d
+  cross join doc_types t
+)
+insert into public.secure_files (
+  file_id,
+  owner_role,
+  owner_id,
+  bucket_name,
+  object_path,
+  original_filename_ciphertext,
+  original_filename_iv,
+  original_filename_tag,
+  mime_type,
+  file_size_bytes,
+  file_sha256,
+  key_version,
+  created_at
+)
+select
+  file_id,
+  'doctor',
+  doctor_id,
+  'encrypted-kyc-documents',
+  auth_user_id::text || '/kyc/' || doctor_id::text || '/' || document_type || '.json',
+  'ZGVtb19lbmNyeXB0ZWRfZmlsZW5hbWU=',
+  'ZGVtb19pdl9zZWVk',
+  'ZGVtb190YWdfc2VlZA==',
+  'application/pdf',
+  2560 + offset_value,
+  file_hash,
+  'v1',
+  now() - interval '20 days'
+from seed_files
+on conflict (file_id) do update
+set
+  owner_role = excluded.owner_role,
+  owner_id = excluded.owner_id,
+  bucket_name = excluded.bucket_name,
+  object_path = excluded.object_path,
+  original_filename_ciphertext = excluded.original_filename_ciphertext,
+  original_filename_iv = excluded.original_filename_iv,
+  original_filename_tag = excluded.original_filename_tag,
+  mime_type = excluded.mime_type,
+  file_size_bytes = excluded.file_size_bytes,
+  file_sha256 = excluded.file_sha256,
+  key_version = excluded.key_version,
+  created_at = excluded.created_at;
+
+with demo_doctors (doctor_id) as (
+  values
+    ('00000000-0000-0000-0000-000000009501'::uuid),
+    ('00000000-0000-0000-0000-000000009511'::uuid),
+    ('00000000-0000-0000-0000-000000009512'::uuid),
+    ('00000000-0000-0000-0000-000000009513'::uuid),
+    ('00000000-0000-0000-0000-000000009514'::uuid),
+    ('00000000-0000-0000-0000-000000009520'::uuid),
+    ('00000000-0000-0000-0000-000000009524'::uuid),
+    ('00000000-0000-0000-0000-000000009527'::uuid)
+),
+doc_types (document_type, offset_value) as (
+  values ('str'::text, 1), ('sip'::text, 2), ('ktp'::text, 3)
+)
+insert into public.doctor_kyc_documents (
+  document_id,
+  doctor_id,
+  document_type,
+  file_id,
+  created_at
+)
+select
+  ('00000000-0000-0000-0000-' || lpad((980000 + right(d.doctor_id::text, 4)::integer * 10 + t.offset_value)::text, 12, '0'))::uuid,
+  d.doctor_id,
+  t.document_type,
+  ('00000000-0000-0000-0000-' || lpad((970000 + right(d.doctor_id::text, 4)::integer * 10 + t.offset_value)::text, 12, '0'))::uuid,
+  now() - interval '19 days'
+from demo_doctors d
+cross join doc_types t
+on conflict (doctor_id, document_type) do update
+set
+  file_id = excluded.file_id,
+  created_at = excluded.created_at;
+
+insert into public.access_grants (
+  grant_id,
+  patient_id,
+  doctor_id,
+  can_view_scope1,
+  can_view_scope2_mental,
+  can_view_scope2_physical,
+  can_download_attachments,
+  granted_at,
+  expires_at,
+  is_revoked,
+  revoked_at,
+  replaced_by_grant_id,
+  consent_hash,
+  blockchain_status,
+  blockchain_tx_hash,
+  blockchain_last_error,
+  blockchain_attempt_count,
+  created_at
+)
+values
+  ('00000000-0000-0000-0000-000000009701', '00000000-0000-0000-0000-000000009401', '00000000-0000-0000-0000-000000009501', true, true, true, true, now() - interval '5 days', now() + interval '10 days', false, null, null, 'seed_consent_9701', 'confirmed', '0xseedgrant01', null, 0, now() - interval '5 days'),
+  ('00000000-0000-0000-0000-000000009702', '00000000-0000-0000-0000-000000009401', '00000000-0000-0000-0000-000000009511', true, false, true, false, now() - interval '3 days', now() + interval '4 days', false, null, null, 'seed_consent_9702', 'pending', null, null, 0, now() - interval '3 days'),
+  ('00000000-0000-0000-0000-000000009703', '00000000-0000-0000-0000-000000009401', '00000000-0000-0000-0000-000000009512', false, true, false, false, now() - interval '12 days', now() + interval '8 days', true, now() - interval '6 days', null, 'seed_consent_9703', 'confirmed', '0xseedgrant03', null, 0, now() - interval '12 days'),
+  ('00000000-0000-0000-0000-000000009704', '00000000-0000-0000-0000-000000009401', '00000000-0000-0000-0000-000000009518', true, false, false, false, now() - interval '18 days', now() - interval '2 days', false, null, null, 'seed_consent_9704', 'failed', null, 'amoy_tx_reverted', 2, now() - interval '18 days'),
+  ('00000000-0000-0000-0000-000000009705', '00000000-0000-0000-0000-000000009401', '00000000-0000-0000-0000-000000009517', false, true, true, false, now() - interval '9 days', now() + interval '6 days', true, now() - interval '2 days', '00000000-0000-0000-0000-000000009706', 'seed_consent_9705', 'confirmed', '0xseedgrant05', null, 0, now() - interval '9 days'),
+  ('00000000-0000-0000-0000-000000009706', '00000000-0000-0000-0000-000000009401', '00000000-0000-0000-0000-000000009517', true, true, true, false, now() - interval '2 days', now() + interval '14 days', false, null, null, 'seed_consent_9706', 'confirmed', '0xseedgrant06', null, 0, now() - interval '2 days'),
+  ('00000000-0000-0000-0000-000000009707', '00000000-0000-0000-0000-000000009401', '00000000-0000-0000-0000-000000009521', false, true, false, false, now() - interval '1 day', now() + interval '30 days', false, null, null, 'seed_consent_9707', 'pending', null, null, 0, now() - interval '1 day'),
+  ('00000000-0000-0000-0000-000000009720', '00000000-0000-0000-0000-000000009411', '00000000-0000-0000-0000-000000009501', true, true, true, true, now() - interval '6 days', now() + interval '5 days', false, null, null, 'seed_consent_9720', 'pending', null, null, 0, now() - interval '6 days'),
+  ('00000000-0000-0000-0000-000000009721', '00000000-0000-0000-0000-000000009412', '00000000-0000-0000-0000-000000009501', true, false, true, false, now() - interval '5 days', now() + interval '6 days', false, null, null, 'seed_consent_9721', 'confirmed', '0xseedgrant21', null, 0, now() - interval '5 days'),
+  ('00000000-0000-0000-0000-000000009722', '00000000-0000-0000-0000-000000009413', '00000000-0000-0000-0000-000000009501', true, true, true, false, now() - interval '4 days', now() + interval '7 days', false, null, null, 'seed_consent_9722', 'confirmed', '0xseedgrant22', null, 0, now() - interval '4 days'),
+  ('00000000-0000-0000-0000-000000009723', '00000000-0000-0000-0000-000000009414', '00000000-0000-0000-0000-000000009501', true, false, true, true, now() - interval '3 days', now() + interval '8 days', false, null, null, 'seed_consent_9723', 'confirmed', '0xseedgrant23', null, 0, now() - interval '3 days'),
+  ('00000000-0000-0000-0000-000000009724', '00000000-0000-0000-0000-000000009415', '00000000-0000-0000-0000-000000009501', true, true, true, false, now() - interval '2 days', now() + interval '9 days', false, null, null, 'seed_consent_9724', 'pending', null, null, 0, now() - interval '2 days'),
+  ('00000000-0000-0000-0000-000000009725', '00000000-0000-0000-0000-000000009416', '00000000-0000-0000-0000-000000009501', true, false, true, false, now() - interval '1 day', now() + interval '10 days', false, null, null, 'seed_consent_9725', 'confirmed', '0xseedgrant25', null, 0, now() - interval '1 day'),
+  ('00000000-0000-0000-0000-000000009730', '00000000-0000-0000-0000-000000009417', '00000000-0000-0000-0000-000000009525', false, false, true, false, now() - interval '10 days', now() - interval '1 day', false, null, null, 'seed_consent_9730', 'confirmed', '0xseedgrant30', null, 0, now() - interval '10 days')
+on conflict (grant_id) do update
+set
+  patient_id = excluded.patient_id,
+  doctor_id = excluded.doctor_id,
+  can_view_scope1 = excluded.can_view_scope1,
+  can_view_scope2_mental = excluded.can_view_scope2_mental,
+  can_view_scope2_physical = excluded.can_view_scope2_physical,
+  can_download_attachments = excluded.can_download_attachments,
+  granted_at = excluded.granted_at,
+  expires_at = excluded.expires_at,
+  is_revoked = excluded.is_revoked,
+  revoked_at = excluded.revoked_at,
+  replaced_by_grant_id = excluded.replaced_by_grant_id,
+  consent_hash = excluded.consent_hash,
+  blockchain_status = excluded.blockchain_status,
+  blockchain_tx_hash = excluded.blockchain_tx_hash,
+  blockchain_last_error = excluded.blockchain_last_error,
+  blockchain_attempt_count = excluded.blockchain_attempt_count,
+  created_at = excluded.created_at;
+
+insert into public.audit_logs (
+  log_id,
+  actor_auth_user_id,
+  actor_role,
+  action,
+  target_type,
+  target_id,
+  patient_id,
+  doctor_id,
+  access_status,
+  reason,
+  ip_address,
+  audit_event_hash,
+  blockchain_status,
+  blockchain_tx_hash,
+  blockchain_last_error,
+  blockchain_attempt_count,
+  created_at
+)
+values
+  ('00000000-0000-0000-0000-000000990101', '00000000-0000-0000-0000-000000009103', 'patient', 'ai_processing_consent_accepted', 'patient', '00000000-0000-0000-0000-000000009401', '00000000-0000-0000-0000-000000009401', null, 'accepted', null, null, 'seed_audit_990101', 'confirmed', '0xseedaudit1', null, 0, now() - interval '21 days'),
+  ('00000000-0000-0000-0000-000000990102', '00000000-0000-0000-0000-000000009103', 'patient', 'patient_grant_created', 'access_grant', '00000000-0000-0000-0000-000000009701', '00000000-0000-0000-0000-000000009401', '00000000-0000-0000-0000-000000009501', 'created', null, null, 'seed_audit_990102', 'confirmed', '0xseedaudit2', null, 0, now() - interval '5 days'),
+  ('00000000-0000-0000-0000-000000990103', '00000000-0000-0000-0000-000000009104', 'doctor', 'doctor_patient_view_allowed', 'access_grant', '00000000-0000-0000-0000-000000009701', '00000000-0000-0000-0000-000000009401', '00000000-0000-0000-0000-000000009501', 'allowed', null, null, 'seed_audit_990103', 'confirmed', '0xseedaudit3', null, 0, now() - interval '1 day'),
+  ('00000000-0000-0000-0000-000000990104', '00000000-0000-0000-0000-000000009104', 'doctor', 'doctor_rag_requested', 'access_grant', '00000000-0000-0000-0000-000000009701', '00000000-0000-0000-0000-000000009401', '00000000-0000-0000-0000-000000009501', 'allowed', null, null, 'seed_audit_990104', 'pending', null, null, 0, now() - interval '1 day'),
+  ('00000000-0000-0000-0000-000000990105', '00000000-0000-0000-0000-000000009103', 'patient', 'patient_grant_revoked', 'access_grant', '00000000-0000-0000-0000-000000009703', '00000000-0000-0000-0000-000000009401', '00000000-0000-0000-0000-000000009512', 'revoked', null, null, 'seed_audit_990105', 'confirmed', '0xseedaudit5', null, 0, now() - interval '6 days'),
+  ('00000000-0000-0000-0000-000000990106', '00000000-0000-0000-0000-000000009152', 'doctor', 'doctor_patient_view_denied', 'access_grant', '00000000-0000-0000-0000-000000009703', '00000000-0000-0000-0000-000000009401', '00000000-0000-0000-0000-000000009512', 'denied', 'revoked', null, 'seed_audit_990106', 'confirmed', '0xseedaudit6', null, 0, now() - interval '4 days'),
+  ('00000000-0000-0000-0000-000000990107', '00000000-0000-0000-0000-000000009103', 'patient', 'doctor_access_code_lookup_failed', 'doctor_lookup', null, '00000000-0000-0000-0000-000000009401', null, 'failed', 'generic_lookup_failed', '103.127.11.24', 'seed_audit_990107', 'pending', null, null, 0, now() - interval '2 days'),
+  ('00000000-0000-0000-0000-000000990108', '00000000-0000-0000-0000-000000009102', 'medical_admin', 'admin_doctor_approved', 'doctor', '00000000-0000-0000-0000-000000009501', null, '00000000-0000-0000-0000-000000009501', 'approved', null, null, 'seed_admin_audit_990108', 'confirmed', '0xseedadminaudit8', null, 0, now() - interval '18 days'),
+  ('00000000-0000-0000-0000-000000990109', '00000000-0000-0000-0000-000000009102', 'medical_admin', 'admin_doctor_approved', 'doctor', '00000000-0000-0000-0000-000000009511', null, '00000000-0000-0000-0000-000000009511', 'approved', null, null, 'seed_admin_audit_990109', 'confirmed', '0xseedadminaudit9', null, 0, now() - interval '17 days'),
+  ('00000000-0000-0000-0000-000000990110', '00000000-0000-0000-0000-000000009102', 'medical_admin', 'admin_doctor_rejected', 'doctor', '00000000-0000-0000-0000-000000009516', null, '00000000-0000-0000-0000-000000009516', 'rejected', 'Dokumen SIP tidak sesuai fasilitas praktik yang diajukan.', null, 'seed_admin_audit_990110', 'confirmed', '0xseedadminaudit10', null, 0, now() - interval '15 days'),
+  ('00000000-0000-0000-0000-000000990111', '00000000-0000-0000-0000-000000009102', 'medical_admin', 'admin_doctor_rejected', 'doctor', '00000000-0000-0000-0000-000000009523', null, '00000000-0000-0000-0000-000000009523', 'rejected', 'Foto KTP tidak terbaca jelas pada unggahan demo.', null, 'seed_admin_audit_990111', 'confirmed', '0xseedadminaudit11', null, 0, now() - interval '8 days'),
+  ('00000000-0000-0000-0000-000000990112', '00000000-0000-0000-0000-000000009102', 'medical_admin', 'doctor_kyc_email_notification_failed', 'doctor', '00000000-0000-0000-0000-000000009514', null, '00000000-0000-0000-0000-000000009514', 'failed', 'resend_demo_delivery_failed', null, 'seed_admin_audit_990112', 'failed', null, 'resend_delivery_failed', 1, now() - interval '3 days')
+on conflict (log_id) do update
+set
+  actor_auth_user_id = excluded.actor_auth_user_id,
+  actor_role = excluded.actor_role,
+  action = excluded.action,
+  target_type = excluded.target_type,
+  target_id = excluded.target_id,
+  patient_id = excluded.patient_id,
+  doctor_id = excluded.doctor_id,
+  access_status = excluded.access_status,
+  reason = excluded.reason,
+  ip_address = excluded.ip_address,
+  audit_event_hash = excluded.audit_event_hash,
+  blockchain_status = excluded.blockchain_status,
+  blockchain_tx_hash = excluded.blockchain_tx_hash,
+  blockchain_last_error = excluded.blockchain_last_error,
+  blockchain_attempt_count = excluded.blockchain_attempt_count,
+  created_at = excluded.created_at;
 
 -- Demo patient dashboard data.
 -- Encrypted medical and AI text values below are generated for the local ENCRYPTION_MASTER_KEY.
 insert into auth.users (
+  instance_id,
   id,
   aud,
   role,
@@ -18,6 +716,7 @@ insert into auth.users (
 )
 values
   (
+    '00000000-0000-0000-0000-000000000000',
     '00000000-0000-0000-0000-000000000101',
     'authenticated',
     'authenticated',
@@ -29,6 +728,7 @@ values
     now()
   ),
   (
+    '00000000-0000-0000-0000-000000000000',
     '00000000-0000-0000-0000-000000000201',
     'authenticated',
     'authenticated',
@@ -40,6 +740,7 @@ values
     now()
   ),
   (
+    '00000000-0000-0000-0000-000000000000',
     '00000000-0000-0000-0000-000000000202',
     'authenticated',
     'authenticated',
@@ -51,6 +752,7 @@ values
     now()
   ),
   (
+    '00000000-0000-0000-0000-000000000000',
     '00000000-0000-0000-0000-000000000203',
     'authenticated',
     'authenticated',
@@ -62,6 +764,7 @@ values
     now()
   ),
   (
+    '00000000-0000-0000-0000-000000000000',
     '00000000-0000-0000-0000-000000000204',
     'authenticated',
     'authenticated',
@@ -73,6 +776,7 @@ values
     now()
   ),
   (
+    '00000000-0000-0000-0000-000000000000',
     '00000000-0000-0000-0000-000000000205',
     'authenticated',
     'authenticated',
@@ -85,6 +789,7 @@ values
   )
 on conflict (id) do update
 set
+  instance_id = excluded.instance_id,
   email = excluded.email,
   raw_app_meta_data = excluded.raw_app_meta_data,
   raw_user_meta_data = excluded.raw_user_meta_data,
@@ -420,6 +1125,7 @@ with existing_developer_user as (
 ),
 inserted_developer_user as (
   insert into auth.users (
+    instance_id,
     id,
     aud,
     role,
@@ -431,6 +1137,7 @@ inserted_developer_user as (
     updated_at
   )
   select
+    '00000000-0000-0000-0000-000000000000',
     '00000000-0000-0000-0000-000000000102',
     'authenticated',
     'authenticated',

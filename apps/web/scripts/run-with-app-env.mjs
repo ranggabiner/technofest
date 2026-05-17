@@ -29,8 +29,9 @@ let spawnCmd = command;
 let spawnArgs = args;
 
 if (command === "supabase") {
+  const supabaseCliVersion = env.SUPABASE_CLI_VERSION ?? "2.90.0";
   spawnCmd = process.platform === "win32" ? "npx.cmd" : "npx";
-  spawnArgs = ["supabase", ...args];
+  spawnArgs = ["--yes", `supabase@${supabaseCliVersion}`, ...args];
 }
 
 const child = spawn(spawnCmd, spawnArgs, {

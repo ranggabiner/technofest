@@ -69,6 +69,9 @@ export function scope2RowMatchesFilter(
 ) {
   if (!filter) return true;
   if (filter.mode === "selected_session") return row.sessionId === filter.sessionId;
+  if (filter.mode === "date_range") {
+    return row.logDate >= filter.startDate && row.logDate <= filter.endDate;
+  }
 
   const rowMs = Date.parse(`${row.logDate}T00:00:00.000Z`);
   if (!Number.isFinite(rowMs)) return false;

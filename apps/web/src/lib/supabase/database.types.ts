@@ -140,25 +140,31 @@ export type Database = {
         Row: {
           created_at: string
           grant_id: string
+          end_date: string | null
           mode: string
           scope_kind: string
           session_id: string | null
+          start_date: string | null
           window_days: number | null
         }
         Insert: {
           created_at?: string
           grant_id: string
+          end_date?: string | null
           mode: string
           scope_kind: string
           session_id?: string | null
+          start_date?: string | null
           window_days?: number | null
         }
         Update: {
           created_at?: string
           grant_id?: string
+          end_date?: string | null
           mode?: string
           scope_kind?: string
           session_id?: string | null
+          start_date?: string | null
           window_days?: number | null
         }
         Relationships: [

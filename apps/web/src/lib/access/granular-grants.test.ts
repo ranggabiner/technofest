@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   buildGranularScopeHash,
+  parseScope2DateRangeFilter,
   normalizeGranularGrantInput,
   parseScope2FilterValue,
 } from "./granular-grants";
@@ -24,6 +25,20 @@ describe("granular access grant selection", () => {
     });
     expect(parseScope2FilterValue("")).toBeNull();
     expect(parseScope2FilterValue("last_n_days:0")).toBeNull();
+  });
+
+  it("parses custom Scope 2 date ranges", () => {
+    expect(parseScope2DateRangeFilter("2026-02-01", "2026-05-17")).toEqual({
+      mode: "date_range",
+      startDate: "2026-02-01",
+      endDate: "2026-05-17",
+      windowDays: null,
+      sessionId: null,
+    });
+
+    expect(parseScope2DateRangeFilter("2026-05-18", "2026-05-17")).toBeNull();
+    expect(parseScope2DateRangeFilter("", "2026-05-17")).toBeNull();
+    expect(parseScope2DateRangeFilter("2026-02-01", "")).toBeNull();
   });
 
   it("normalizes duplicate record selections and derives attachment download scope", () => {
