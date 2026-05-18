@@ -113,4 +113,6 @@ pnpm supabase:advisors
 pnpm validate:privacy
 ```
 
+Remote `pnpm validate:privacy` uses `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_PROJECT_REF`, and `SUPABASE_SERVICE_ROLE_KEY` from the active environment. The URL and project ref must point to the same Supabase project.
+
 Use demo/test data only. MedProof Sprint 1 is not a production clinical system.

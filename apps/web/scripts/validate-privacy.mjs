@@ -2,43 +2,11 @@ import { createClient } from "@supabase/supabase-js";
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { defaultSchemaCacheRetry, getPrivacyValidationConfig, withSchemaCacheRetry } from "./validate-privacy-helpers.mjs";
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const appRoot = path.resolve(scriptDir, "..");
 const supabaseRoot = path.resolve(appRoot, "../supabase");
-
-loadEnvFile(path.join(appRoot, ".env"));
-loadEnvFile(path.join(appRoot, ".env.local"));
-loadEnvFile(path.join(supabaseRoot, ".env"));
-loadEnvFile(path.join(supabaseRoot, ".env.local"));
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL ?? process.env.API_URL;
-const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SERVICE_ROLE_KEY;
-
-const defaultSentinels = [
-  "Diagnosis plaintext",
-  "Prescription plaintext",
-  "gejala rahasia",
-  "mood rahasia",
-  "raw quote rahasia",
-  "nama pasien rahasia",
-];
-
-const sentinels = (process.env.MEDPROOF_PRIVACY_SENTINELS ?? "")
-  .split(",")
-  .map((value) => value.trim())
-  .filter(Boolean);
-
-const needles = sentinels.length > 0 ? sentinels : defaultSentinels;
-
-if (!supabaseUrl || !serviceRoleKey) {
-  console.error("Missing NEXT_PUBLIC_SUPABASE_URL/SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY.");
-  process.exit(1);
-}
-
-const supabase = createClient(supabaseUrl, serviceRoleKey, {
-  auth: { persistSession: false },
-});
 
 const checks = [
   {
@@ -92,7 +60,34 @@ const checks = [
 ];
 
 const storageBuckets = ["encrypted-kyc-documents", "encrypted-medical-attachments"];
+
+loadEnvFile(path.join(appRoot, ".env"));
+loadEnvFile(path.join(appRoot, ".env.local"));
+loadEnvFile(path.join(supabaseRoot, ".env"));
+loadEnvFile(path.join(supabaseRoot, ".env.local"));
+
 const failures = [];
+const retryOptions = {
+  maxAttempts: readPositiveInt(process.env.MEDPROOF_SCHEMA_CACHE_RETRY_ATTEMPTS, defaultSchemaCacheRetry.maxAttempts),
+  delayMs: readPositiveInt(process.env.MEDPROOF_SCHEMA_CACHE_RETRY_DELAY_MS, defaultSchemaCacheRetry.delayMs),
+  onRetry: ({ label, attempt, maxAttempts, delayMs, error }) => {
+    console.warn(
+      `${label}: ${error.message} Waiting ${delayMs}ms for PostgREST schema cache refresh (${attempt}/${maxAttempts}).`,
+    );
+  },
+};
+
+let config;
+try {
+  config = getPrivacyValidationConfig(process.env);
+} catch (error) {
+  console.error(error instanceof Error ? error.message : String(error));
+  process.exit(1);
+}
+
+const supabase = createClient(config.supabaseUrl, config.serviceRoleKey, {
+  auth: { persistSession: false },
+});
 
 for (const check of checks) {
   await inspectTable(check);
@@ -109,13 +104,17 @@ if (failures.length > 0) {
 }
 
 console.log(`Privacy validation passed. Checked ${checks.length} table groups and ${storageBuckets.length} storage buckets.`);
-console.log(`Sentinel count: ${needles.length}. Set MEDPROOF_PRIVACY_SENTINELS to match local demo inputs.`);
+console.log(`Sentinel count: ${config.needles.length}. Set MEDPROOF_PRIVACY_SENTINELS to match local demo inputs.`);
 
 async function inspectTable(check) {
-  const { data, error } = await supabase
-    .from(check.table)
-    .select(check.columns.join(","))
-    .limit(1000);
+  const { data, error } = await withSchemaCacheRetry(
+    check.table,
+    () => supabase
+      .from(check.table)
+      .select(check.columns.join(","))
+      .limit(1000),
+    retryOptions,
+  );
 
   if (error) {
     failures.push(`${check.table}: ${error.message}`);
@@ -176,7 +175,12 @@ async function listBucketObjects(bucket, prefix) {
 
 function findNeedle(value) {
   const normalized = value.toLowerCase();
-  return needles.find((needle) => normalized.includes(needle.toLowerCase()));
+  return config.needles.find((needle) => normalized.includes(needle.toLowerCase()));
+}
+
+function readPositiveInt(value, fallback) {
+  const parsed = Number.parseInt(value ?? "", 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
 }
 
 function loadEnvFile(path) {

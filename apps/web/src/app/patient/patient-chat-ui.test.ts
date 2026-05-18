@@ -22,7 +22,7 @@ describe("patient chat Stitch redesign contract", () => {
     expect(source).not.toContain("PatientLayout");
     expect(source).not.toContain("PatientForbiddenLayout");
     expect(source).toContain("requireRole");
-    expect(source).toContain('className="h-screen overflow-hidden bg-[var(--color-warm-canvas)]"');
+    expect(source).toContain('className="h-screen h-[100dvh] overflow-hidden bg-[var(--color-warm-canvas)]"');
     expect(source).toContain('data-chat-layout="stitch-chat-workspace"');
   });
 
@@ -74,17 +74,17 @@ describe("patient chat Stitch redesign contract", () => {
     const page = pageSource();
     const client = clientSource();
 
-    expect(page).toContain('className="h-screen overflow-hidden bg-[var(--color-warm-canvas)]"');
+    expect(page).toContain('className="h-screen h-[100dvh] overflow-hidden bg-[var(--color-warm-canvas)]"');
     expect(page).toContain('className="h-full overflow-hidden bg-[var(--color-warm-canvas)]"');
 
     expect(client).toContain("grid h-full min-h-0 grid-rows-[auto_minmax(0,1fr)] overflow-hidden bg-[var(--color-warm-canvas)]");
-    expect(client).toContain("flex min-h-0 shrink-0 flex-col gap-6 overflow-hidden");
-    expect(client).toContain("max-h-[min(420px,48vh)]");
+    expect(client).toContain("grid min-h-0 max-h-[min(220px,34dvh)]");
+    expect(client).toContain("lg:flex lg:h-full lg:max-h-none lg:flex-col lg:gap-6");
     expect(client).toContain("lg:max-h-none");
     expect(client).toContain("relative flex h-full min-h-0 flex-col overflow-hidden");
     expect(client).toContain("min-h-0 flex-1 overflow-y-auto");
     expect(client).toContain('data-chat-history="items"');
-    expect(client).toContain('className="min-h-0 flex-1 overflow-y-auto custom-scrollbar pr-1"');
+    expect(client).toContain('className="min-h-0 overflow-x-auto overflow-y-hidden custom-scrollbar pb-1 lg:flex-1 lg:overflow-x-hidden lg:overflow-y-auto lg:pb-0 lg:pr-1"');
     expect(client).not.toContain("grid min-h-[inherit]");
     expect(client).not.toContain("relative flex min-h-screen flex-col");
 
@@ -95,6 +95,22 @@ describe("patient chat Stitch redesign contract", () => {
     expect(historyStart).toBeGreaterThan(-1);
     expect(sidebar.slice(0, historyStart)).not.toContain("overflow-y-auto");
     expect(sidebar.slice(historyStart)).toContain("overflow-y-auto");
+  });
+
+  it("keeps the standalone chat workspace usable on narrow mobile viewports", () => {
+    const page = pageSource();
+    const client = clientSource();
+
+    expect(page).toContain("h-screen h-[100dvh] overflow-hidden");
+    expect(client).toContain("max-h-[min(220px,34dvh)]");
+    expect(client).toContain("grid grid-cols-2 gap-2 lg:grid-cols-1 lg:gap-1");
+    expect(client).toContain("overflow-x-auto overflow-y-hidden custom-scrollbar");
+    expect(client).toContain("flex min-w-0 gap-2 lg:grid lg:gap-1");
+    expect(client).toContain("w-[min(220px,70vw)] shrink-0");
+    expect(client).toContain("min-h-[128px]");
+    expect(client).toContain("max-w-[92%] px-3.5 py-3 text-sm leading-6 sm:max-w-[82%] sm:px-4");
+    expect(client).toContain("pb-[calc(env(safe-area-inset-bottom)+1rem)]");
+    expect(client).toContain("text-base sm:text-sm");
   });
 
   it("groups the AI avatar with the back affordance instead of centering it", () => {
@@ -346,7 +362,7 @@ describe("patient chat Stitch redesign contract", () => {
     expect(source).toContain('data-chat-composer="readonly-bottom"');
     expect(source).not.toContain("bg-[var(--color-warm-canvas)] px-5 pb-5 md:px-10 md:pb-8");
     expect(source).not.toContain("border-t border-[var(--color-stone-surface)] bg-[var(--color-card)] px-2.5 pb-5 md:px-5 md:pb-8");
-    expect(source).toContain("bg-[var(--color-warm-canvas)] px-2.5 pb-5 md:px-5 md:pb-8");
+    expect(source).toContain("bg-[var(--color-warm-canvas)] px-3 pb-[calc(env(safe-area-inset-bottom)+1rem)] sm:px-4 md:px-5 md:pb-8");
   });
 
   it("keeps the chat input editable while AI is streaming and blocks only send actions", () => {
@@ -430,7 +446,7 @@ describe("patient chat Stitch redesign contract", () => {
 
     expect(source).toContain("const showFinishAction = hasMessages && !selectedSessionIsClosed && !isSessionLoading");
     expect(canvas).toContain('data-chat-actions="main-session"');
-    expect(canvas).toContain('className="shrink-0 px-5 pt-5 md:px-10 md:pt-8"');
+    expect(canvas).toContain('className="shrink-0 px-3 pt-3 sm:px-5 md:px-10 md:pt-8"');
     expect(canvas).toContain('className="flex w-full justify-start"');
     expect(canvas).not.toContain('className="mx-auto flex w-full max-w-[760px] justify-start"');
     expect(canvas).toContain("disabled={isStreaming || isFinishing}");
@@ -453,7 +469,7 @@ describe("patient chat Stitch redesign contract", () => {
     expect(source).toContain('import { AssistantMarkdown } from "./assistant-markdown"');
     expect(source).toContain("<AssistantMarkdown content={message.content || copy.writing} />");
     expect(source).toContain("{message.content || copy.writing}");
-    expect(source).toContain('"max-w-[82%] px-4 py-3 text-sm leading-6"');
+    expect(source).toContain('"max-w-[92%] px-3.5 py-3 text-sm leading-6 sm:max-w-[82%] sm:px-4"');
     expect(source).toContain(
       'message.role === "user" && "whitespace-pre-wrap break-words"',
     );

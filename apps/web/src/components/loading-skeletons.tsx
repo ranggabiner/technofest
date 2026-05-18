@@ -221,38 +221,34 @@ export function PatientDashboardSkeleton() {
 export function PatientChatSkeleton() {
   return (
     <div
-      className="h-screen overflow-hidden bg-[var(--color-warm-canvas)]"
+      className="h-screen h-[100dvh] overflow-hidden bg-[var(--color-warm-canvas)]"
       data-loading-pattern="patient-chat"
     >
       <div className="grid h-full min-h-0 grid-rows-[auto_minmax(0,1fr)] overflow-hidden lg:grid-cols-[280px_minmax(0,1fr)] lg:grid-rows-1">
-        <aside className="grid min-h-0 shrink-0 gap-6 overflow-hidden border-b border-[var(--color-stone-surface)] bg-[color-mix(in_srgb,var(--color-stone-surface)_55%,var(--color-warm-canvas))] p-4 lg:border-b-0 lg:border-r lg:p-6">
+        <aside className="grid min-h-0 max-h-[min(220px,34dvh)] shrink-0 grid-rows-[auto_auto_minmax(0,1fr)] gap-3 overflow-hidden border-b border-[var(--color-stone-surface)] bg-[color-mix(in_srgb,var(--color-stone-surface)_55%,var(--color-warm-canvas))] p-3 sm:p-4 lg:flex lg:h-full lg:max-h-none lg:flex-col lg:gap-6 lg:border-b-0 lg:border-r lg:p-6">
           <div data-chat-header="navigation-group" className="flex items-center gap-3">
             <Skeleton className="size-9 rounded-full" />
             <Skeleton className="size-10 rounded-full" />
           </div>
-          <div className="grid gap-2">
-            <Skeleton className="h-10 w-full rounded-xl" />
-            <Skeleton className="h-10 w-full rounded-xl" />
-            <Skeleton className="h-10 w-full rounded-xl" />
-          </div>
-          <div className="grid gap-3">
-            <Skeleton className="h-4 w-24" />
+          <div className="grid grid-cols-2 gap-2 lg:grid-cols-1">
             <Skeleton className="h-10 w-full rounded-xl" />
             <Skeleton className="h-10 w-full rounded-xl" />
           </div>
-          <div className="mt-auto grid gap-2">
-            <Skeleton className="h-24 w-full rounded-xl" />
-            <Skeleton className="h-8 w-full rounded-full" />
+          <div className="min-h-0 overflow-hidden">
+            <div className="flex min-w-0 gap-2 overflow-hidden lg:grid lg:gap-2">
+              <Skeleton className="h-12 w-[min(220px,70vw)] shrink-0 rounded-xl lg:w-full" />
+              <Skeleton className="h-12 w-[min(220px,70vw)] shrink-0 rounded-xl lg:w-full" />
+            </div>
           </div>
         </aside>
-        <div className="flex h-full min-h-0 flex-col justify-between overflow-hidden px-5 py-8 md:px-10">
-          <div className="mx-auto grid min-h-0 w-full max-w-[720px] flex-1 place-content-center gap-10 text-center">
+        <div className="flex h-full min-h-0 flex-col justify-between overflow-hidden px-3 py-5 sm:px-5 sm:py-7 md:px-10 md:py-8">
+          <div className="mx-auto grid min-h-0 w-full max-w-[720px] flex-1 place-content-center gap-6 text-center sm:gap-8 md:gap-10">
             <div className="grid justify-items-center gap-3">
-              <Skeleton className="h-12 w-72 md:h-16 md:w-96" />
+              <Skeleton className="h-10 w-64 max-w-full sm:h-12 sm:w-72 md:h-16 md:w-96" />
             </div>
-            <div className="grid gap-5 md:grid-cols-2">
-              <Skeleton className="h-[190px] rounded-xl" />
-              <Skeleton className="h-[190px] rounded-xl" />
+            <div className="grid gap-3 sm:gap-5 md:grid-cols-2">
+              <Skeleton className="h-[128px] rounded-xl sm:h-[160px] md:h-[190px]" />
+              <Skeleton className="h-[128px] rounded-xl sm:h-[160px] md:h-[190px]" />
             </div>
           </div>
           <div className="mx-auto w-full max-w-[800px]">

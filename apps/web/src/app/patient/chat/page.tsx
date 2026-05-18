@@ -44,7 +44,7 @@ export default async function PatientChatPage({
 
   return (
     <div className="min-h-screen bg-[var(--color-warm-canvas)]">
-      <main className="h-screen overflow-hidden bg-[var(--color-warm-canvas)]">
+      <main className="h-screen h-[100dvh] overflow-hidden bg-[var(--color-warm-canvas)]">
         <StatusToast
           key={statusToastKey}
           failedMessage={
