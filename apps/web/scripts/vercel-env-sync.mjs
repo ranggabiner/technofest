@@ -1,7 +1,7 @@
 const TARGETS = {
   staging: {
     vercelTarget: "preview",
-    gitBranch: "development",
+    gitBranch: "develop",
   },
   production: {
     vercelTarget: "production",
