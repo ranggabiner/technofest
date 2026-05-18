@@ -42,6 +42,8 @@ env.local
 # Root project planning files and directories
 /AGENTS.md
 /PLAN.md
+/agents.md
+/.superpowers/
 /docs/
 /plans/
 
