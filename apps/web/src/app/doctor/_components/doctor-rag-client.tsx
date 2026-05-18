@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
-import { Bot, Send } from "lucide-react";
+import { useRef, useState } from "react";
+import { Send } from "lucide-react";
 
 import { RagAnswerSkeleton } from "@/components/loading-skeletons";
-import { Button } from "@/components/ui/button";
+import { LoadingActionButton } from "@/components/ui/async-action-button";
 import { Field, Label, Textarea } from "@/components/ui/form";
 import { DOCTOR_RAG_DISCLAIMER } from "@/lib/doctor-records/rag";
 
@@ -26,14 +26,18 @@ export function DoctorRagClient({
   const [answer, setAnswer] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const loadingRef = useRef(false);
 
   async function askQuestion() {
+    if (loadingRef.current) return;
+
     const nextQuestion = question.trim();
     if (!nextQuestion) {
       setError(copy.questionRequired);
       return;
     }
 
+    loadingRef.current = true;
     setIsLoading(true);
     setError(null);
     setAnswer(null);
@@ -50,6 +54,7 @@ export function DoctorRagClient({
     } catch (ragError) {
       setError(ragError instanceof Error ? ragError.message : copy.answerFailed);
     } finally {
+      loadingRef.current = false;
       setIsLoading(false);
     }
   }
@@ -74,14 +79,21 @@ export function DoctorRagClient({
           {error}
         </p>
       ) : null}
-      <Button type="button" className="w-fit rounded-[10px]" onClick={() => void askQuestion()} disabled={isLoading}>
-        {isLoading ? <Bot size={16} /> : <Send size={16} />}
-        {isLoading ? copy.processing : copy.ask}
-      </Button>
+      <LoadingActionButton
+        type="button"
+        className="w-full rounded-[10px] sm:w-fit"
+        isLoading={isLoading}
+        loadingLabel={copy.processing}
+        onClick={() => void askQuestion()}
+        slotClassName="w-full sm:w-fit"
+      >
+        <Send size={16} />
+        {copy.ask}
+      </LoadingActionButton>
       {isLoading ? (
         <RagAnswerSkeleton />
       ) : answer ? (
-        <div className="whitespace-pre-wrap rounded-[10px] bg-[var(--color-parchment-card)] p-4 text-sm leading-6 text-[var(--color-charcoal-primary)]">
+        <div className="whitespace-pre-wrap break-words rounded-[10px] bg-[var(--color-parchment-card)] p-4 text-sm leading-6 text-[var(--color-charcoal-primary)] [overflow-wrap:anywhere]">
           {answer}
         </div>
       ) : null}

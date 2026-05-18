@@ -410,6 +410,8 @@ export const dictionary = {
         emailPlaceholder: "nama@email.com",
         passwordPlaceholder: "Masukkan password",
         manualSubmit: "Login",
+        manualSubmitting: "Memvalidasi kredensial...",
+        oauthSubmitting: "Membuka Google...",
         google: "Lanjutkan dengan Google",
         demoCredentialsTitle: "Kredensial demo",
         demoCredentialsDescription: "Akun ini hanya untuk demo/test. Jangan gunakan sebagai pola keamanan produksi.",
@@ -456,6 +458,7 @@ export const dictionary = {
         description:
           "Selamat datang di MedProof. Silakan pilih kategori akun yang sesuai dengan kebutuhan Anda untuk memulai.",
         continue: "Lanjut",
+        submitting: "Memproses...",
         invalidRole: "Peran tidak valid. Pilih Pasien atau Dokter lalu lanjutkan.",
         options: [
           {
@@ -1383,6 +1386,7 @@ export const dictionary = {
         decisionTitle: "Keputusan admin",
         decisionDescription: "Status DB tetap menjadi sumber kebenaran walau email Resend gagal.",
         approve: "Setujui dokter",
+        submitting: "Memproses keputusan...",
         approveFailed: "Gagal menyetujui dokter",
         doctorIdRequired: "ID dokter wajib diisi",
         rejectionReason: "Alasan penolakan",
@@ -1871,6 +1875,8 @@ export const dictionary = {
         emailPlaceholder: "name@email.com",
         passwordPlaceholder: "Enter password",
         manualSubmit: "Log in",
+        manualSubmitting: "Validating credentials...",
+        oauthSubmitting: "Opening Google...",
         google: "Continue with Google",
         demoCredentialsTitle: "Demo credentials",
         demoCredentialsDescription: "These accounts are for demo/test only. Do not use them as production security patterns.",
@@ -1917,6 +1923,7 @@ export const dictionary = {
         description:
           "Welcome to MedProof. Choose the account category that matches how you want to get started.",
         continue: "Continue",
+        submitting: "Processing...",
         invalidRole: "Invalid role. Choose Patient or Doctor, then continue.",
         options: [
           {
@@ -2844,6 +2851,7 @@ export const dictionary = {
         decisionTitle: "Admin decision",
         decisionDescription: "The DB status remains the source of truth even if Resend email fails.",
         approve: "Approve doctor",
+        submitting: "Processing decision...",
         approveFailed: "Failed to approve doctor",
         doctorIdRequired: "Doctor ID is required",
         rejectionReason: "Rejection reason",

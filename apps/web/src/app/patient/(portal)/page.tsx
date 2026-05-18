@@ -11,7 +11,7 @@ import { StatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
 import { requireRole } from "@/lib/auth/session";
 import { roleOnboardingPath } from "@/lib/auth/roles";
-import { loadPatientJournalState } from "@/lib/ai/journal-service";
+import { loadPatientJournalDashboardState } from "@/lib/ai/journal-service";
 import { formatDateTime, fillTemplate } from "@/lib/i18n/format";
 import {
   proofLabel,
@@ -39,26 +39,26 @@ export default async function PatientDashboardPage() {
   if (!role.patientId || onboardingPath) redirect(onboardingPath ?? "/login/role");
 
   const [journalState, dashboardState] = await Promise.all([
-    loadPatientJournalState(role),
+    loadPatientJournalDashboardState(role),
     loadPatientDashboardState(role),
   ]);
 
   return (
     <>
-      <section className="flex flex-col gap-12 border-b border-[var(--color-stone-surface)] pb-4">
+      <section className="flex flex-col gap-8 border-b border-[var(--color-stone-surface)] pb-4 sm:gap-12">
             <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
               <div className="max-w-[620px]">
-                <p className="mb-2 text-[19px] font-semibold uppercase tracking-[0.18em] text-[var(--color-midnight)]">
+                <p className="mb-2 text-sm font-semibold uppercase tracking-widest text-[var(--color-midnight)] sm:text-lg sm:tracking-widest">
                   {copy.patient.dashboard.eyebrow}
                 </p>
-                <h1 className="mb-2 text-[36px] font-medium leading-[1.1] tracking-[-0.03em] text-[var(--color-midnight)] md:text-[44px]">
+                <h1 className="mb-2 text-3xl font-medium leading-tight tracking-normal text-[var(--color-midnight)] sm:text-4xl md:text-5xl">
                   {fillTemplate(copy.patient.dashboard.dailyPrompt, { name: role.fullName })}
                 </h1>
                 <p className="max-w-md text-base leading-7 text-[var(--color-ash)]">
                   {copy.patient.dashboard.dailyDescription}
                 </p>
               </div>
-              <Button asChild className="min-h-12 w-fit shrink-0 px-8">
+              <Button asChild className="min-h-12 w-full shrink-0 px-8 sm:w-fit">
                 <PatientTransitionLink href="/patient/chat">
                   {copy.patient.dashboard.startNow}
                   <ArrowUpRight size={16} />
@@ -74,15 +74,15 @@ export default async function PatientDashboardPage() {
         </section>
 
         <section className="space-y-4">
-          <h2 className="text-[28px] font-semibold leading-tight text-[var(--color-midnight)]">
+          <h2 className="text-2xl font-semibold leading-tight text-[var(--color-midnight)]">
             {copy.patient.dashboard.healthHistoryTitle}
           </h2>
 
           <div className="grid gap-6 lg:grid-cols-2">
-            <DashboardCard className="flex min-h-[400px] flex-col">
-              <div className="mb-8 flex items-start justify-between gap-4">
+            <DashboardCard className="flex flex-col md:min-h-[400px]">
+              <div className="mb-6 flex flex-col gap-4 sm:mb-8 sm:flex-row sm:items-start sm:justify-between">
                 <div>
-                  <h2 className="text-[28px] font-semibold leading-tight text-[var(--color-midnight)]">
+                  <h2 className="text-2xl font-semibold leading-tight text-[var(--color-midnight)]">
                     {copy.patient.dashboard.scope1TimelineTitle}
                   </h2>
                   <p className="mt-2 text-sm leading-6 text-[var(--color-ash)]">
@@ -91,7 +91,7 @@ export default async function PatientDashboardPage() {
                 </div>
                 <PatientTransitionLink
                   href="/patient/health-history#records"
-                  className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-[0.12em] text-[var(--color-teal-deep)] hover:underline"
+                  className="inline-flex min-h-11 w-full items-center justify-center gap-1 rounded-full border border-[var(--color-stone-surface)] px-4 text-center text-xs font-semibold uppercase tracking-widest text-[var(--color-teal-deep)] hover:bg-[var(--color-teal-surface)] sm:w-auto sm:justify-start sm:border-0 sm:px-0 sm:hover:bg-transparent sm:hover:underline"
                 >
                   {copy.patient.dashboard.moreDetails}
                   <ChevronRight size={14} aria-hidden="true" />
@@ -121,7 +121,7 @@ export default async function PatientDashboardPage() {
                             {copy.common.proofPrefix} {proofLabel(copy, record.blockchainStatus)}
                           </StatusBadge>
                         </div>
-                        <p className="font-semibold text-[var(--color-midnight)]">{record.title}</p>
+                        <p className="break-words font-semibold text-[var(--color-midnight)]">{record.title}</p>
                         <p className="mt-1 text-xs text-[var(--color-ash)]">{formatDateTime(record.createdAt, locale)}</p>
                         <div className="mt-3">
                           <ProofStatus
@@ -141,10 +141,10 @@ export default async function PatientDashboardPage() {
               )}
             </DashboardCard>
 
-            <DashboardCard className="flex min-h-[400px] flex-col">
-              <div className="mb-8 flex items-start justify-between gap-4">
+            <DashboardCard className="flex flex-col md:min-h-[400px]">
+              <div className="mb-6 flex flex-col gap-4 sm:mb-8 sm:flex-row sm:items-start sm:justify-between">
                 <div>
-                  <h2 className="text-[28px] font-semibold leading-tight text-[var(--color-midnight)]">
+                  <h2 className="text-2xl font-semibold leading-tight text-[var(--color-midnight)]">
                     {copy.patient.dashboard.aiSummaryTitle}
                   </h2>
                   <p className="mt-2 text-sm leading-6 text-[var(--color-ash)]">
@@ -153,7 +153,7 @@ export default async function PatientDashboardPage() {
                 </div>
                 <PatientTransitionLink
                   href="/patient/health-history#journal"
-                  className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-[0.12em] text-[var(--color-teal-deep)] hover:underline"
+                  className="inline-flex min-h-11 w-full items-center justify-center gap-1 rounded-full border border-[var(--color-stone-surface)] px-4 text-center text-xs font-semibold uppercase tracking-widest text-[var(--color-teal-deep)] hover:bg-[var(--color-teal-surface)] sm:w-auto sm:justify-start sm:border-0 sm:px-0 sm:hover:bg-transparent sm:hover:underline"
                 >
                   {copy.patient.dashboard.moreDetails}
                   <ChevronRight size={14} aria-hidden="true" />
@@ -165,9 +165,9 @@ export default async function PatientDashboardPage() {
                   {journalState.recentSummaries.map((summary) => (
                     <div
                       key={summary.id}
-                      className="rounded-[14px] border border-[var(--color-stone-surface)] bg-[var(--color-parchment-card)] p-6 transition hover:border-[color-mix(in_srgb,var(--color-teal-primary)_30%,transparent)] hover:bg-[var(--color-teal-surface)]"
+                      className="rounded-[14px] border border-[var(--color-stone-surface)] bg-[var(--color-parchment-card)] p-4 transition hover:border-[color-mix(in_srgb,var(--color-teal-primary)_30%,transparent)] hover:bg-[var(--color-teal-surface)] sm:p-6"
                     >
-                      <div className="mb-3 flex items-start justify-between gap-3">
+                      <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                         <div className="flex min-w-0 items-center gap-2">
                           <span className="grid size-8 shrink-0 place-items-center rounded-full bg-[var(--color-card)] text-[var(--color-teal-deep)]">
                             <MessageCircle size={18} aria-hidden="true" />
@@ -176,7 +176,7 @@ export default async function PatientDashboardPage() {
                             {summary.title ?? copy.patient.dashboard.scope2Title}
                           </h3>
                         </div>
-                        <p className="shrink-0 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--color-ash)]">
+                        <p className="text-xs font-semibold uppercase tracking-widest text-[var(--color-ash)] sm:shrink-0">
                           {formatDateTime(summary.summaryGeneratedAt, locale)}
                         </p>
                       </div>

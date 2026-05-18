@@ -55,9 +55,13 @@ describe("site footer route coverage", () => {
   });
 
   it("keeps the shared footer below the first viewport on sparse pages", () => {
-    expect(readLoginSurface("login/page.tsx")).toContain('className="flex min-h-screen flex-1 flex-col"');
+    const loginSurface = readLoginSurface("login/page.tsx");
+
+    expect(loginSurface).toContain('className="flex min-h-dvh flex-1 flex-col"');
+    expect(loginSurface).toContain("desktop: \"hidden flex-1 items-center justify-center px-6 pb-20 pt-24 md:flex");
+    expect(loginSurface).toContain("mobile: \"flex flex-1 flex-col items-center justify-center px-4 pb-16 pt-24");
     expect(readApp("login/role/page.tsx")).toContain('className="flex min-h-screen flex-1 items-center justify-center');
-    expect(readComponent("onboarding-shell.tsx")).toContain("mx-auto flex min-h-screen w-full max-w-[1100px] flex-1 flex-col px-6 py-20");
+    expect(readComponent("onboarding-shell.tsx")).toContain("mx-auto flex min-h-screen w-full max-w-[1100px] flex-1 flex-col px-4 py-16 sm:px-6 sm:py-20");
     expect(readFileSync(new URL("../app/_components/portal-layout.tsx", import.meta.url), "utf8")).toContain(
       "mx-auto grid min-h-screen max-w-[1400px]",
     );

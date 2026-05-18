@@ -18,10 +18,10 @@ export default async function AdminAddAdminPage() {
     return (
       <section className="grid gap-8" data-admin-add-admin-page="forbidden">
         <header className="border-b border-[var(--color-stone-surface)] pb-5">
-          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-ash)]">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-[var(--color-ash)]">
             {copy.admin.nav.addAdmin}
           </p>
-          <h1 className="text-[36px] font-semibold leading-[1.1] text-[var(--color-midnight)] md:text-[44px]">
+          <h1 className="text-3xl font-semibold leading-tight text-[var(--color-midnight)] sm:text-4xl md:text-5xl">
             {copy.admin.addAdmin.title}
           </h1>
           <p className="mt-3 max-w-2xl text-base leading-7 text-[var(--color-ash)]">
@@ -50,10 +50,10 @@ export default async function AdminAddAdminPage() {
   return (
     <section className="grid gap-8" data-admin-add-admin-page="main">
       <header className="border-b border-[var(--color-stone-surface)] pb-5">
-        <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-ash)]">
+        <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-[var(--color-ash)]">
           {copy.admin.doctors.title}
         </p>
-        <h1 className="text-[36px] font-semibold leading-[1.1] text-[var(--color-midnight)] md:text-[44px]">
+        <h1 className="text-3xl font-semibold leading-tight text-[var(--color-midnight)] sm:text-4xl md:text-5xl">
           {copy.admin.addAdmin.title}
         </h1>
         <p className="mt-3 max-w-2xl text-base leading-7 text-[var(--color-ash)]">
@@ -62,7 +62,7 @@ export default async function AdminAddAdminPage() {
       </header>
 
       <DashboardCard className="w-full max-w-xl p-6 md:p-8">
-        <h2 className="mb-5 text-[23px] font-semibold leading-tight text-[var(--color-midnight)]">
+        <h2 className="mb-5 text-xl font-semibold leading-tight text-[var(--color-midnight)]">
           {copy.admin.addAdmin.cardTitle}
         </h2>
         <AddAdminForm copy={copy.admin.addAdmin} />
@@ -70,7 +70,7 @@ export default async function AdminAddAdminPage() {
 
       <DashboardCard className="w-full p-6 md:p-8">
         <div className="mb-5">
-          <h2 className="text-[23px] font-semibold leading-tight text-[var(--color-midnight)]">
+          <h2 className="text-xl font-semibold leading-tight text-[var(--color-midnight)]">
             {copy.admin.addAdmin.listTitle}
           </h2>
           <p className="mt-1 text-sm leading-6 text-[var(--color-ash)]">

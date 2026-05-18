@@ -5,12 +5,18 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
 import {
+  AdminApprovalSkeleton,
+  DoctorDashboardSkeleton,
   DoctorGrantPageSkeleton,
   HomeSkeleton,
   LoadingCard,
   LoadingList,
+  OnboardingPageSkeleton,
   PatientChatSkeleton,
   PatientDashboardSkeleton,
+  PatientHealthHistoryJournalSkeleton,
+  PatientHealthHistoryRecordsSkeleton,
+  PatientHealthHistorySkeleton,
 } from "./loading-skeletons";
 import { Skeleton } from "./ui/skeleton";
 
@@ -54,6 +60,61 @@ describe("loading skeleton components", () => {
     expect(patientHtml).toContain("min-h-[400px]");
     expect(grantHtml).toContain('data-loading-pattern="doctor-grant"');
     expect(grantHtml.match(/data-skeleton-card/g)?.length).toBeGreaterThanOrEqual(4);
+  });
+
+  it("keeps patient health-history loading states route-specific across breakpoints", () => {
+    const overviewHtml = renderToStaticMarkup(
+      React.createElement(PatientHealthHistorySkeleton),
+    );
+    const recordsHtml = renderToStaticMarkup(
+      React.createElement(PatientHealthHistoryRecordsSkeleton),
+    );
+    const journalHtml = renderToStaticMarkup(
+      React.createElement(PatientHealthHistoryJournalSkeleton),
+    );
+
+    expect(overviewHtml).toContain('data-loading-pattern="patient-health-history-overview"');
+    expect(overviewHtml).toContain("md:min-h-[375px]");
+    expect(recordsHtml).toContain('data-loading-pattern="patient-health-history-records"');
+    expect(recordsHtml).toContain('data-skeleton-record-timeline');
+    expect(recordsHtml).toContain("before:left-[7px]");
+    expect(recordsHtml).toContain("sm:before:left-[9px]");
+    expect(journalHtml).toContain('data-loading-pattern="patient-health-history-journal"');
+    expect(journalHtml).toContain("flex flex-wrap gap-3");
+  });
+
+  it("renders mobile card skeletons separately from desktop table skeletons", () => {
+    const adminHtml = renderToStaticMarkup(
+      React.createElement(AdminApprovalSkeleton),
+    );
+    const doctorHtml = renderToStaticMarkup(
+      React.createElement(DoctorDashboardSkeleton),
+    );
+
+    expect(adminHtml).toContain('data-skeleton-mobile-cards');
+    expect(adminHtml).toContain("md:hidden");
+    expect(adminHtml).toContain('data-skeleton-desktop-table');
+    expect(adminHtml).toContain("hidden overflow-x-auto md:block");
+    expect(doctorHtml).toContain('data-doctor-session-skeleton-cards');
+    expect(doctorHtml).toContain("md:hidden");
+    expect(doctorHtml).toContain('data-doctor-session-skeleton-table');
+    expect(doctorHtml).toContain("hidden overflow-x-auto md:block");
+  });
+
+  it("keeps onboarding skeleton role variants aligned with patient and doctor shells", () => {
+    const patientHtml = renderToStaticMarkup(
+      React.createElement(OnboardingPageSkeleton, { role: "patient", variant: "intro" }),
+    );
+    const doctorHtml = renderToStaticMarkup(
+      React.createElement(OnboardingPageSkeleton, { role: "doctor", variant: "documents" }),
+    );
+
+    expect(patientHtml).toContain('data-onboarding-skeleton="patient-intro"');
+    expect(patientHtml).toContain("items-center justify-center px-4 py-16");
+    expect(patientHtml).toContain("sm:p-8 md:p-12");
+    expect(doctorHtml).toContain('data-onboarding-skeleton="doctor-documents"');
+    expect(doctorHtml).toContain("mx-auto flex min-h-screen w-full max-w-[1100px]");
+    expect(doctorHtml).toContain("sm:mb-28");
   });
 
   it("keeps patient chat loading header grouped around back navigation", () => {

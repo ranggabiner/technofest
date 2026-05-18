@@ -3,7 +3,7 @@
 import { useActionState, useEffect, useRef } from "react";
 import { UserPlus } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
+import { PendingSubmitButton } from "@/components/ui/async-action-button";
 import { Field, Input, Label } from "@/components/ui/form";
 import type { Dictionary } from "@/lib/i18n/dictionary";
 
@@ -11,7 +11,7 @@ import { inviteAdminAction } from "./actions";
 import { initialInviteAdminFormState } from "./form-state";
 
 export function AddAdminForm({ copy }: { copy: Dictionary["admin"]["addAdmin"] }) {
-  const [state, formAction, isPending] = useActionState(inviteAdminAction, initialInviteAdminFormState);
+  const [state, formAction] = useActionState(inviteAdminAction, initialInviteAdminFormState);
   const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
@@ -48,10 +48,10 @@ export function AddAdminForm({ copy }: { copy: Dictionary["admin"]["addAdmin"] }
         </p>
       ) : null}
 
-      <Button type="submit" className="w-full rounded-[10px]" disabled={isPending}>
+      <PendingSubmitButton type="submit" className="w-full rounded-[10px]" loadingLabel={copy.submitting} slotClassName="w-full">
         <UserPlus size={16} aria-hidden="true" />
-        {isPending ? copy.submitting : copy.submit}
-      </Button>
+        {copy.submit}
+      </PendingSubmitButton>
     </form>
   );
 }

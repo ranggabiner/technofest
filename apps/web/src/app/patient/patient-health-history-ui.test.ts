@@ -19,6 +19,10 @@ describe("patient health history page", () => {
     "./(portal)/health-history/records/_components/attachment-preview-modal.tsx",
     import.meta.url,
   );
+  const attachmentDialogPath = new URL(
+    "./(portal)/health-history/records/_components/attachment-preview-dialog.tsx",
+    import.meta.url,
+  );
   const attachmentPreviewRoutePath = new URL(
     "../api/patient/health-history/records/[recordId]/attachments/[fileId]/preview/route.ts",
     import.meta.url,
@@ -41,7 +45,7 @@ describe("patient health history page", () => {
     expect(source).toContain("data-health-history-card={cardKey}");
     expect(source).toContain('cardKey="records"');
     expect(source).toContain('cardKey="journal"');
-    expect(source).toContain("font-serif");
+    expect(source).not.toContain("font-serif");
     expect(source).toContain("min-h-[375px]");
     expect(source).toContain("ArrowRight");
     expect(source).toContain('data-health-history-section="records"');
@@ -103,6 +107,7 @@ describe("patient health history page", () => {
     expect(existsSync(recordsLoadingPath)).toBe(true);
 
     const source = readFileSync(recordsPagePath, "utf8");
+    const loading = readFileSync(recordsLoadingPath, "utf8");
 
     expect(source).not.toContain("PatientLayout");
     expect(source).not.toContain("PatientForbiddenLayout");
@@ -117,27 +122,33 @@ describe("patient health history page", () => {
     expect(source).toContain("attachmentFilename");
     expect(source).toContain("AttachmentPreviewControl");
     expect(source).toContain('href="/patient/health-history"');
+    expect(loading).toContain("PatientHealthHistoryRecordsSkeleton");
+    expect(loading).not.toContain("PatientHealthHistorySkeleton");
   });
 
   it("adds a guarded attachment preview modal for patient record attachments", () => {
     expect(existsSync(attachmentModalPath)).toBe(true);
+    expect(existsSync(attachmentDialogPath)).toBe(true);
     expect(existsSync(attachmentPreviewRoutePath)).toBe(true);
     expect(existsSync(attachmentDownloadRoutePath)).toBe(true);
 
     const modal = readFileSync(attachmentModalPath, "utf8");
+    const dialog = readFileSync(attachmentDialogPath, "utf8");
     const previewRoute = readFileSync(attachmentPreviewRoutePath, "utf8");
     const downloadRoute = readFileSync(attachmentDownloadRoutePath, "utf8");
 
     expect(modal).toContain('"use client"');
     expect(modal).toContain("AttachmentPreviewControl");
-    expect(modal).toContain('role="dialog"');
-    expect(modal).toContain('aria-modal="true"');
-    expect(modal).toContain('event.key === "Escape"');
-    expect(modal).toContain("onMouseDown={(event)");
-    expect(modal).toContain("<iframe");
-    expect(modal).toContain("<Image");
+    expect(modal).toContain('import("./attachment-preview-dialog")');
+    expect(modal).toContain("AttachmentPreviewDialogFallback");
+    expect(dialog).toContain('role="dialog"');
+    expect(dialog).toContain('aria-modal="true"');
+    expect(dialog).toContain('event.key === "Escape"');
+    expect(dialog).toContain("onMouseDown={(event)");
+    expect(dialog).toContain("<iframe");
+    expect(dialog).toContain("<Image");
     expect(modal).toContain("downloadUrl");
-    expect(modal).toContain("copy.attachmentModalDownload");
+    expect(dialog).toContain("copy.attachmentModalDownload");
 
     expect(previewRoute).toContain("requireRole");
     expect(previewRoute).toContain("loadPatientHealthHistoryAttachment");

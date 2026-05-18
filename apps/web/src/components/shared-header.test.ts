@@ -14,10 +14,17 @@ describe("shared header state", () => {
     expect(source).toContain(
       "fixed inset-x-0 top-0 z-50 border-b border-[var(--color-stone-surface)] bg-[color-mix(in_srgb,var(--color-warm-canvas)_90%,transparent)] shadow-[0_1px_10px_color-mix(in_srgb,var(--color-midnight)_4%,transparent)] backdrop-blur-md",
     );
-    expect(source).toContain("mx-auto flex h-20 w-full max-w-[1100px] items-center justify-between gap-4 px-6");
+    expect(source).toContain("mx-auto flex h-16 w-full max-w-[1100px] items-center justify-between gap-2 px-4 sm:h-20 sm:gap-4 sm:px-6");
     expect(source).toContain("hidden items-center gap-6 lg:flex");
     expect(source).toContain("<details");
     expect(source).toContain("landing.mobileMenuLabel");
+  });
+
+  it("keeps mobile header controls and menu viewport-safe", () => {
+    expect(source).toContain("h-8 w-auto object-contain sm:h-10");
+    expect(source).toContain("text-xl font-semibold leading-none tracking-tight sm:text-2xl");
+    expect(source).toContain("flex shrink-0 items-center gap-1.5 sm:gap-2");
+    expect(source).toContain("w-[min(calc(100vw-2rem),18rem)] rounded-2xl");
   });
 
   it("uses theme tokens instead of light-only header colors", () => {
@@ -76,5 +83,12 @@ describe("shared header state", () => {
   it("allows authenticated pages to hide the header auth action without changing default behavior", () => {
     expect(source).toContain("showAuthAction = true");
     expect(source).toContain("showAuthAction && action === \"logout\"");
+  });
+
+  it("renders logout through the shared async button with the original teal tone", () => {
+    expect(source).toContain("<PendingSubmitButton");
+    expect(source).toContain("loadingLabel={copy.common.logout}");
+    expect(source).toContain("bg-[var(--color-teal-deep)]");
+    expect(source).toContain("hover:bg-[var(--color-teal-primary)]");
   });
 });

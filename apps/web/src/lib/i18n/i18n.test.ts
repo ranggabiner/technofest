@@ -175,6 +175,9 @@ describe("i18n locale contracts", () => {
       expect(login.emailLabel).toBeTruthy();
       expect(login.passwordLabel).toBeTruthy();
       expect(login.manualSubmit).toBeTruthy();
+      expect(login.manualSubmitting).toBeTruthy();
+      expect(login.oauthSubmitting).toBeTruthy();
+      expect(dictionary[locale].marketing.role.submitting).toBeTruthy();
       expect(login.demoCredentialsTitle).toBeTruthy();
       expect(login.demoCredentialsDescription).toBeTruthy();
       expect(login.demoCredentials).toHaveLength(4);

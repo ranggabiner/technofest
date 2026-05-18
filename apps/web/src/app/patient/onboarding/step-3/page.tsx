@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 import { ArrowRight, Bot, CheckCircle2, LockKeyhole, ShieldAlert } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
+import { PendingSubmitButton } from "@/components/ui/async-action-button";
 import { roleEntryPath } from "@/lib/auth/roles";
 import { requireRole } from "@/lib/auth/session";
 import { getDictionary } from "@/lib/i18n/server";
@@ -30,9 +30,9 @@ export default async function PatientOnboardingStep3Page() {
       variant="form-card"
       themeLabels={copy.common.theme}
     >
-      <form action={completePatientOnboardingAction} className="space-y-12">
+      <form action={completePatientOnboardingAction} className="space-y-10 sm:space-y-12">
         <PatientOnboardingSection icon={<Bot size={20} aria-hidden="true" />} title={copy.patient.onboarding.step3.cardTitle}>
-          <p className="text-[15px] leading-[1.47] text-[var(--color-graphite)]">
+          <p className="text-sm leading-6 text-[var(--color-graphite)]">
             {copy.patient.onboarding.step3.cardDescription}
           </p>
           <div className="mt-6 grid gap-3 md:grid-cols-2">
@@ -42,22 +42,28 @@ export default async function PatientOnboardingStep3Page() {
         </PatientOnboardingSection>
 
         <PatientOnboardingSection icon={<ShieldAlert size={20} aria-hidden="true" />} title={copy.patient.onboarding.step3.safetyTitle}>
-          <div className="rounded-[10px] border border-[var(--color-stone-surface)] bg-[var(--color-warm-canvas)] p-4 text-[15px] leading-[1.47] text-[var(--color-graphite)]">
+          <div className="rounded-[10px] border border-[var(--color-stone-surface)] bg-[var(--color-warm-canvas)] p-4 text-sm leading-6 text-[var(--color-graphite)]">
             {copy.patient.onboarding.step3.warning}
           </div>
         </PatientOnboardingSection>
 
-        <div className="flex items-center justify-between border-t border-[var(--color-stone-surface)] pt-6">
+        <div className="grid gap-3 border-t border-[var(--color-stone-surface)] pt-6 sm:flex sm:items-center sm:justify-between">
           <Link
             href="/patient/onboarding/step-2"
-            className="rounded-full px-4 py-2 text-[15px] leading-[1.47] text-[var(--color-graphite)] transition-colors hover:bg-[var(--color-warm-canvas)] hover:text-[var(--color-midnight)]"
+            className="inline-flex min-h-11 items-center rounded-full px-4 py-2 text-sm leading-6 text-[var(--color-graphite)] transition-colors hover:bg-[var(--color-warm-canvas)] hover:text-[var(--color-midnight)]"
           >
             {copy.patient.onboarding.back}
           </Link>
-          <Button type="submit" variant="secondary" className="min-h-10 px-4 text-[15px] font-medium leading-[1.47]">
+          <PendingSubmitButton
+            type="submit"
+            variant="secondary"
+            className="w-full px-4 text-sm font-medium leading-6 sm:w-auto"
+            loadingLabel={copy.marketing.role.submitting}
+            slotClassName="w-full sm:w-auto"
+          >
             {copy.patient.onboarding.complete}
             <ArrowRight size={16} aria-hidden="true" />
-          </Button>
+          </PendingSubmitButton>
         </div>
       </form>
     </PatientOnboardingShell>
@@ -86,7 +92,7 @@ function PatientOnboardingSection({
     <section className="space-y-6">
       <div className="flex items-center gap-2 border-b border-[var(--color-stone-surface)] pb-2">
         <span className="text-[var(--color-ash)]">{icon}</span>
-        <h2 className="text-[23px] font-semibold leading-[1.2] text-[var(--color-charcoal-primary)]">{title}</h2>
+        <h2 className="text-xl font-semibold leading-tight text-[var(--color-charcoal-primary)] sm:text-xl">{title}</h2>
       </div>
       {children}
     </section>

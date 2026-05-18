@@ -5,6 +5,7 @@ import { LogOut, Menu } from "lucide-react";
 import { BrandScrollTopButton } from "@/components/brand-scroll-top-button";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { PendingSubmitButton } from "@/components/ui/async-action-button";
 import { cn } from "@/lib/utils";
 
 export const MEDPROOF_LOGO_SRC = "/assets/landing/logo.webp";
@@ -83,14 +84,14 @@ export async function SharedHeader({
   const visiblePrimaryAction = showAuthAction && action === "login" ? loginAction : null;
   const hasMobileMenu = navigation.length > 0 || Boolean(visiblePrimaryAction);
   const brandRootClassName = "flex min-w-0 cursor-pointer items-center gap-2 text-[var(--color-teal-deep)]";
-  const brandLogoClassName = "h-10 w-auto object-contain";
-  const brandTextClassName = "truncate font-[var(--font-landing-serif)] text-[28px] font-bold leading-none";
+  const brandLogoClassName = "h-8 w-auto object-contain sm:h-10";
+  const brandTextClassName = "truncate text-xl font-semibold leading-none tracking-tight sm:text-2xl";
 
   return (
     <header className={cn(headerPositionClass[position], className)}>
       <div
         className={cn(
-          "mx-auto flex h-20 w-full max-w-[1100px] items-center justify-between gap-4 px-6",
+          "mx-auto flex h-16 w-full max-w-[1100px] items-center justify-between gap-2 px-4 sm:h-20 sm:gap-4 sm:px-6",
           maxWidth === "none" && "max-w-none",
         )}
       >
@@ -130,33 +131,34 @@ export async function SharedHeader({
           </nav>
         ) : null}
 
-        <div className="flex shrink-0 items-center gap-2">
+        <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
           {showLanguageSwitcher ? <LanguageSwitcher key={locale} locale={locale} labels={copy.common.languageToggle} /> : null}
           {showThemeToggle ? <ThemeToggle labels={copy.common.theme} /> : null}
           {contextAction ? (
             <Link
               href={contextAction.href}
-              className="hidden min-h-11 cursor-pointer items-center justify-center rounded-full border border-[var(--color-stone-surface)] bg-[var(--color-card)] px-5 text-[13px] font-semibold leading-none text-[var(--color-teal-deep)] transition-colors hover:bg-[var(--color-teal-surface)] sm:inline-flex"
+              className="hidden min-h-11 cursor-pointer items-center justify-center rounded-full border border-[var(--color-stone-surface)] bg-[var(--color-card)] px-5 text-sm font-semibold leading-none text-[var(--color-teal-deep)] transition-colors hover:bg-[var(--color-teal-surface)] sm:inline-flex"
             >
               {contextAction.label}
             </Link>
           ) : null}
           {showAuthAction && action === "logout" ? (
             <form action={signOutAction}>
-              <button
+              <PendingSubmitButton
                 type="submit"
-                className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-full bg-[var(--color-teal-deep)] px-4 text-[14px] font-semibold text-[var(--color-inverted)] transition-colors hover:bg-[var(--color-teal-primary)]"
+                className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-full bg-[var(--color-teal-deep)] px-4 text-sm font-semibold text-[var(--color-inverted)] transition-colors hover:bg-[var(--color-teal-primary)]"
+                loadingLabel={copy.common.logout}
               >
                 <span className="hidden sm:inline">{copy.common.logout}</span>
                 <LogOut size={15} aria-hidden="true" />
-              </button>
+              </PendingSubmitButton>
             </form>
           ) : null}
           {visiblePrimaryAction ? (
             <div className="hidden items-center lg:flex">
               <Link
                 href={visiblePrimaryAction.href}
-                className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-full border-2 border-[var(--color-teal-deep)] bg-[var(--color-card)] px-6 text-[14px] font-semibold leading-none text-[var(--color-teal-deep)] transition-colors hover:bg-[var(--color-teal-deep)] hover:text-[var(--color-inverted)]"
+                className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-full border-2 border-[var(--color-teal-deep)] bg-[var(--color-card)] px-6 text-sm font-semibold leading-none text-[var(--color-teal-deep)] transition-colors hover:bg-[var(--color-teal-deep)] hover:text-[var(--color-inverted)]"
               >
                 {visiblePrimaryAction.label}
               </Link>
@@ -171,7 +173,7 @@ export async function SharedHeader({
               >
                 <Menu size={24} aria-hidden="true" />
               </summary>
-              <div className="absolute right-0 mt-3 w-64 rounded-3xl border border-[var(--color-stone-surface)] bg-[var(--color-card)] p-4 shadow-[var(--shadow-elevated)]">
+              <div className="absolute right-0 mt-3 w-[min(calc(100vw-2rem),18rem)] rounded-2xl border border-[var(--color-stone-surface)] bg-[var(--color-card)] p-4 shadow-[var(--shadow-elevated)] sm:rounded-3xl">
                 <nav className="flex flex-col gap-1" aria-label={navigationLabel ?? copy.marketing.primaryNavLabel}>
                   {navigation.map((item) => (
                     <HeaderNavigationItem key={`${item.label}-${item.href ?? "button"}-mobile`} item={item} variant="mobile" />
@@ -179,7 +181,7 @@ export async function SharedHeader({
                   {visiblePrimaryAction ? (
                     <Link
                       href={visiblePrimaryAction.href}
-                      className="mt-2 inline-flex min-h-11 cursor-pointer items-center justify-center rounded-full bg-[var(--color-teal-deep)] px-5 text-[14px] font-semibold text-[var(--color-inverted)] transition-colors hover:bg-[var(--color-teal-primary)]"
+                      className="mt-2 inline-flex min-h-11 cursor-pointer items-center justify-center rounded-full bg-[var(--color-teal-deep)] px-5 text-sm font-semibold text-[var(--color-inverted)] transition-colors hover:bg-[var(--color-teal-primary)]"
                     >
                       {visiblePrimaryAction.label}
                     </Link>
@@ -204,11 +206,11 @@ function HeaderNavigationItem({
   const className =
     variant === "mobile"
       ? cn(
-          "cursor-pointer rounded-full px-4 py-3 text-[14px] font-medium text-[var(--color-graphite)] transition-colors hover:bg-[var(--color-teal-surface)] hover:text-[var(--color-teal-deep)]",
+          "cursor-pointer rounded-full px-4 py-3 text-sm font-medium text-[var(--color-graphite)] transition-colors hover:bg-[var(--color-teal-surface)] hover:text-[var(--color-teal-deep)]",
           item.active && "bg-[var(--color-teal-surface)] text-[var(--color-teal-deep)]",
         )
       : cn(
-          "cursor-pointer text-[15px] font-medium text-[var(--color-graphite)] transition-colors hover:text-[var(--color-teal-deep)]",
+          "cursor-pointer text-sm font-medium text-[var(--color-graphite)] transition-colors hover:text-[var(--color-teal-deep)]",
           item.active && "text-[var(--color-teal-deep)]",
         );
 

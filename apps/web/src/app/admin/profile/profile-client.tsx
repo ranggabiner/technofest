@@ -6,6 +6,7 @@ import {
   ProfileConfirmationHost,
   openProfileConfirmation,
 } from "@/app/_components/profile-shell";
+import { PendingSubmitButton } from "@/components/ui/async-action-button";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Label } from "@/components/ui/form";
 import type { Dictionary } from "@/lib/i18n/dictionary";
@@ -34,11 +35,11 @@ export function AdminProfileClient({
       <form
         ref={formRef}
         action={updateAdminProfileAction}
-        className="rounded-xl border border-[var(--color-stone-surface)] bg-[var(--color-card)] p-6 shadow-[var(--shadow-subtle)]"
+        className="rounded-xl border border-[var(--color-stone-surface)] bg-[var(--color-card)] p-5 shadow-[var(--shadow-subtle)] sm:p-6"
       >
-        <div className="mb-6 flex items-center justify-between gap-4">
+        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <h1 className="text-2xl font-semibold text-[var(--color-midnight)]">{copy.admin.title}</h1>
-          <Button type="button" variant="secondary" className="rounded-[10px]" onClick={() => setIsEditing(true)}>
+          <Button type="button" variant="secondary" className="w-full rounded-[10px] sm:w-auto" onClick={() => setIsEditing(true)}>
             {copy.admin.edit}
           </Button>
         </div>
@@ -80,11 +81,11 @@ function ProfileFormControls({
   onCancel: () => void;
 }) {
   return (
-    <div className="mt-6 flex justify-end gap-3">
+    <div className="mt-6 grid gap-2 sm:flex sm:justify-end sm:gap-3">
       <Button
         type="button"
         variant="ghost"
-        className="rounded-[10px]"
+        className="w-full rounded-[10px] sm:w-auto"
         onClick={() =>
           openProfileConfirmation({
             title: copy.confirm.cancelTitle,
@@ -97,9 +98,11 @@ function ProfileFormControls({
       >
         {copy.admin.cancel}
       </Button>
-      <Button
+      <PendingSubmitButton
         type="button"
-        className="rounded-[10px]"
+        className="w-full rounded-[10px] sm:w-auto"
+        loadingLabel={copy.admin.save}
+        slotClassName="w-full sm:w-auto"
         onClick={() =>
           openProfileConfirmation({
             title: copy.confirm.saveTitle,
@@ -111,7 +114,7 @@ function ProfileFormControls({
         }
       >
         {copy.admin.save}
-      </Button>
+      </PendingSubmitButton>
     </div>
   );
 }

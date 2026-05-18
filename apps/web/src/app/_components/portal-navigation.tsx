@@ -109,7 +109,7 @@ export function PortalDesktopNavigation({
 }) {
   return (
     <nav className="flex flex-col gap-1" aria-label={ariaLabel}>
-      <span className="mb-4 block px-3 text-[19px] font-semibold uppercase tracking-[0.18em] text-[var(--color-ash)]">
+      <span className="mb-4 block px-3 text-lg font-semibold uppercase tracking-widest text-[var(--color-ash)]">
         {sectionLabel}
       </span>
       {items.map((item) => (
@@ -118,7 +118,7 @@ export function PortalDesktopNavigation({
           href={item.href}
           aria-current={item.active ? "page" : undefined}
           className={cn(
-            "flex min-h-10 cursor-pointer items-center gap-4 rounded-lg px-3 py-2 text-[15px] font-medium text-[var(--color-ash)] transition hover:bg-[color-mix(in_srgb,var(--color-teal-primary)_5%,transparent)] hover:text-[var(--color-teal-deep)]",
+            "flex min-h-11 cursor-pointer items-center gap-4 rounded-lg px-3 py-2 text-sm font-medium text-[var(--color-ash)] transition hover:bg-[color-mix(in_srgb,var(--color-teal-primary)_5%,transparent)] hover:text-[var(--color-teal-deep)]",
             item.active && "bg-[color-mix(in_srgb,var(--color-teal-primary)_10%,transparent)] text-[var(--color-teal-deep)]",
           )}
         >
@@ -154,7 +154,7 @@ export function PortalMobileNavigation({
           href={item.href}
           aria-current={item.active ? "page" : undefined}
           className={cn(
-            "inline-flex min-h-10 shrink-0 cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-[var(--color-ash)]",
+            "inline-flex min-h-11 shrink-0 cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-[var(--color-ash)]",
             item.active && "bg-[color-mix(in_srgb,var(--color-teal-primary)_10%,transparent)] text-[var(--color-teal-deep)]",
           )}
         >

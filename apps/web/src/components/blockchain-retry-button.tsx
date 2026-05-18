@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { RefreshCw } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
+import { LoadingActionButton } from "@/components/ui/async-action-button";
 import { Skeleton } from "@/components/ui/skeleton";
 
 type RetryResult = {
@@ -26,8 +26,12 @@ export function BlockchainRetryButton({
 }) {
   const [isRunning, setIsRunning] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const runningRef = useRef(false);
 
   async function runRetry() {
+    if (runningRef.current) return;
+
+    runningRef.current = true;
     setIsRunning(true);
     setMessage(null);
     try {
@@ -49,16 +53,24 @@ export function BlockchainRetryButton({
     } catch (error) {
       setMessage(error instanceof Error ? error.message : copy.failed);
     } finally {
+      runningRef.current = false;
       setIsRunning(false);
     }
   }
 
   return (
     <div className="grid gap-2 rounded-[10px] bg-[var(--color-parchment-card)] p-4 text-sm">
-      <Button type="button" className="w-fit rounded-[10px]" onClick={runRetry} disabled={isRunning}>
+      <LoadingActionButton
+        type="button"
+        className="w-full rounded-[10px] sm:w-fit"
+        isLoading={isRunning}
+        loadingLabel={copy.buttonRunning}
+        onClick={runRetry}
+        slotClassName="w-full sm:w-fit"
+      >
         <RefreshCw size={16} />
-        {isRunning ? copy.buttonRunning : copy.buttonIdle}
-      </Button>
+        {copy.buttonIdle}
+      </LoadingActionButton>
       {isRunning ? (
         <Skeleton className="h-4 w-full max-w-md" />
       ) : message ? (

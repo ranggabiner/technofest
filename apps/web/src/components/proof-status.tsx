@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { ShieldCheck } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
+import { LoadingActionButton } from "@/components/ui/async-action-button";
 import type { ProofType, VerifyStatus } from "@/lib/blockchain/proofs";
 
 type VerifyResponse = {
@@ -41,9 +41,13 @@ export function ProofStatus({
 }) {
   const [isVerifying, setIsVerifying] = useState(false);
   const [result, setResult] = useState<VerifyResponse | null>(null);
+  const verifyingRef = useRef(false);
   const canVerify = blockchainStatus === "confirmed" && Boolean(txHash);
 
   async function verify() {
+    if (verifyingRef.current) return;
+
+    verifyingRef.current = true;
     setIsVerifying(true);
     setResult(null);
     try {
@@ -61,6 +65,7 @@ export function ProofStatus({
         message: error instanceof Error ? error.message : messages.verifyFailed,
       });
     } finally {
+      verifyingRef.current = false;
       setIsVerifying(false);
     }
   }
@@ -72,16 +77,18 @@ export function ProofStatus({
         <p className="break-all font-mono text-xs text-[var(--color-ash)]">{messages.txPrefix}: {txHash}</p>
       ) : null}
       {canVerify ? (
-        <Button
+        <LoadingActionButton
           type="button"
           variant="secondary"
-          className="w-fit rounded-[10px]"
+          className="w-full rounded-[10px] sm:w-fit"
           onClick={verify}
-          disabled={isVerifying}
+          isLoading={isVerifying}
+          loadingLabel={messages.verifying}
+          slotClassName="w-full sm:w-fit"
         >
           <ShieldCheck size={16} />
-          {isVerifying ? messages.verifying : messages.verify}
-        </Button>
+          {messages.verify}
+        </LoadingActionButton>
       ) : null}
       {result?.message ? (
         <p className={result.status === "mismatch" ? "font-semibold text-[var(--color-error-red)]" : "text-[var(--color-ash)]"}>

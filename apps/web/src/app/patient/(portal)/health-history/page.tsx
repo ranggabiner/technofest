@@ -26,12 +26,12 @@ export default async function PatientHealthHistoryPage() {
   if (!role.patientId || onboardingPath) redirect(onboardingPath ?? "/login/role");
 
   return (
-    <section className="grid gap-12" data-health-history-page="main">
+    <section className="grid gap-8 sm:gap-12" data-health-history-page="main">
       <header>
-        <h1 className="font-serif text-[48px] font-semibold leading-none tracking-[-0.01em] text-[var(--color-midnight)] md:text-[64px]">
+        <h1 className="text-3xl font-semibold leading-tight tracking-normal text-[var(--color-midnight)] sm:text-4xl md:text-5xl">
           {copy.patient.healthHistory.title}
         </h1>
-        <p className="mt-5 max-w-2xl text-[17px] leading-7 text-[var(--color-graphite)]">
+        <p className="mt-5 max-w-2xl text-base leading-7 text-[var(--color-graphite)]">
           {copy.patient.healthHistory.description}
         </p>
       </header>
@@ -82,21 +82,21 @@ function HealthHistoryOverviewCard({
 }) {
   return (
     <DashboardCard
-      className="grid min-h-[375px] content-between gap-10 rounded-[16px] p-8 md:p-9"
+      className="grid content-between gap-8 rounded-[16px] p-5 sm:p-8 md:min-h-[375px] md:p-9"
       data-health-history-card={cardKey}
     >
       <div>
-        <span className="mb-10 grid size-16 place-items-center rounded-[10px] bg-[var(--color-teal-surface)] text-[var(--color-teal-deep)]">
+        <span className="mb-8 grid size-14 place-items-center rounded-[10px] bg-[var(--color-teal-surface)] text-[var(--color-teal-deep)] sm:mb-10 sm:size-16">
           {icon}
         </span>
-        <h2 className="text-[28px] font-semibold leading-tight text-[var(--color-midnight)]">
+        <h2 className="text-2xl font-semibold leading-tight text-[var(--color-midnight)]">
           {title}
         </h2>
-        <p className="mt-6 max-w-xl text-[17px] leading-8 text-[var(--color-graphite)]">
+        <p className="mt-6 max-w-xl text-base leading-8 text-[var(--color-graphite)]">
           {description}
         </p>
       </div>
-      <Button asChild variant="secondary" className="min-h-14 w-fit px-8 text-base">
+      <Button asChild variant="secondary" className="min-h-14 w-full px-8 text-base sm:w-fit">
         <PatientTransitionLink href={href}>
           {cta}
           <ArrowRight size={20} aria-hidden="true" />

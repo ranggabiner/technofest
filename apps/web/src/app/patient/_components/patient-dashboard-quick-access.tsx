@@ -2,6 +2,7 @@
 
 import type { ClipboardEvent, FormEvent } from "react";
 import { useCallback, useState } from "react";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { ArrowRight, QrCode } from "lucide-react";
 
@@ -14,8 +15,15 @@ import {
   preventNonNumericDoctorCodeInput,
 } from "./doctor-code-input";
 import { savePendingDoctorLookup } from "./doctor-lookup-handoff";
-import { DoctorQrScannerModal } from "./doctor-qr-scanner-modal";
 import { usePatientNavigationTransition } from "./patient-navigation-transition";
+
+const DoctorQrScannerModal = dynamic(
+  () => import("./doctor-qr-scanner-modal").then((module) => module.DoctorQrScannerModal),
+  {
+    ssr: false,
+    loading: () => <DoctorQrScannerModalFallback />,
+  },
+);
 
 export function PatientDashboardQuickAccess({ copy }: { copy: Dictionary }) {
   const router = useRouter();
@@ -70,10 +78,10 @@ export function PatientDashboardQuickAccess({ copy }: { copy: Dictionary }) {
     <div className="flex h-full flex-col gap-8">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-ash)]">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-[var(--color-ash)]">
             {copy.patient.dashboard.quickIdentityLabel}
           </p>
-          <h2 className="text-[23px] font-semibold leading-tight text-[var(--color-midnight)]">
+          <h2 className="text-xl font-semibold leading-tight text-[var(--color-midnight)]">
             {copy.patient.dashboard.qrTitle}
           </h2>
         </div>
@@ -86,7 +94,7 @@ export function PatientDashboardQuickAccess({ copy }: { copy: Dictionary }) {
           >
             <QrCode size={46} aria-hidden="true" className="transition group-hover:scale-[1.04]" />
           </button>
-          <span className="text-center text-[10px] font-semibold uppercase leading-4 tracking-[0.08em] text-[var(--color-teal-deep)]">
+          <span className="text-center text-xs font-semibold uppercase leading-4 tracking-widest text-[var(--color-teal-deep)]">
             {copy.patient.dashboard.scanQrDoctor}
           </span>
         </div>
@@ -100,7 +108,7 @@ export function PatientDashboardQuickAccess({ copy }: { copy: Dictionary }) {
 
       <form className="mt-auto grid gap-3 border-t border-[var(--color-stone-surface)] pt-6" onSubmit={submitLookup}>
         <label
-          className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-ash)]"
+          className="text-xs font-semibold uppercase tracking-widest text-[var(--color-ash)]"
           htmlFor="dashboard_doctor_lookup"
         >
           {copy.patient.dashboard.doctorCodeLabel}
@@ -128,12 +136,34 @@ export function PatientDashboardQuickAccess({ copy }: { copy: Dictionary }) {
         </div>
       </form>
 
-      <DoctorQrScannerModal
-        copy={copy}
-        onClose={closeScannerModal}
-        onScan={handleQrScan}
-        open={scannerModalOpen}
-      />
+      {scannerModalOpen ? (
+        <DoctorQrScannerModal
+          copy={copy}
+          onClose={closeScannerModal}
+          onScan={handleQrScan}
+          open={scannerModalOpen}
+        />
+      ) : null}
+    </div>
+  );
+}
+
+function DoctorQrScannerModalFallback() {
+  return (
+    <div className="fixed inset-0 z-50 grid place-items-center overflow-y-auto bg-[color-mix(in_srgb,var(--color-ash)_28%,transparent)] p-3 backdrop-blur-sm sm:p-4">
+      <section className="my-4 grid max-h-[calc(100dvh-2rem)] min-h-[320px] w-full max-w-[560px] animate-pulse overflow-hidden rounded-[18px] border border-[var(--color-stone-surface)] bg-[var(--color-card)] shadow-[0_24px_80px_rgba(18,18,18,0.18),inset_0_0_0_1px_var(--color-stone-surface)] sm:my-6">
+        <div className="px-5 pb-4 pt-5 sm:px-6">
+          <div className="h-7 w-40 rounded-[10px] bg-[color-mix(in_srgb,var(--color-ash)_18%,transparent)]" />
+          <div className="mt-3 h-4 w-full max-w-sm rounded-[10px] bg-[color-mix(in_srgb,var(--color-ash)_18%,transparent)]" />
+        </div>
+        <div className="grid gap-4 px-5 pb-5 sm:px-6">
+          <div className="aspect-video rounded-[14px] bg-[color-mix(in_srgb,var(--color-midnight)_82%,transparent)]" />
+          <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-between">
+            <div className="h-11 rounded-[10px] bg-[color-mix(in_srgb,var(--color-ash)_18%,transparent)] sm:w-28" />
+            <div className="h-11 rounded-[10px] bg-[color-mix(in_srgb,var(--color-ash)_18%,transparent)] sm:w-32" />
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

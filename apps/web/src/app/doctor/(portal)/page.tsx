@@ -20,10 +20,10 @@ export default async function DoctorDashboardPage() {
   return (
     <section className="grid gap-8" data-doctor-dashboard-page="main">
       <header className="border-b border-[var(--color-stone-surface)] pb-5">
-        <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-ash)]">
+        <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-[var(--color-ash)]">
           {copy.doctor.dashboard.sidebarSection}
         </p>
-        <h1 className="text-[36px] font-semibold leading-[1.1] text-[var(--color-midnight)] md:text-[44px]">
+        <h1 className="text-3xl font-semibold leading-tight text-[var(--color-midnight)] sm:text-4xl md:text-5xl">
           {copy.doctor.dashboard.title}
         </h1>
         <p className="mt-3 max-w-2xl text-base leading-7 text-[var(--color-ash)]">

@@ -12,6 +12,7 @@ import {
 
 import { SharedHeader } from "@/components/shared-header";
 import { SiteFooter } from "@/components/site-footer";
+import { PendingSubmitButton } from "@/components/ui/async-action-button";
 import type { getDictionary } from "@/lib/i18n/server";
 import { landingLoginHref } from "@/lib/i18n/marketing";
 
@@ -33,7 +34,6 @@ export type LoginOption = LoginCopy["optionCards"][number] & {
 type LoginPageShellProps = {
   authError: string | null;
   copy: LoginCopy;
-  copyright: string;
   description: string;
   desktopAside?: ReactNode;
   desktopBreakpoint?: "md" | "lg";
@@ -43,19 +43,18 @@ type LoginPageShellProps = {
 
 const responsiveSectionClassNames = {
   md: {
-    desktop: "hidden flex-1 items-center justify-center px-6 pt-16 md:flex",
-    mobile: "flex flex-1 flex-col items-center justify-center px-6 pb-10 pt-32 md:hidden",
+    desktop: "hidden flex-1 items-center justify-center px-6 pb-20 pt-24 md:flex",
+    mobile: "flex flex-1 flex-col items-center justify-center px-4 pb-16 pt-24 sm:px-6 sm:pb-20 sm:pt-32 md:hidden",
   },
   lg: {
-    desktop: "hidden flex-1 items-center justify-center px-6 pt-16 lg:flex",
-    mobile: "flex flex-1 flex-col items-center justify-center px-6 pb-10 pt-32 lg:hidden",
+    desktop: "hidden flex-1 items-center justify-center px-6 pb-20 pt-24 lg:flex",
+    mobile: "flex flex-1 flex-col items-center justify-center px-4 pb-16 pt-24 sm:px-6 sm:pb-20 sm:pt-32 lg:hidden",
   },
 } as const;
 
 export function LoginPageShell({
   authError,
   copy,
-  copyright,
   description,
   desktopAside,
   desktopBreakpoint = "md",
@@ -72,9 +71,9 @@ export function LoginPageShell({
     : "mx-auto grid w-full max-w-[1100px] grid-cols-2 items-center gap-[120px]";
 
   return (
-    <div className="flex min-h-screen flex-col bg-[var(--color-warm-canvas)] text-[var(--color-graphite)]">
+    <div className="flex min-h-dvh flex-col bg-[var(--color-warm-canvas)] text-[var(--color-graphite)]">
       <SharedHeader authMode="public" navigationItems={[]} showAuthAction={false} />
-      <main className="flex min-h-screen flex-1 flex-col">
+      <main className="flex min-h-dvh flex-1 flex-col">
         <section className={sectionClassNames.desktop}>
           <div className={desktopLayoutClassName}>
             {desktopAside ? (
@@ -89,10 +88,10 @@ export function LoginPageShell({
                       <feature.icon size={18} className="text-[var(--color-midnight)]" aria-hidden="true" />
                     </span>
                     <div>
-                      <h2 className="mb-2 text-[23px] font-semibold leading-tight text-[var(--color-charcoal-primary)]">
+                      <h2 className="mb-2 text-xl font-semibold leading-tight text-[var(--color-charcoal-primary)]">
                         {feature.title}
                       </h2>
-                      <p className="text-[15px] leading-6 text-[var(--color-graphite)]">
+                      <p className="text-sm leading-6 text-[var(--color-graphite)]">
                         {feature.description}
                       </p>
                     </div>
@@ -104,7 +103,6 @@ export function LoginPageShell({
             <div className="flex justify-center">
               <LoginCard
                 authError={authError}
-                copyright={copyright}
                 description={description}
                 privacy={copy.privacy}
                 title={title}
@@ -117,15 +115,15 @@ export function LoginPageShell({
 
         <section className={sectionClassNames.mobile}>
           <div className="mx-auto w-full max-w-[420px] text-center">
-            <h1 className="mb-4 font-serif text-[44px] font-medium leading-[1.08] text-[var(--color-midnight)]">
+            <h1 className="mb-4 text-4xl font-medium leading-tight text-[var(--color-midnight)] sm:text-5xl">
               {title}
             </h1>
-            <p className="mx-auto mb-8 max-w-[340px] text-[15px] leading-6 text-[var(--color-graphite)]">
+            <p className="mx-auto mb-8 max-w-[340px] text-sm leading-6 text-[var(--color-graphite)]">
               {description}
             </p>
             {authError ? <LoginErrorMessage message={authError} /> : null}
             <div className="space-y-5 text-left">{renderContent("mobile")}</div>
-            <p className="mx-auto mt-6 max-w-[320px] text-[12px] leading-5 text-[var(--color-graphite)]">
+            <p className="mx-auto mt-6 max-w-[320px] text-xs leading-5 text-[var(--color-graphite)]">
               {copy.privacy}
             </p>
           </div>
@@ -146,18 +144,18 @@ export function LoginOptionGrid({ options }: { options: readonly LoginOption[] }
           <Link
             key={option.href}
             href={option.href}
-            className="group flex min-h-[168px] cursor-pointer flex-col rounded-xl border border-[var(--color-stone-surface)] bg-[var(--color-warm-canvas)] p-5 text-left transition duration-300 hover:-translate-y-0.5 hover:border-[var(--color-midnight)] hover:bg-[var(--color-card)]"
+            className="group flex min-h-[144px] cursor-pointer flex-col rounded-xl border border-[var(--color-stone-surface)] bg-[var(--color-warm-canvas)] p-4 text-left transition duration-300 hover:-translate-y-0.5 hover:border-[var(--color-midnight)] hover:bg-[var(--color-card)] sm:min-h-[168px] sm:p-5"
           >
             <span className="mb-5 flex size-11 items-center justify-center rounded-full bg-[var(--color-stone-surface)] text-[var(--color-midnight)] transition group-hover:bg-[var(--color-midnight)] group-hover:text-[var(--color-inverted)]">
               <Icon size={19} aria-hidden="true" />
             </span>
-            <span className="mb-2 text-[21px] font-semibold leading-tight text-[var(--color-charcoal-primary)]">
+            <span className="mb-2 text-xl font-semibold leading-tight text-[var(--color-charcoal-primary)]">
               {option.title}
             </span>
-            <span className="text-[13px] leading-5 text-[var(--color-graphite)]">
+            <span className="text-sm leading-5 text-[var(--color-graphite)]">
               {option.description}
             </span>
-            <span className="mt-5 inline-flex items-center gap-2 text-[12px] font-semibold text-[var(--color-teal-deep)]">
+            <span className="mt-5 inline-flex items-center gap-2 text-xs font-semibold text-[var(--color-teal-deep)]">
               {option.actionLabel}
               <ArrowRight size={14} aria-hidden="true" />
             </span>
@@ -171,9 +169,9 @@ export function LoginOptionGrid({ options }: { options: readonly LoginOption[] }
 export function ManualLoginForm({ copy }: { copy: LoginCopy }) {
   return (
     <section className="rounded-[10px] border border-[var(--color-stone-surface)] bg-[var(--color-warm-canvas)] p-4">
-      <h2 className="mb-3 text-[15px] font-semibold text-[var(--color-midnight)]">{copy.manualTitle}</h2>
+      <h2 className="mb-3 text-sm font-semibold text-[var(--color-midnight)]">{copy.manualTitle}</h2>
       <form action={startManualLoginAction} className="space-y-3">
-        <label className="block text-[12px] font-semibold text-[var(--color-ash)]">
+        <label className="block text-xs font-semibold text-[var(--color-ash)]">
           <span>{copy.emailLabel}</span>
           <input
             name="email"
@@ -181,10 +179,10 @@ export function ManualLoginForm({ copy }: { copy: LoginCopy }) {
             required
             autoComplete="email"
             placeholder={copy.emailPlaceholder}
-            className="mt-1.5 min-h-11 w-full rounded-[10px] border border-[var(--color-stone-surface)] bg-[var(--color-card)] px-3 text-[14px] font-medium text-[var(--color-midnight)] outline-none transition placeholder:text-[var(--color-ash)] focus:border-[var(--color-teal-primary)]"
+            className="mt-1.5 min-h-11 w-full rounded-[10px] border border-[var(--color-stone-surface)] bg-[var(--color-card)] px-3 text-sm font-medium text-[var(--color-midnight)] outline-none transition placeholder:text-[var(--color-ash)] focus:border-[var(--color-teal-primary)]"
           />
         </label>
-        <label className="block text-[12px] font-semibold text-[var(--color-ash)]">
+        <label className="block text-xs font-semibold text-[var(--color-ash)]">
           <span>{copy.passwordLabel}</span>
           <input
             name="password"
@@ -192,15 +190,17 @@ export function ManualLoginForm({ copy }: { copy: LoginCopy }) {
             required
             autoComplete="current-password"
             placeholder={copy.passwordPlaceholder}
-            className="mt-1.5 min-h-11 w-full rounded-[10px] border border-[var(--color-stone-surface)] bg-[var(--color-card)] px-3 text-[14px] font-medium text-[var(--color-midnight)] outline-none transition placeholder:text-[var(--color-ash)] focus:border-[var(--color-teal-primary)]"
+            className="mt-1.5 min-h-11 w-full rounded-[10px] border border-[var(--color-stone-surface)] bg-[var(--color-card)] px-3 text-sm font-medium text-[var(--color-midnight)] outline-none transition placeholder:text-[var(--color-ash)] focus:border-[var(--color-teal-primary)]"
           />
         </label>
-        <button
+        <PendingSubmitButton
           type="submit"
-          className="inline-flex min-h-11 w-full cursor-pointer items-center justify-center rounded-full bg-[var(--color-teal-primary)] px-5 py-2.5 text-[14px] font-semibold text-[var(--color-inverted)] transition hover:bg-[var(--color-teal-deep)]"
+          className="inline-flex min-h-11 w-full cursor-pointer items-center justify-center rounded-full bg-[var(--color-teal-primary)] px-5 py-2.5 text-sm font-semibold text-[var(--color-inverted)] transition hover:bg-[var(--color-teal-deep)]"
+          loadingLabel={copy.manualSubmitting}
+          slotClassName="w-full"
         >
           {copy.manualSubmit}
-        </button>
+        </PendingSubmitButton>
       </form>
     </section>
   );
@@ -209,28 +209,32 @@ export function ManualLoginForm({ copy }: { copy: LoginCopy }) {
 export function GoogleLoginForm({
   className,
   label,
+  loadingLabel,
   title,
 }: {
   className?: string;
   label: string;
+  loadingLabel: string;
   title: string;
 }) {
   return (
     <section className="rounded-[10px] border border-[var(--color-stone-surface)] bg-[var(--color-card)] p-4">
-      <h2 className="mb-3 text-[15px] font-semibold text-[var(--color-midnight)]">{title}</h2>
+      <h2 className="mb-3 text-sm font-semibold text-[var(--color-midnight)]">{title}</h2>
       <form action={startGoogleOAuthAction}>
-        <button
+        <PendingSubmitButton
           type="submit"
           className={[
-            "inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-full bg-[var(--color-midnight)] px-5 py-3 text-[15px] font-semibold text-[var(--color-inverted)] transition hover:bg-[var(--color-charcoal-primary)] hover:text-[var(--color-warm-canvas)]",
+            "inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-full bg-[var(--color-midnight)] px-5 py-3 text-sm font-semibold text-[var(--color-inverted)] transition hover:bg-[var(--color-charcoal-primary)] hover:text-[var(--color-warm-canvas)]",
             className,
           ]
             .filter(Boolean)
             .join(" ")}
+          loadingLabel={loadingLabel}
+          slotClassName={className?.includes("w-full") ? "w-full" : undefined}
         >
           <GoogleMark />
           <span>{label}</span>
-        </button>
+        </PendingSubmitButton>
       </form>
     </section>
   );
@@ -244,10 +248,10 @@ export function DemoCredentials({ copy }: { copy: LoginCopy }) {
   return (
     <section className="rounded-[10px] bg-[var(--color-stone-surface)] p-4 text-left">
       <div className="mb-3">
-        <h2 className="text-[14px] font-semibold text-[var(--color-midnight)]">
+        <h2 className="text-sm font-semibold text-[var(--color-midnight)]">
           {copy.demoCredentialsTitle}
         </h2>
-        <p className="mt-1 text-[12px] leading-5 text-[var(--color-ash)]">
+        <p className="mt-1 text-xs leading-5 text-[var(--color-ash)]">
           {copy.demoCredentialsDescription}
         </p>
       </div>
@@ -257,7 +261,7 @@ export function DemoCredentials({ copy }: { copy: LoginCopy }) {
             key={credential.email}
             className="rounded-[10px] border border-[color-mix(in_srgb,var(--color-midnight)_8%,transparent)] bg-[color-mix(in_srgb,var(--color-card)_70%,transparent)] p-3"
           >
-            <p className="text-[12px] font-semibold text-[var(--color-midnight)]">{credential.role}</p>
+            <p className="text-xs font-semibold text-[var(--color-midnight)]">{credential.role}</p>
             <CredentialValue
               label={copy.emailLabel}
               value={credential.email}
@@ -281,7 +285,7 @@ export function BackToLoginOptions({ label }: { label: string }) {
   return (
     <Link
       href={landingLoginHref}
-      className="inline-flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-full border border-[var(--color-stone-surface)] bg-[var(--color-card)] px-4 text-[12px] font-semibold text-[var(--color-teal-deep)] transition hover:bg-[var(--color-teal-surface)]"
+      className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-full border border-[var(--color-stone-surface)] bg-[var(--color-card)] px-4 text-center text-xs font-semibold text-[var(--color-teal-deep)] transition hover:bg-[var(--color-teal-surface)]"
     >
       <ArrowLeft size={14} aria-hidden="true" />
       {label}
@@ -298,34 +302,29 @@ export function getAuthErrorMessage(authErrors: Record<string, string>, rawError
 function LoginCard({
   authError,
   children,
-  copyright,
   description,
   privacy,
   title,
 }: {
   authError: string | null;
   children: ReactNode;
-  copyright: string;
   description: string;
   privacy: string;
   title: string;
 }) {
   return (
-    <section className="w-full max-w-md rounded-xl bg-[var(--color-card)] p-8 shadow-[inset_0_0_0_1px_var(--color-stone-surface)]">
-      <h1 className="mb-4 text-center font-serif text-[44px] font-medium leading-[1.09] text-[var(--color-charcoal-primary)]">
+    <section className="w-full max-w-md rounded-xl bg-[var(--color-card)] p-5 shadow-[inset_0_0_0_1px_var(--color-stone-surface)] sm:p-8">
+      <h1 className="mb-4 text-center text-4xl font-medium leading-tight text-[var(--color-charcoal-primary)] sm:text-5xl">
         {title}
       </h1>
-      <p className="mb-8 text-center text-[15px] leading-6 text-[var(--color-graphite)]">
+      <p className="mb-8 text-center text-sm leading-6 text-[var(--color-graphite)]">
         {description}
       </p>
       {authError ? <LoginErrorMessage message={authError} /> : null}
       <div className="space-y-5">{children}</div>
       <div className="mt-6 space-y-1 text-center">
-        <p className="text-[12px] leading-5 text-[var(--color-graphite)]">
+        <p className="text-xs leading-5 text-[var(--color-graphite)]">
           {privacy}
-        </p>
-        <p className="text-[12px] leading-5 text-[var(--color-graphite)] opacity-70">
-          {copyright}
         </p>
       </div>
     </section>
@@ -336,7 +335,7 @@ function LoginErrorMessage({ message }: { message: string }) {
   return (
     <div
       role="alert"
-      className="mb-5 flex items-start gap-3 rounded-[10px] bg-[var(--color-error-surface)] p-4 text-left text-[12px] leading-5 text-[var(--color-error-red)]"
+      className="mb-5 flex items-start gap-3 rounded-[10px] bg-[var(--color-error-surface)] p-4 text-left text-xs leading-5 text-[var(--color-error-red)]"
     >
       <AlertTriangle size={16} className="mt-0.5 shrink-0" aria-hidden="true" />
       <span>{message}</span>
@@ -358,8 +357,8 @@ function CredentialValue({
   return (
     <div className="mt-2 flex items-center justify-between gap-3">
       <div className="min-w-0">
-        <span className="block text-[10px] font-semibold uppercase text-[var(--color-ash)]">{label}</span>
-        <code className="block truncate text-[12px] font-semibold text-[var(--color-charcoal-primary)]">
+        <span className="block text-xs font-semibold uppercase text-[var(--color-ash)]">{label}</span>
+        <code className="block truncate text-xs font-semibold text-[var(--color-charcoal-primary)]">
           {value}
         </code>
       </div>

@@ -1,5 +1,5 @@
-import { PatientHealthJournalSkeleton } from "@/components/loading-skeletons";
+import { PatientHealthHistoryJournalSkeleton } from "@/components/loading-skeletons";
 
 export default function Loading() {
-  return <PatientHealthJournalSkeleton />;
+  return <PatientHealthHistoryJournalSkeleton />;
 }

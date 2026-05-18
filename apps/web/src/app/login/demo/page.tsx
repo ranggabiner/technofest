@@ -28,7 +28,6 @@ export default async function DemoLoginPage({
     <LoginPageShell
       authError={authError}
       copy={loginCopy}
-      copyright={copy.common.copyright}
       description={loginCopy.demoPageDescription}
       desktopAside={<DemoCredentials copy={loginCopy} />}
       desktopBreakpoint="lg"

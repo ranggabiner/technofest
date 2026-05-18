@@ -18,10 +18,10 @@ export default async function ArticlesPage() {
       <SharedHeader authMode="public" />
       <main className="mx-auto min-h-screen w-full max-w-[1100px] px-6 pb-24 pt-28 md:pt-32">
         <section className="mx-auto mb-20 max-w-3xl text-center">
-          <h1 className="font-serif text-[34px] font-semibold leading-tight text-[var(--color-charcoal-primary)] md:text-[56px]">
+          <h1 className="text-3xl font-semibold leading-tight tracking-tight text-[var(--color-charcoal-primary)] md:text-6xl">
             {articlesCopy.listTitle}
           </h1>
-          <p className="mx-auto mt-6 max-w-2xl text-[15px] leading-7 text-[var(--color-graphite)]">
+          <p className="mx-auto mt-6 max-w-2xl text-sm leading-7 text-[var(--color-graphite)]">
             {articlesCopy.listDescription}
           </p>
           <label className="sr-only" htmlFor="article-search">
@@ -35,7 +35,7 @@ export default async function ArticlesPage() {
             <input
               id="article-search"
               type="search"
-              className="min-h-14 w-full rounded-xl border border-[var(--color-stone-surface)] bg-[var(--color-card)] px-12 text-[15px] text-[var(--color-charcoal-primary)] outline-none transition focus:shadow-[inset_0_0_0_2px_var(--color-stone-surface)]"
+              className="min-h-14 w-full rounded-xl border border-[var(--color-stone-surface)] bg-[var(--color-card)] px-12 text-sm text-[var(--color-charcoal-primary)] outline-none transition focus:shadow-[inset_0_0_0_2px_var(--color-stone-surface)]"
               placeholder={articlesCopy.searchPlaceholder}
             />
           </div>
@@ -54,24 +54,25 @@ export default async function ArticlesPage() {
                   alt={article.imageAlt}
                   width={640}
                   height={480}
+                  sizes="(max-width: 767px) calc(100vw - 3rem), 320px"
                   className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
                 />
               </div>
               <article className="flex flex-1 flex-col justify-center">
-                <div className="mb-2 flex flex-wrap items-center gap-2 text-[12px] leading-5">
-                  <span className="font-semibold uppercase tracking-[0.05em] text-[var(--color-teal-deep)]">
+                <div className="mb-2 flex flex-wrap items-center gap-2 text-xs leading-5">
+                  <span className="font-semibold uppercase tracking-wide text-[var(--color-teal-deep)]">
                     {article.category}
                   </span>
                   <span className="text-[var(--color-fog)]">•</span>
                   <time className="text-[var(--color-graphite)]">{article.publishedAt}</time>
                 </div>
-                <h2 className="text-[21px] font-semibold leading-snug text-[var(--color-charcoal-primary)] transition group-hover:text-[var(--color-teal-deep)] md:text-[24px]">
+                <h2 className="text-xl font-semibold leading-snug text-[var(--color-charcoal-primary)] transition group-hover:text-[var(--color-teal-deep)] md:text-2xl">
                   {article.title}
                 </h2>
-                <p className="mt-4 line-clamp-3 text-[15px] leading-7 text-[var(--color-graphite)]">
+                <p className="mt-4 line-clamp-3 text-sm leading-7 text-[var(--color-graphite)]">
                   {article.excerpt}
                 </p>
-                <span className="mt-6 inline-flex items-center gap-2 text-[12px] font-semibold uppercase tracking-[0.05em] text-[var(--color-midnight)] group-hover:underline group-hover:underline-offset-4">
+                <span className="mt-6 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-[var(--color-midnight)] group-hover:underline group-hover:underline-offset-4">
                   {articlesCopy.readMore}
                   <ArrowRight aria-hidden="true" className="h-4 w-4" />
                 </span>

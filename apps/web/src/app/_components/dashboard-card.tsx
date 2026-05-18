@@ -10,7 +10,7 @@ export function DashboardCard({
   return (
     <section
       className={cn(
-        "rounded-xl border border-[var(--color-stone-surface)] bg-[var(--color-card)] p-8 shadow-[inset_0_0_0_1px_var(--color-stone-surface)]",
+        "rounded-xl border border-[var(--color-stone-surface)] bg-[var(--color-card)] p-5 shadow-[inset_0_0_0_1px_var(--color-stone-surface)] sm:p-6 lg:p-8",
         className,
       )}
       {...props}

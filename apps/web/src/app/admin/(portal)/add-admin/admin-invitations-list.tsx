@@ -4,8 +4,8 @@ import { useActionState, useEffect, useMemo, useState } from "react";
 import { Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
+import { PendingSubmitButton } from "@/components/ui/async-action-button";
 import { StatusBadge } from "@/components/status-badge";
-import { Button } from "@/components/ui/button";
 import type { AdminInvitationListItem } from "@/lib/admin/service";
 import { formatDateTime } from "@/lib/i18n/format";
 import type { Dictionary } from "@/lib/i18n/dictionary";
@@ -91,7 +91,7 @@ function RevokeAdminInvitationForm({
   onRevoked: (invitationId: string, message: string) => void;
 }) {
   const router = useRouter();
-  const [state, formAction, isPending] = useActionState<RevokeAdminInvitationFormState, FormData>(
+  const [state, formAction] = useActionState<RevokeAdminInvitationFormState, FormData>(
     revokeAdminInvitationAction,
     initialRevokeAdminInvitationFormState,
   );
@@ -106,10 +106,16 @@ function RevokeAdminInvitationForm({
   return (
     <form action={formAction} className="grid gap-2 sm:justify-items-end">
       <input type="hidden" name="invitation_id" value={invitationId} />
-      <Button type="submit" variant="destructive" className="rounded-[10px]" disabled={isPending}>
+      <PendingSubmitButton
+        type="submit"
+        variant="destructive"
+        className="w-full rounded-[10px] sm:w-auto"
+        loadingLabel={copy.revoking}
+        slotClassName="w-full sm:w-auto"
+      >
         <Trash2 size={16} aria-hidden="true" />
-        {isPending ? copy.revoking : copy.revoke}
-      </Button>
+        {copy.revoke}
+      </PendingSubmitButton>
       {state.status === "error" && state.message ? (
         <p className="max-w-xs text-sm text-[var(--color-error-red)]">{state.message}</p>
       ) : null}

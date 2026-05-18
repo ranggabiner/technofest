@@ -6,6 +6,7 @@ import { useEffect, useRef, useState, type ButtonHTMLAttributes, type ReactNode 
 import { FileText, LogOut, Settings, UserRound } from "lucide-react";
 
 import { signOutAction } from "@/app/auth/actions";
+import { PendingSubmitButton } from "@/components/ui/async-action-button";
 import type { Dictionary } from "@/lib/i18n/dictionary";
 import { cn } from "@/lib/utils";
 
@@ -71,9 +72,10 @@ export function ProfileShell({
               description={copy.confirm.logoutDescription}
               confirmLabel={copy.confirm.yes}
               cancelLabel={copy.confirm.no}
+              loadingLabel={copy.shell.logout}
               className={cn(
                 "inline-flex min-h-11 w-full cursor-pointer items-center gap-3 rounded-lg border px-3 py-2 text-sm font-semibold transition",
-                "border-[color-mix(in_srgb,var(--color-error-red)_55%,white)] text-[var(--color-error-red)] hover:bg-[var(--color-error-red)] hover:text-white",
+                "border-[color-mix(in_srgb,var(--color-error-red)_55%,white)] bg-[color-mix(in_srgb,var(--color-error-red)_8%,transparent)] text-[var(--color-error-red)] hover:bg-[color-mix(in_srgb,var(--color-error-red)_14%,transparent)] hover:text-[var(--color-error-red)]",
               )}
               data-profile-tone="soft-red"
             >
@@ -95,6 +97,7 @@ export function ConfirmSubmitButton({
   cancelLabel,
   children,
   className,
+  loadingLabel,
   ...props
 }: {
   title: string;
@@ -103,11 +106,14 @@ export function ConfirmSubmitButton({
   cancelLabel: string;
   children: ReactNode;
   className?: string;
+  loadingLabel?: string;
 } & ButtonHTMLAttributes<HTMLButtonElement>) {
   return (
-    <button
+    <PendingSubmitButton
       type="button"
       className={className}
+      loadingLabel={loadingLabel ?? confirmLabel}
+      slotClassName="w-full"
       onClick={(event) => {
         const form = event.currentTarget.form;
         window.dispatchEvent(
@@ -125,7 +131,7 @@ export function ConfirmSubmitButton({
       {...props}
     >
       {children}
-    </button>
+    </PendingSubmitButton>
   );
 }
 
@@ -134,22 +140,22 @@ export function ProfileConfirmationHost() {
   if (!state) return null;
 
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-black/30 px-4" data-profile-confirmation="dialog">
+    <div className="fixed inset-0 z-50 grid place-items-center bg-black/30 px-3 py-4 sm:px-4" data-profile-confirmation="dialog">
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="profile-confirm-title"
-        className="w-full max-w-md rounded-xl border border-[var(--color-stone-surface)] bg-[var(--color-card)] p-5 shadow-[var(--shadow-elevated)]"
+        className="max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-y-auto rounded-xl border border-[var(--color-stone-surface)] bg-[var(--color-card)] p-4 shadow-[var(--shadow-elevated)] sm:p-5"
       >
         <h2 id="profile-confirm-title" className="text-lg font-semibold text-[var(--color-midnight)]">
           {state.title}
         </h2>
         <p className="mt-2 text-sm leading-6 text-[var(--color-graphite)]">{state.description}</p>
-        <div className="mt-5 flex justify-end gap-2">
+        <div className="mt-5 grid gap-2 sm:flex sm:justify-end">
           <button
             type="button"
             onClick={() => setState(null)}
-            className="min-h-10 cursor-pointer rounded-full border border-[var(--color-stone-surface)] px-4 text-sm font-medium text-[var(--color-graphite)] transition hover:bg-[var(--color-stone-surface)]"
+            className="min-h-11 cursor-pointer rounded-full border border-[var(--color-stone-surface)] px-4 text-sm font-medium text-[var(--color-graphite)] transition hover:bg-[var(--color-stone-surface)]"
           >
             {state.cancelLabel}
           </button>
@@ -160,7 +166,7 @@ export function ProfileConfirmationHost() {
               setState(null);
               onConfirm();
             }}
-            className="min-h-10 cursor-pointer rounded-full bg-[var(--color-midnight)] px-4 text-sm font-medium text-[var(--color-inverted)] transition hover:bg-[var(--color-charcoal-primary)]"
+            className="min-h-11 cursor-pointer rounded-full bg-[var(--color-midnight)] px-4 text-sm font-medium text-[var(--color-inverted)] transition hover:bg-[var(--color-charcoal-primary)]"
           >
             {state.confirmLabel}
           </button>

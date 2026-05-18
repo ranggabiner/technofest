@@ -2,6 +2,7 @@ import * as React from "react";
 import * as LabelPrimitive from "@radix-ui/react-label";
 
 import { cn } from "@/lib/utils";
+import { typography } from "@/components/ui/typography";
 
 export function Label({
   className,
@@ -9,7 +10,7 @@ export function Label({
 }: React.ComponentPropsWithoutRef<typeof LabelPrimitive.Root>) {
   return (
     <LabelPrimitive.Root
-      className={cn("text-sm font-medium text-[var(--color-charcoal-primary)]", className)}
+      className={cn(typography.label, className)}
       {...props}
     />
   );
@@ -19,7 +20,8 @@ export function Input({ className, ...props }: React.InputHTMLAttributes<HTMLInp
   return (
     <input
       className={cn(
-        "min-h-11 w-full rounded-[10px] border border-[var(--color-fog)] bg-[var(--color-card)] px-3 text-sm text-[var(--color-graphite)] outline-none transition placeholder:text-[var(--color-ash)] focus:border-[var(--color-teal-deep)] disabled:bg-[var(--color-stone-surface)] disabled:text-[var(--color-ash)]",
+        "min-h-11 w-full rounded-[10px] border border-[var(--color-fog)] bg-[var(--color-card)] px-3 outline-none transition placeholder:text-[var(--color-ash)] focus:border-[var(--color-teal-deep)] disabled:bg-[var(--color-stone-surface)] disabled:text-[var(--color-ash)]",
+        typography.body,
         className,
       )}
       {...props}
@@ -31,7 +33,8 @@ export function Select({ className, ...props }: React.SelectHTMLAttributes<HTMLS
   return (
     <select
       className={cn(
-        "min-h-11 w-full rounded-[10px] border border-[var(--color-fog)] bg-[var(--color-card)] px-3 text-sm text-[var(--color-graphite)] outline-none transition focus:border-[var(--color-teal-deep)] disabled:bg-[var(--color-stone-surface)] disabled:text-[var(--color-ash)]",
+        "min-h-11 w-full rounded-[10px] border border-[var(--color-fog)] bg-[var(--color-card)] px-3 outline-none transition focus:border-[var(--color-teal-deep)] disabled:bg-[var(--color-stone-surface)] disabled:text-[var(--color-ash)]",
+        typography.body,
         className,
       )}
       {...props}
@@ -43,7 +46,8 @@ export function Textarea({ className, ...props }: React.TextareaHTMLAttributes<H
   return (
     <textarea
       className={cn(
-        "min-h-28 w-full rounded-[10px] border border-[var(--color-fog)] bg-[var(--color-card)] px-3 py-3 text-sm text-[var(--color-graphite)] outline-none transition placeholder:text-[var(--color-ash)] focus:border-[var(--color-teal-deep)] disabled:bg-[var(--color-stone-surface)] disabled:text-[var(--color-ash)]",
+        "min-h-28 w-full rounded-[10px] border border-[var(--color-fog)] bg-[var(--color-card)] px-3 py-3 outline-none transition placeholder:text-[var(--color-ash)] focus:border-[var(--color-teal-deep)] disabled:bg-[var(--color-stone-surface)] disabled:text-[var(--color-ash)]",
+        typography.body,
         className,
       )}
       {...props}
