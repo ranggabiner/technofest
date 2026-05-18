@@ -6,7 +6,7 @@ This repository separates app validation, Supabase validation, Supabase deployme
 
 | Git branch | App environment | Supabase target | Vercel target |
 |---|---|---|---|
-| `development` | Staging | Staging Supabase project | Preview env scoped to `development` |
+| `develop` | Staging | Staging Supabase project | Preview env scoped to `develop` |
 | `main` | Production | Production Supabase project | Production env |
 
 The local environment uses a separate local Supabase project and a separate Google OAuth client.
@@ -81,7 +81,7 @@ Remote `pnpm validate:privacy` runs in `Supabase Validation` after `Supabase Dep
 
 `Vercel Env Sync` reads values from the active GitHub Environment and upserts them into the Vercel project identified by `VERCEL_PROJECT_ID` and `VERCEL_ORG_ID`.
 
-- Staging sync writes Vercel `preview` variables scoped to Git branch `development`.
+- Staging sync writes Vercel `preview` variables scoped to Git branch `develop`.
 - Production sync writes Vercel `production` variables.
 - Secret values must come from GitHub Secrets, not repository files.
 - The sync script calls the Vercel Project Env API with `upsert=true`; it does not call any deployment endpoint.

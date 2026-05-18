@@ -3,14 +3,14 @@ name: Supabase Validation
 on:
   pull_request:
     branches:
-      - development
+      - develop
       - main
     paths:
       - apps/supabase/**
       - .github/workflows/supabase-validation.yml
   push:
     branches:
-      - development
+      - develop
       - main
     paths:
       - apps/supabase/**
@@ -75,7 +75,7 @@ jobs:
   remote-staging:
     name: Remote privacy validation for staging
     runs-on: ubuntu-latest
-    if: (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'development') || (github.event_name == 'workflow_dispatch' && inputs.target_environment == 'staging')
+    if: (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'develop') || (github.event_name == 'workflow_dispatch' && inputs.target_environment == 'staging')
     environment: staging
     env:
       NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
