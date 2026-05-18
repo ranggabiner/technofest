@@ -66,13 +66,29 @@ describe("doctor dashboard contract", () => {
 
   it("has dashboard modal actions, QR modal, and clickable filter controls", () => {
     const client = route("doctor/_components/doctor-dashboard-client.tsx");
+    const modalContent = route("doctor/_components/doctor-grant-modal-content.tsx");
 
     expect(client).toContain('role="dialog"');
     expect(client).toContain("openQrModal");
     expect(client).toContain("loadDoctorGrantModalStateAction");
-    expect(client).toContain("createScope1RecordFromDashboardAction");
+    expect(modalContent).toContain("createScope1RecordFromDashboardAction");
     expect(client).toContain('dataFilter="active"');
     expect(client).toContain('dataFilter="finished"');
+  });
+
+  it("uses mobile session cards and viewport-safe dashboard modals", () => {
+    const client = route("doctor/_components/doctor-dashboard-client.tsx");
+    const modalContent = route("doctor/_components/doctor-grant-modal-content.tsx");
+    const skeleton = route("../components/loading-skeletons.tsx");
+
+    expect(client).toContain("data-doctor-session-cards");
+    expect(client).toContain("md:hidden");
+    expect(client).toContain("hidden overflow-x-auto md:block");
+    expect(client).toContain("max-h-[calc(100dvh-2rem)]");
+    expect(client).toContain("size-[min(18rem,70vw)]");
+    expect(modalContent).toContain("[overflow-wrap:anywhere]");
+    expect(skeleton).toContain("data-doctor-session-skeleton-cards");
+    expect(skeleton).toContain("data-doctor-session-skeleton-table");
   });
 
   it("loads dashboard sessions newest grant first with explicit columns and scope flags", () => {

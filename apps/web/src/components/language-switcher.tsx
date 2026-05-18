@@ -36,7 +36,7 @@ export function LanguageSwitcher({
     <Button
       type="button"
       variant="ghost"
-      className="min-h-9 rounded-full px-3 text-xs"
+      className="min-h-11 min-w-11 rounded-full px-3 text-xs"
       aria-label={ariaLabel}
       title={ariaLabel}
       onClick={handleClick}

@@ -24,10 +24,10 @@ export default async function AdminApprovalPage({
   return (
     <section className="grid gap-8" data-admin-approval-page="main">
       <header className="border-b border-[var(--color-stone-surface)] pb-5">
-        <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-ash)]">
+        <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-[var(--color-ash)]">
           {copy.admin.nav.doctorVerification}
         </p>
-        <h1 className="text-[36px] font-semibold leading-[1.1] text-[var(--color-midnight)] md:text-[44px]">
+        <h1 className="text-3xl font-semibold leading-tight text-[var(--color-midnight)] sm:text-4xl md:text-5xl">
           {copy.admin.approval.title}
         </h1>
         <p className="mt-3 max-w-2xl text-base leading-7 text-[var(--color-ash)]">
@@ -44,8 +44,8 @@ export default async function AdminApprovalPage({
               aria-current={state.status === status ? "page" : undefined}
               className={
                 state.status === status
-                  ? "cursor-pointer rounded-[10px] bg-[var(--color-midnight)] px-4 py-2 text-sm font-semibold text-[var(--color-inverted)]"
-                  : "cursor-pointer rounded-[10px] bg-[var(--color-stone-surface)] px-4 py-2 text-sm font-semibold text-[var(--color-midnight)]"
+                  ? "inline-flex min-h-11 cursor-pointer items-center rounded-[10px] bg-[var(--color-midnight)] px-4 py-2 text-sm font-semibold text-[var(--color-inverted)]"
+                  : "inline-flex min-h-11 cursor-pointer items-center rounded-[10px] bg-[var(--color-stone-surface)] px-4 py-2 text-sm font-semibold text-[var(--color-midnight)]"
               }
             >
               {statusLabel(copy, status)}
@@ -61,8 +61,8 @@ export default async function AdminApprovalPage({
           emptyMessage={copy.admin.approval.noDoctors}
         />
 
-        <div className="mt-5 flex flex-wrap items-center justify-between gap-4">
-          <form className="flex items-center gap-2">
+        <div className="mt-5 grid gap-4 lg:flex lg:flex-wrap lg:items-center lg:justify-between">
+          <form className="grid gap-2 sm:flex sm:items-center">
             <input type="hidden" name="status" value={state.status} />
             <input type="hidden" name="page" value="1" />
             <label htmlFor="pageSize" className="text-sm font-medium text-[var(--color-graphite)]">
@@ -75,12 +75,12 @@ export default async function AdminApprovalPage({
                 </option>
               ))}
             </Select>
-            <Button type="submit" variant="ghost" className="rounded-[10px]">
+            <Button type="submit" variant="ghost" className="w-full rounded-[10px] sm:w-auto">
               {copy.admin.approval.applyRows}
             </Button>
           </form>
 
-          <div className="flex flex-wrap items-center justify-end gap-2">
+          <div className="flex flex-wrap items-center gap-2 lg:justify-end">
             <span className="text-sm text-[var(--color-ash)]">
               {copy.admin.approval.showing
                 .replace("{from}", String(state.showingFrom))
@@ -138,7 +138,7 @@ function PaginationLink({
 }) {
   if (disabled) {
     return (
-      <span className="rounded-[10px] bg-[var(--color-stone-surface)] px-3 py-2 text-sm font-semibold text-[var(--color-ash)]">
+      <span className="inline-flex min-h-11 items-center rounded-[10px] bg-[var(--color-stone-surface)] px-3 py-2 text-sm font-semibold text-[var(--color-ash)]">
         {children}
       </span>
     );
@@ -149,8 +149,8 @@ function PaginationLink({
       href={href}
       className={
         active
-          ? "cursor-pointer rounded-[10px] bg-[var(--color-midnight)] px-3 py-2 text-sm font-semibold text-[var(--color-inverted)]"
-          : "cursor-pointer rounded-[10px] bg-[var(--color-stone-surface)] px-3 py-2 text-sm font-semibold text-[var(--color-midnight)]"
+          ? "inline-flex min-h-11 cursor-pointer items-center rounded-[10px] bg-[var(--color-midnight)] px-3 py-2 text-sm font-semibold text-[var(--color-inverted)]"
+          : "inline-flex min-h-11 cursor-pointer items-center rounded-[10px] bg-[var(--color-stone-surface)] px-3 py-2 text-sm font-semibold text-[var(--color-midnight)]"
       }
     >
       {children}

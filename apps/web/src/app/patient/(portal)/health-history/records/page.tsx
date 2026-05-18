@@ -60,7 +60,7 @@ export default async function PatientHealthHistoryRecordsPage({ searchParams }: 
         <div className="mb-5 flex flex-wrap items-center gap-2 text-sm text-[var(--color-ash)]">
           <PatientTransitionLink
             href="/patient/health-history"
-            className="inline-flex cursor-pointer items-center gap-2 font-semibold text-[var(--color-teal-deep)] transition hover:text-[var(--color-midnight)]"
+            className="inline-flex min-h-11 cursor-pointer items-center gap-2 font-semibold text-[var(--color-teal-deep)] transition hover:text-[var(--color-midnight)]"
           >
             <ArrowLeft size={16} aria-hidden="true" />
             {detailCopy.back}
@@ -70,7 +70,7 @@ export default async function PatientHealthHistoryRecordsPage({ searchParams }: 
           <span aria-hidden="true">/</span>
           <span>{detailCopy.title}</span>
         </div>
-        <h1 className="font-serif text-[44px] font-semibold leading-none tracking-[-0.01em] text-[var(--color-midnight)] md:text-[56px]">
+        <h1 className="text-3xl font-semibold leading-tight tracking-normal text-[var(--color-midnight)] sm:text-4xl md:text-5xl">
           {detailCopy.title}
         </h1>
         <p className="mt-4 max-w-2xl text-base leading-7 text-[var(--color-graphite)]">
@@ -84,7 +84,7 @@ export default async function PatientHealthHistoryRecordsPage({ searchParams }: 
             key={filter}
             asChild
             variant={filter === state.activeFilter ? "secondary" : "ghost"}
-            className="min-h-10 px-5"
+            className="min-h-11 px-5"
           >
             <PatientTransitionLink
               href={recordFilterHref(filter)}
@@ -98,7 +98,7 @@ export default async function PatientHealthHistoryRecordsPage({ searchParams }: 
       </nav>
 
       {state.records.length > 0 ? (
-        <div className="relative grid gap-8 pl-7 before:absolute before:bottom-0 before:left-[9px] before:top-2 before:border-l-2 before:border-[var(--color-stone-surface)]">
+        <div className="relative grid gap-6 pl-5 before:absolute before:bottom-0 before:left-[7px] before:top-2 before:border-l-2 before:border-[var(--color-stone-surface)] sm:gap-8 sm:pl-7 sm:before:left-[9px]">
           {state.records.map((record, index) => (
             <TimelineRecord
               key={record.recordId}
@@ -137,7 +137,7 @@ function TimelineRecord({
       <span
         aria-hidden="true"
         className={[
-          "absolute -left-[27px] top-1 grid size-5 place-items-center rounded-full border-4 bg-[var(--color-card)]",
+          "absolute -left-[20px] top-1 grid size-5 place-items-center rounded-full border-4 bg-[var(--color-card)] sm:-left-[27px]",
           index === 0
             ? "border-[var(--color-teal-primary)] text-[var(--color-teal-deep)] ring-2 ring-[var(--color-teal-primary)]"
             : "border-[var(--color-stone-surface)] text-[var(--color-ash)]",
@@ -146,11 +146,11 @@ function TimelineRecord({
         <span className="size-1.5 rounded-full bg-current" />
       </span>
 
-      <p className="mb-4 text-[16px] font-semibold text-[var(--color-midnight)]">
+      <p className="mb-4 text-base font-semibold text-[var(--color-midnight)]">
         {formatRecordDate(record.createdAt, locale)}
       </p>
 
-      <DashboardCard className="grid gap-5 rounded-[14px] p-6 md:p-7">
+      <DashboardCard className="grid gap-5 rounded-[14px] p-4 sm:p-6 md:p-7">
         <div className="flex flex-wrap items-center gap-2">
           <StatusBadge tone={index === 0 ? "approved" : "neutral"}>
             {recordTypeLabel(copy, record.recordType)}
@@ -168,7 +168,7 @@ function TimelineRecord({
         </div>
 
         <div>
-          <h2 className="text-[24px] font-semibold leading-tight text-[var(--color-midnight)]">
+          <h2 className="break-words text-xl font-semibold leading-tight text-[var(--color-midnight)] sm:text-2xl">
             {record.title}
           </h2>
           <p className="mt-2 flex flex-wrap items-center gap-2 text-sm text-[var(--color-ash)]">
@@ -181,7 +181,7 @@ function TimelineRecord({
         </div>
 
         {record.description ? (
-          <p className="text-[15px] leading-7 text-[var(--color-graphite)]">{record.description}</p>
+          <p className="text-sm leading-7 text-[var(--color-graphite)]">{record.description}</p>
         ) : null}
 
         <div className="rounded-[10px] border border-[var(--color-stone-surface)] bg-[var(--color-parchment-card)] p-4">
@@ -192,7 +192,7 @@ function TimelineRecord({
                   <FileText size={18} aria-hidden="true" />
                 </span>
                 <div className="min-w-0">
-                  <p className="truncate font-semibold text-[var(--color-midnight)]">
+                  <p className="break-words font-semibold text-[var(--color-midnight)]">
                     {record.attachmentFilename}
                   </p>
                   <p className="text-xs text-[var(--color-ash)]">

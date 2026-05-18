@@ -1,5 +1,5 @@
 import { OnboardingPageSkeleton } from "@/components/loading-skeletons";
 
 export default function Loading() {
-  return <OnboardingPageSkeleton variant="documents" />;
+  return <OnboardingPageSkeleton role="doctor" variant="documents" />;
 }

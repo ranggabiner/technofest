@@ -60,7 +60,7 @@ export default async function ArticleDetailPage({ params }: ArticleDetailPagePro
         contextTitle={articlesCopy.breadcrumbArticles}
       />
       <main className="mx-auto w-full max-w-[1100px] px-6 pb-24 pt-28 md:pt-32">
-        <nav className="mb-12 flex flex-wrap items-center gap-2 text-[12px] leading-5 text-[var(--color-graphite)]">
+        <nav className="mb-12 flex flex-wrap items-center gap-2 text-xs leading-5 text-[var(--color-graphite)]">
           <Link className="cursor-pointer transition hover:text-[var(--color-midnight)]" href="/">
             {articlesCopy.breadcrumbHome}
           </Link>
@@ -74,13 +74,13 @@ export default async function ArticleDetailPage({ params }: ArticleDetailPagePro
 
         <article>
           <header className="mx-auto mb-20 max-w-[800px] text-center">
-            <p className="mb-4 text-[12px] font-semibold uppercase tracking-[0.08em] text-[var(--color-teal-deep)]">
+            <p className="mb-4 text-xs font-semibold uppercase tracking-widest text-[var(--color-teal-deep)]">
               {article.category}
             </p>
-            <h1 className="font-serif text-[34px] font-semibold leading-tight text-[var(--color-charcoal-primary)] md:text-[48px]">
+            <h1 className="text-3xl font-semibold leading-tight tracking-tight text-[var(--color-charcoal-primary)] md:text-5xl">
               {article.title}
             </h1>
-            <p className="mt-6 text-[12px] leading-5 text-[var(--color-graphite)]">{publishedMeta}</p>
+            <p className="mt-6 text-xs leading-5 text-[var(--color-graphite)]">{publishedMeta}</p>
           </header>
 
           <div className="mb-20 overflow-hidden rounded-xl border border-[var(--color-stone-surface)] bg-[var(--color-card)]">
@@ -94,18 +94,19 @@ export default async function ArticleDetailPage({ params }: ArticleDetailPagePro
               width={1280}
               height={720}
               priority
+              sizes="(max-width: 1100px) calc(100vw - 3rem), 1100px"
               className="max-h-[500px] w-full object-cover"
             />
           </div>
 
-          <div className="mx-auto max-w-[800px] space-y-10 text-[16px] leading-8 text-[var(--color-charcoal-primary)]">
+          <div className="mx-auto max-w-[800px] space-y-10 text-base leading-8 text-[var(--color-charcoal-primary)]">
             {article.body.intro.map((paragraph) => (
               <p key={paragraph}>{paragraph}</p>
             ))}
 
             {article.body.sections.map((section) => (
               <section key={section.title} className="space-y-5">
-                <h2 className="pt-4 text-[23px] font-semibold leading-snug text-[var(--color-midnight)]">
+                <h2 className="pt-4 text-xl font-semibold leading-snug text-[var(--color-midnight)]">
                   {section.title}
                 </h2>
                 {section.paragraphs.map((paragraph) => (
@@ -127,12 +128,12 @@ export default async function ArticleDetailPage({ params }: ArticleDetailPagePro
 
         <section aria-labelledby="related-articles-title">
           <div className="mb-6 flex items-center justify-between gap-4">
-            <h2 id="related-articles-title" className="text-[19px] font-semibold text-[var(--color-midnight)]">
+            <h2 id="related-articles-title" className="text-lg font-semibold text-[var(--color-midnight)]">
               {articlesCopy.relatedTitle}
             </h2>
             <Link
               href="/articles"
-              className="inline-flex cursor-pointer items-center gap-2 text-[13px] font-semibold text-[var(--color-teal-deep)] transition hover:text-[var(--color-midnight)]"
+              className="inline-flex cursor-pointer items-center gap-2 text-sm font-semibold text-[var(--color-teal-deep)] transition hover:text-[var(--color-midnight)]"
             >
               <ArrowLeft aria-hidden="true" className="h-4 w-4" />
               {articlesCopy.breadcrumbArticles}
@@ -150,12 +151,13 @@ export default async function ArticleDetailPage({ params }: ArticleDetailPagePro
                   alt={related.imageAlt}
                   width={480}
                   height={320}
+                  sizes="(max-width: 767px) calc(100vw - 3rem), 33vw"
                   className="mb-4 h-40 w-full rounded-md object-cover transition duration-500 group-hover:scale-[1.02]"
                 />
-                <h3 className="line-clamp-2 text-[18px] font-medium leading-snug text-[var(--color-midnight)]">
+                <h3 className="line-clamp-2 text-lg font-medium leading-snug text-[var(--color-midnight)]">
                   {related.title}
                 </h3>
-                <p className="mt-auto pt-4 text-[12px] leading-5 text-[var(--color-graphite)]">
+                <p className="mt-auto pt-4 text-xs leading-5 text-[var(--color-graphite)]">
                   {related.publishedAt}
                 </p>
               </Link>

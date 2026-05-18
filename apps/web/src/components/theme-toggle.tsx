@@ -31,7 +31,7 @@ export function ThemeToggle({
       type="button"
       variant="ghost"
       className={[
-        "min-h-9 rounded-full px-3 text-xs",
+        "min-h-11 min-w-11 rounded-full px-3 text-xs",
         compact ? "fixed right-4 top-4 z-50 shadow-[var(--shadow-subtle)]" : "",
       ]
         .filter(Boolean)

@@ -16,7 +16,7 @@ import {
   kycDocumentCompactPreviewSurfaceClassName,
   type KycDocumentPreviewLabels,
 } from "@/components/kyc-document-preview";
-import { Button } from "@/components/ui/button";
+import { LoadingActionButton } from "@/components/ui/async-action-button";
 import { Label } from "@/components/ui/form";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
@@ -146,7 +146,7 @@ export function DoctorDocumentUploadForm({
   }
 
   return (
-    <div className="rounded-2xl border border-[var(--color-stone-surface)] bg-[var(--color-card)] p-6 shadow-[var(--shadow-elevated)] md:p-12">
+    <div className="rounded-2xl border border-[var(--color-stone-surface)] bg-[var(--color-card)] p-5 shadow-[var(--shadow-elevated)] sm:p-6 md:p-12">
       <div className="space-y-6">
         {documents.map((document, index) => (
           <div key={document.documentType}>
@@ -168,32 +168,29 @@ export function DoctorDocumentUploadForm({
         ))}
       </div>
 
-      <div className="mt-12 border-t border-[var(--color-stone-surface)] pt-6">
+      <div className="mt-10 border-t border-[var(--color-stone-surface)] pt-6 sm:mt-12">
         {!allUploaded ? (
-          <p className="mb-3 text-center text-[12px] leading-[1.58] tracking-[-0.14px] text-[var(--color-ash)]">
+          <p className="mb-3 text-center text-xs leading-6 tracking-normal text-[var(--color-ash)]">
             {copy.uploadPreview.continueBlocked}
           </p>
         ) : null}
         {continueError ? (
-          <p className="mb-3 text-center text-[12px] leading-[1.58] tracking-[-0.14px] text-[var(--color-error-red)]">
+          <p className="mb-3 text-center text-xs leading-6 tracking-normal text-[var(--color-error-red)]">
             {continueError}
           </p>
         ) : null}
-        <Button
+        <LoadingActionButton
           type="button"
           disabled={!canContinue}
+          isLoading={isContinuing}
+          loadingLabel={copy.uploadPreview.uploading}
           onClick={continueToReview}
-          className="min-h-12 w-full rounded-full bg-[var(--color-midnight)] px-12 py-3 text-[15px] font-medium leading-[1.47] tracking-[-0.2px] text-[var(--color-inverted)] hover:bg-[var(--color-charcoal-primary)] hover:text-[var(--color-warm-canvas)]"
+          className="min-h-12 w-full rounded-full bg-[var(--color-midnight)] px-12 py-3 text-sm font-medium leading-6 tracking-normal text-[var(--color-inverted)] hover:bg-[var(--color-charcoal-primary)] hover:text-[var(--color-warm-canvas)]"
+          slotClassName="w-full"
         >
-          {isContinuing ? (
-            <Skeleton className="h-4 w-32 bg-[color-mix(in_srgb,var(--color-inverted)_34%,transparent)]" />
-          ) : (
-            <>
-              {copy.next}
-              <ArrowRight size={18} aria-hidden="true" />
-            </>
-          )}
-        </Button>
+          {copy.next}
+          <ArrowRight size={18} aria-hidden="true" />
+        </LoadingActionButton>
       </div>
     </div>
   );
@@ -281,18 +278,18 @@ function DocumentUploadField({
 
   return (
     <div>
-      <div className="mb-2 flex items-baseline justify-between gap-4">
+      <div className="mb-2 flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between sm:gap-4">
         <Label
           htmlFor={inputId}
-          className="text-[19px] font-medium leading-[1.38] tracking-[-0.25px] text-[var(--color-charcoal-primary)]"
+          className="text-lg font-medium leading-snug tracking-normal text-[var(--color-charcoal-primary)] sm:text-lg"
         >
           {title}
         </Label>
-        <span className="text-[12px] leading-[1.58] tracking-[-0.14px] text-[var(--color-ash)]">
+        <span className="text-xs leading-6 tracking-normal text-[var(--color-ash)]">
           {requiredLabel}
         </span>
       </div>
-      <p className="mb-3 text-[12px] leading-[1.58] tracking-[-0.14px] text-[var(--color-ash)]">
+      <p className="mb-3 text-xs leading-6 tracking-normal text-[var(--color-ash)]">
         {description}
       </p>
 
@@ -365,7 +362,7 @@ function UploadLoadingState({ label }: { label: string }) {
   return (
     <div className="relative flex h-full w-full items-center justify-center overflow-hidden px-6 text-center">
       <Skeleton className="absolute inset-4 rounded-md opacity-70" />
-      <span className="relative inline-flex items-center gap-2 rounded-full bg-[var(--color-card)] px-4 py-2 text-[13px] font-medium leading-[1.47] tracking-[-0.16px] text-[var(--color-midnight)] shadow-sm">
+      <span className="relative inline-flex items-center gap-2 rounded-full bg-[var(--color-card)] px-4 py-2 text-sm font-medium leading-6 tracking-normal text-[var(--color-midnight)] shadow-sm">
         <Loader2 size={16} className="animate-spin" aria-hidden="true" />
         {label}
       </span>
@@ -408,13 +405,13 @@ function EmptyDocumentUploadState({
       </span>
       <span
         className={cn(
-          "mt-2 max-w-full truncate text-[15px] font-medium leading-[1.47] tracking-[-0.2px] text-[var(--color-midnight)]",
+          "mt-2 max-w-full break-words text-sm font-medium leading-6 tracking-normal text-[var(--color-midnight)]",
           error && "text-[var(--color-error-red)]",
         )}
       >
         {error ?? uploadLabel}
       </span>
-      <span className="mt-1 max-w-full truncate text-[11px] leading-[1.5] text-[var(--color-ash)]">
+      <span className="mt-1 max-w-full break-words text-xs leading-6 text-[var(--color-ash)]">
         {error ? retryLabel : uploadHint}
       </span>
     </div>

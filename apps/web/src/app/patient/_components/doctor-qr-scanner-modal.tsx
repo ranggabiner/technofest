@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo } from "react";
 import { Loader2, QrCode, RefreshCw, X } from "lucide-react";
 
+import { LoadingActionButton } from "@/components/ui/async-action-button";
 import { Button } from "@/components/ui/button";
 import type { Dictionary } from "@/lib/i18n/dictionary";
 
@@ -87,7 +88,7 @@ export function DoctorQrScannerModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 grid place-items-center overflow-y-auto bg-[color-mix(in_srgb,var(--color-ash)_28%,transparent)] p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-50 grid place-items-center overflow-y-auto bg-[color-mix(in_srgb,var(--color-ash)_28%,transparent)] p-3 backdrop-blur-sm sm:p-4"
       data-doctor-qr-scanner-modal
       role="dialog"
       aria-modal="true"
@@ -97,12 +98,12 @@ export function DoctorQrScannerModal({
         if (event.target === event.currentTarget) handleClose();
       }}
     >
-      <section className="my-6 grid w-full max-w-[560px] overflow-hidden rounded-[18px] border border-[var(--color-stone-surface)] bg-[var(--color-card)] shadow-[0_24px_80px_rgba(18,18,18,0.18),inset_0_0_0_1px_var(--color-stone-surface)]">
+      <section className="my-4 grid max-h-[calc(100dvh-2rem)] w-full max-w-[560px] overflow-y-auto rounded-[18px] border border-[var(--color-stone-surface)] bg-[var(--color-card)] shadow-[0_24px_80px_rgba(18,18,18,0.18),inset_0_0_0_1px_var(--color-stone-surface)] sm:my-6">
         <header className="flex items-start justify-between gap-4 px-5 pb-4 pt-5 sm:px-6">
           <div className="min-w-0">
             <h2
               id="doctor-qr-scanner-title"
-              className="text-[24px] font-semibold leading-tight text-[var(--color-midnight)] sm:text-[28px]"
+              className="text-2xl font-semibold leading-tight text-[var(--color-midnight)] sm:text-2xl"
             >
               {copy.patient.access.scannerModalTitle}
             </h2>
@@ -156,19 +157,22 @@ export function DoctorQrScannerModal({
           ) : null}
 
           <footer className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <Button type="button" variant="ghost" className="rounded-[10px]" onClick={handleClose}>
+            <Button type="button" variant="ghost" className="w-full rounded-[10px] sm:w-auto" onClick={handleClose}>
               {copy.patient.access.scannerModalClose}
             </Button>
-            <Button
+            <LoadingActionButton
               type="button"
               variant="secondary"
-              className="rounded-[10px]"
+              className="w-full rounded-[10px] sm:w-auto"
               onClick={handleRetry}
-              disabled={isBusy || !cameraSupported}
+              disabled={!cameraSupported}
+              isLoading={isBusy}
+              loadingLabel={copy.patient.access.scannerModalVerifying}
+              slotClassName="w-full sm:w-auto"
             >
               <RefreshCw size={16} aria-hidden="true" />
               {copy.patient.access.scannerModalRetry}
-            </Button>
+            </LoadingActionButton>
           </footer>
         </div>
       </section>

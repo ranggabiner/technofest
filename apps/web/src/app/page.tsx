@@ -1,6 +1,5 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Playfair_Display } from "next/font/google";
 import type { CSSProperties } from "react";
 import {
   BarChart3,
@@ -24,12 +23,6 @@ import { getDictionary } from "@/lib/i18n/server";
 
 export const dynamic = "force-dynamic";
 
-const landingSerif = Playfair_Display({
-  subsets: ["latin"],
-  weight: ["500", "600", "700"],
-  variable: "--font-landing-serif",
-});
-
 const imagePaths = {
   hero: "/assets/landing/hero-ai-interface.webp",
   about: "/assets/landing/doctor-tablet.webp",
@@ -51,7 +44,7 @@ export default async function HomePage() {
   const articlePreviews = getLandingArticlePreviews(copy.marketing.articlesHub.items);
 
   return (
-    <div className={`${landingSerif.variable} min-h-screen bg-[var(--color-warm-canvas)] text-[var(--color-graphite)]`}>
+    <div className="min-h-screen bg-[var(--color-warm-canvas)] text-[var(--color-graphite)]">
       <SharedHeader
         authMode="public"
         brandAction="scroll-top"
@@ -79,22 +72,22 @@ export default async function HomePage() {
 
 function HeroSection({ landing }: { landing: Awaited<ReturnType<typeof getDictionary>>["marketing"]["landing"] }) {
   return (
-    <section data-scroll-reveal="" data-scroll-reveal-group="hero-section" className="w-full overflow-hidden bg-[linear-gradient(135deg,color-mix(in_srgb,var(--color-teal-surface)_70%,var(--color-warm-canvas))_0%,var(--color-warm-canvas)_100%)] px-6 py-20 lg:py-32">
-      <div className="mx-auto flex w-full max-w-[1100px] flex-col items-center gap-12 lg:flex-row">
+    <section data-scroll-reveal="" data-scroll-reveal-group="hero-section" className="w-full overflow-hidden bg-[linear-gradient(135deg,color-mix(in_srgb,var(--color-teal-surface)_70%,var(--color-warm-canvas))_0%,var(--color-warm-canvas)_100%)] px-4 py-14 sm:px-6 sm:py-20 lg:py-32">
+      <div className="mx-auto flex w-full max-w-[1100px] flex-col items-center gap-10 lg:flex-row lg:gap-12">
         <div
           data-scroll-reveal=""
           data-scroll-reveal-group="hero-copy"
           className="z-10 flex flex-1 flex-col items-center gap-4 text-center lg:items-start lg:text-left"
         >
-          <h1 className="max-w-2xl font-[var(--font-landing-serif)] text-[40px] font-bold leading-[1.1] tracking-normal text-[var(--color-charcoal-primary)] sm:text-[48px] lg:text-[56px]">
+          <h1 className="max-w-2xl text-4xl font-semibold leading-tight tracking-tight text-[var(--color-charcoal-primary)] sm:text-5xl lg:text-6xl">
             {landing.hero.title}
           </h1>
-          <p className="mx-auto mt-2 max-w-xl text-[16px] leading-7 text-[var(--color-graphite)] lg:mx-0">
+          <p className="mx-auto mt-2 max-w-xl text-base leading-7 text-[var(--color-graphite)] lg:mx-0">
             {landing.hero.description}
           </p>
           <Link
             href="/login"
-            className="mt-4 inline-flex min-h-12 cursor-pointer items-center justify-center rounded-full bg-[var(--color-teal-deep)] px-8 text-[14px] font-semibold uppercase tracking-normal text-[var(--color-inverted)] shadow-[0_18px_36px_color-mix(in_srgb,var(--color-teal-primary)_24%,transparent)] transition hover:-translate-y-1 hover:bg-[var(--color-teal-primary)]"
+            className="mt-4 inline-flex min-h-12 w-full cursor-pointer items-center justify-center rounded-full bg-[var(--color-teal-deep)] px-8 text-center text-sm font-semibold uppercase tracking-normal text-[var(--color-inverted)] shadow-[0_18px_36px_color-mix(in_srgb,var(--color-teal-primary)_24%,transparent)] transition hover:-translate-y-1 hover:bg-[var(--color-teal-primary)] sm:w-auto"
           >
             {landing.hero.primaryCta}
           </Link>
@@ -108,6 +101,7 @@ function HeroSection({ landing }: { landing: Awaited<ReturnType<typeof getDictio
               width={512}
               height={512}
               priority
+              sizes="(max-width: 1023px) calc(100vw - 2rem), 512px"
               className="aspect-square w-full rounded-3xl object-cover shadow-[var(--shadow-elevated)]"
             />
           </div>
@@ -119,7 +113,7 @@ function HeroSection({ landing }: { landing: Awaited<ReturnType<typeof getDictio
 
 function AboutSection({ landing }: { landing: Awaited<ReturnType<typeof getDictionary>>["marketing"]["landing"] }) {
   return (
-    <section id="about" data-scroll-reveal="" data-scroll-reveal-group="about-section" className="w-full scroll-mt-24 bg-[var(--color-card)] px-6 py-20 lg:py-32">
+    <section id="about" data-scroll-reveal="" data-scroll-reveal-group="about-section" className="w-full scroll-mt-24 bg-[var(--color-card)] px-4 py-14 sm:px-6 sm:py-20 lg:py-32">
       <SectionIntro title={landing.about.title} accent={landing.about.accent} description={landing.about.description} />
       <div className="mx-auto grid w-full max-w-[1100px] items-center gap-12 lg:grid-cols-[5fr_7fr]">
         <Image
@@ -129,6 +123,7 @@ function AboutSection({ landing }: { landing: Awaited<ReturnType<typeof getDicti
           alt={landing.about.imageAlt}
           width={512}
           height={512}
+          sizes="(max-width: 1023px) calc(100vw - 2rem), 512px"
           className="aspect-square w-full rounded-3xl object-cover shadow-[var(--shadow-elevated)]"
         />
         <div className="flex flex-col gap-6">
@@ -153,7 +148,7 @@ function AboutSection({ landing }: { landing: Awaited<ReturnType<typeof getDicti
 
 function FeatureSection({ landing }: { landing: Awaited<ReturnType<typeof getDictionary>>["marketing"]["landing"] }) {
   return (
-    <section id="features" data-scroll-reveal="" data-scroll-reveal-group="features-section" className="w-full scroll-mt-24 bg-[var(--color-parchment-card)] px-6 py-20 lg:py-32">
+    <section id="features" data-scroll-reveal="" data-scroll-reveal-group="features-section" className="w-full scroll-mt-24 bg-[var(--color-parchment-card)] px-4 py-14 sm:px-6 sm:py-20 lg:py-32">
       <SectionIntro
         title={landing.features.title}
         accent={landing.features.accent}
@@ -188,7 +183,7 @@ function ArticleSection({
   readMoreLabel: string;
 }) {
   return (
-    <section id="articles" data-scroll-reveal="" data-scroll-reveal-group="articles-section" className="w-full scroll-mt-24 bg-[var(--color-card)] px-6 py-20 lg:py-32">
+    <section id="articles" data-scroll-reveal="" data-scroll-reveal-group="articles-section" className="w-full scroll-mt-24 bg-[var(--color-card)] px-4 py-14 sm:px-6 sm:py-20 lg:py-32">
       <SectionIntro
         title={landing.articles.title}
         accent={landing.articles.accent}
@@ -212,13 +207,14 @@ function ArticleSection({
                   alt={article.imageAlt}
                   width={512}
                   height={512}
+                  sizes="(max-width: 767px) calc(100vw - 2rem), 33vw"
                   className="h-48 w-full object-cover transition duration-500 group-hover:scale-105"
                 />
                 <div className="flex flex-1 flex-col p-6">
-                  <h3 className="mb-3 text-[19px] font-bold leading-snug text-[var(--color-charcoal-primary)]">{article.title}</h3>
-                  <p className="mb-5 flex-1 text-[14px] leading-6 text-[var(--color-graphite)]">{article.excerpt}</p>
+                  <h3 className="mb-3 text-lg font-bold leading-snug text-[var(--color-charcoal-primary)]">{article.title}</h3>
+                  <p className="mb-5 flex-1 text-sm leading-6 text-[var(--color-graphite)]">{article.excerpt}</p>
                   <span
-                    className="inline-flex cursor-pointer items-center gap-2 text-[13px] font-semibold uppercase tracking-normal text-[var(--color-teal-deep)] transition hover:text-[var(--color-teal-primary)]"
+                    className="inline-flex cursor-pointer items-center gap-2 text-sm font-semibold uppercase tracking-normal text-[var(--color-teal-deep)] transition hover:text-[var(--color-teal-primary)]"
                   >
                     <Send size={15} aria-hidden="true" />
                     {readMoreLabel}
@@ -229,7 +225,7 @@ function ArticleSection({
           </div>
         ))}
       </div>
-      <div data-scroll-reveal="" data-scroll-reveal-group="articles-view-all" className="mx-auto mt-10 flex w-full max-w-[1100px] justify-end">
+      <div data-scroll-reveal="" data-scroll-reveal-group="articles-view-all" className="mx-auto mt-10 flex w-full max-w-[1100px] justify-start sm:justify-end">
         <Link
           href="/articles"
           className="cursor-pointer font-medium text-[var(--color-midnight)] underline underline-offset-4 transition-colors hover:text-[var(--color-teal-deep)]"
@@ -243,7 +239,7 @@ function ArticleSection({
 
 function WorkflowSection({ landing }: { landing: Awaited<ReturnType<typeof getDictionary>>["marketing"]["landing"] }) {
   return (
-    <section id="workflow" data-scroll-reveal="" data-scroll-reveal-group="workflow-section" className="w-full scroll-mt-24 bg-[var(--color-parchment-card)] px-6 py-20 lg:py-32">
+    <section id="workflow" data-scroll-reveal="" data-scroll-reveal-group="workflow-section" className="w-full scroll-mt-24 bg-[var(--color-parchment-card)] px-4 py-14 sm:px-6 sm:py-20 lg:py-32">
       <SectionIntro
         title={landing.workflow.title}
         accent={landing.workflow.accent}
@@ -272,8 +268,8 @@ function WorkflowSection({ landing }: { landing: Awaited<ReturnType<typeof getDi
                 >
                   <Icon size={36} aria-hidden="true" />
                 </div>
-                <h3 className="mb-2 text-[19px] font-bold leading-snug text-[var(--color-charcoal-primary)]">{step.title}</h3>
-                <p className="text-[14px] leading-6 text-[var(--color-graphite)]">{step.description}</p>
+                <h3 className="mb-2 text-lg font-bold leading-snug text-[var(--color-charcoal-primary)]">{step.title}</h3>
+                <p className="text-sm leading-6 text-[var(--color-graphite)]">{step.description}</p>
               </div>
             );
           })}
@@ -285,11 +281,11 @@ function WorkflowSection({ landing }: { landing: Awaited<ReturnType<typeof getDi
 
 function SectionIntro({ title, accent, description }: { title: string; accent: string; description: string }) {
   return (
-    <div data-scroll-reveal="" data-scroll-reveal-group="section-intro" className="mx-auto mb-16 w-full max-w-[1100px] text-center">
-      <h2 className="font-[var(--font-landing-serif)] text-[32px] font-semibold leading-tight tracking-normal text-[var(--color-charcoal-primary)] lg:text-[44px]">
+    <div data-scroll-reveal="" data-scroll-reveal-group="section-intro" className="mx-auto mb-12 w-full max-w-[1100px] text-center sm:mb-16">
+      <h2 className="text-3xl font-semibold leading-tight tracking-tight text-[var(--color-charcoal-primary)] lg:text-5xl">
         {title} <span className="text-[var(--color-teal-deep)]">{accent}</span>
       </h2>
-      <p className="mx-auto mt-4 max-w-3xl text-[16px] leading-7 text-[var(--color-graphite)]">{description}</p>
+      <p className="mx-auto mt-4 max-w-3xl text-base leading-7 text-[var(--color-graphite)]">{description}</p>
     </div>
   );
 }
@@ -312,8 +308,8 @@ function InfoCard({
     <div
       className={
         left
-          ? "flex flex-col items-center gap-6 rounded-3xl border border-[var(--color-stone-surface)] bg-[var(--color-warm-canvas)] p-8 text-center shadow-[var(--shadow-elevated)] transition-colors hover:border-[color-mix(in_srgb,var(--color-teal-primary)_36%,var(--color-stone-surface))] lg:flex-row lg:items-start lg:text-left"
-          : "flex flex-col items-center rounded-3xl border border-[var(--color-stone-surface)] bg-[var(--color-card)] p-8 text-center shadow-[var(--shadow-elevated)] transition-transform duration-300 hover:-translate-y-2"
+          ? "flex flex-col items-center gap-5 rounded-3xl border border-[var(--color-stone-surface)] bg-[var(--color-warm-canvas)] p-5 text-center shadow-[var(--shadow-elevated)] transition-colors hover:border-[color-mix(in_srgb,var(--color-teal-primary)_36%,var(--color-stone-surface))] sm:gap-6 sm:p-8 lg:flex-row lg:items-start lg:text-left"
+          : "flex flex-col items-center rounded-3xl border border-[var(--color-stone-surface)] bg-[var(--color-card)] p-5 text-center shadow-[var(--shadow-elevated)] transition-transform duration-300 hover:-translate-y-2 sm:p-8"
       }
     >
       <IconBadge icon={Icon} className={left ? "shrink-0" : "mb-6"} />
@@ -322,12 +318,12 @@ function InfoCard({
           className={
             left
               ? "mb-2 text-sm font-bold uppercase tracking-normal text-[var(--color-charcoal-primary)]"
-              : "mb-4 text-[19px] font-bold leading-snug text-[var(--color-charcoal-primary)]"
+              : "mb-4 text-lg font-bold leading-snug text-[var(--color-charcoal-primary)]"
           }
         >
           {title}
         </h3>
-        <p className="text-[14px] leading-6 text-[var(--color-graphite)]">{description}</p>
+        <p className="text-sm leading-6 text-[var(--color-graphite)]">{description}</p>
       </div>
     </div>
   );

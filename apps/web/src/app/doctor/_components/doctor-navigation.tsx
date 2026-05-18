@@ -1,5 +1,6 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 
@@ -10,17 +11,25 @@ import {
   PortalTransitionLink,
   usePortalNavigationTransition,
 } from "@/app/_components/portal-navigation";
-import {
-  DoctorDashboardSkeleton,
-  DoctorGrantPageSkeleton,
-  DoctorMedicalRecordLibrarySkeleton,
-} from "@/components/loading-skeletons";
 import type { Dictionary } from "@/lib/i18n/dictionary";
 
 import { doctorNavItems } from "./doctor-nav-model";
 import { doctorPendingSkeletonKey } from "./doctor-navigation-transition-model";
 
 export { PortalTransitionLink as DoctorTransitionLink };
+
+const DoctorDashboardSkeleton = dynamic(
+  () => import("@/components/loading-skeletons").then((module) => module.DoctorDashboardSkeleton),
+  { loading: () => <PendingSkeletonFallback /> },
+);
+const DoctorGrantPageSkeleton = dynamic(
+  () => import("@/components/loading-skeletons").then((module) => module.DoctorGrantPageSkeleton),
+  { loading: () => <PendingSkeletonFallback /> },
+);
+const DoctorMedicalRecordLibrarySkeleton = dynamic(
+  () => import("@/components/loading-skeletons").then((module) => module.DoctorMedicalRecordLibrarySkeleton),
+  { loading: () => <PendingSkeletonFallback /> },
+);
 
 export function DoctorDesktopNavigation({ copy }: { copy: Dictionary }) {
   const pathname = usePathname() ?? "/doctor";
@@ -68,4 +77,17 @@ function renderPendingSkeleton(path: string) {
   if (key === "medical-record-library") return <DoctorMedicalRecordLibrarySkeleton />;
   if (key === "grant") return <DoctorGrantPageSkeleton />;
   return null;
+}
+
+function PendingSkeletonFallback() {
+  return (
+    <div className="grid min-h-[360px] animate-pulse gap-4">
+      <div className="h-28 rounded-[10px] bg-[var(--color-stone-surface)]" />
+      <div className="grid gap-3 md:grid-cols-2">
+        <div className="h-40 rounded-[10px] bg-[var(--color-stone-surface)]" />
+        <div className="h-40 rounded-[10px] bg-[var(--color-stone-surface)]" />
+      </div>
+      <div className="h-32 rounded-[10px] bg-[var(--color-stone-surface)]" />
+    </div>
+  );
 }

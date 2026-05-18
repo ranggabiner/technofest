@@ -32,11 +32,11 @@ export default async function DoctorOnboardingStep2Page() {
       themeLabels={copy.common.theme}
     >
       <div className="mx-auto w-full max-w-2xl">
-        <div className="mb-12 text-center">
-          <h1 className="font-serif text-[32px] font-medium leading-[1.15] tracking-[-0.8px] text-[var(--color-charcoal-primary)] md:text-[44px] md:leading-[1.09] md:tracking-[-1.14px]">
+        <div className="mb-8 text-center sm:mb-12">
+          <h1 className="text-3xl font-medium leading-tight tracking-normal text-[var(--color-charcoal-primary)] sm:text-3xl md:text-5xl md:leading-tight">
             {copy.doctor.onboarding.step2.title}
           </h1>
-          <p className="mx-auto mt-4 max-w-lg text-[15px] leading-[1.47] tracking-[-0.2px] text-[var(--color-graphite)]">
+          <p className="mx-auto mt-4 max-w-lg text-sm leading-6 tracking-normal text-[var(--color-graphite)]">
             {copy.doctor.onboarding.step2.description}
           </p>
         </div>
@@ -46,17 +46,17 @@ export default async function DoctorOnboardingStep2Page() {
           copy={copy.doctor.onboarding}
         />
 
-        <div className="mt-12 flex items-center justify-between gap-4">
+        <div className="mt-10 flex items-center justify-between gap-4 sm:mt-12">
           <Link
             href="/doctor/onboarding/step-1"
-            className="inline-flex items-center gap-2 text-[15px] font-medium leading-[1.47] tracking-[-0.2px] text-[var(--color-ash)] transition hover:text-[var(--color-midnight)]"
+            className="inline-flex min-h-11 items-center gap-2 text-sm font-medium leading-6 tracking-normal text-[var(--color-ash)] transition hover:text-[var(--color-midnight)]"
           >
             <ArrowLeft size={18} aria-hidden="true" />
             {copy.doctor.onboarding.back}
           </Link>
         </div>
 
-        <p className="mx-auto mt-12 flex max-w-xl items-center justify-center gap-2 text-center text-[12px] leading-[1.58] tracking-[-0.14px] text-[var(--color-ash)]">
+        <p className="mx-auto mt-10 flex max-w-xl items-center justify-center gap-2 text-center text-xs leading-6 tracking-normal text-[var(--color-ash)] sm:mt-12">
           <Lock size={18} aria-hidden="true" />
           <span>{copy.doctor.onboarding.step2.securityNote}</span>
         </p>

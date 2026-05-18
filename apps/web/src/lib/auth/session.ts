@@ -3,6 +3,7 @@ import "server-only";
 import type { User } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { cache } from "react";
 
 import { parseAdminEmailAllowlist, requireEnv } from "@/lib/config/env";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -29,13 +30,17 @@ type RoleRows = {
 };
 
 export async function getCurrentUser(): Promise<User | null> {
+  return getCurrentUserCached();
+}
+
+const getCurrentUserCached = cache(async (): Promise<User | null> => {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
   return user;
-}
+});
 
 export async function requireCurrentUser() {
   const user = await getCurrentUser();
@@ -86,6 +91,7 @@ export async function requireDoctorRole() {
 
 type EnsureRoleOptions = {
   clearIntentCookie?: boolean;
+  refreshRoleRows?: boolean;
 };
 
 export async function ensureRoleForUser(
@@ -113,7 +119,9 @@ export async function resolveRoleForUser(
   }
 
   const admin = createAdminClient();
-  const rows = await loadRoleRows(user.id, email);
+  const rows = await loadRoleRows(user.id, email, {
+    fresh: Boolean(options.clearIntentCookie || options.refreshRoleRows),
+  });
   const adminAllowlist = parseAdminEmailAllowlist(env.data.ADMIN_EMAIL_ALLOWLIST);
   let shouldReloadAdminProfile = false;
   let role = resolveRoleFromRows({
@@ -175,7 +183,7 @@ export async function resolveRoleForUser(
   }
 
   if (shouldReloadAdminProfile) {
-    const refreshed = await loadRoleRows(user.id, email);
+    const refreshed = await loadRoleRows(user.id, email, { fresh: true });
 
     role = resolveRoleFromRows({
       authUserId: user.id,
@@ -230,14 +238,14 @@ export async function completeRoleForUser(
 
   if (insert.error) {
     if (insert.error.code === "23505") {
-      const role = await resolveRoleForUser(user);
+      const role = await resolveRoleForUser(user, { refreshRoleRows: true });
       if (role) return role;
     }
 
     throw insert.error;
   }
 
-  const rows = await loadRoleRows(user.id, email);
+  const rows = await loadRoleRows(user.id, email, { fresh: true });
   const role = resolveRoleFromRows({
     authUserId: user.id,
     email,
@@ -260,7 +268,18 @@ export async function redirectToRoleHome() {
   redirect(roleEntryPath(role));
 }
 
-async function loadRoleRows(authUserId: string, email: string): Promise<RoleRows> {
+async function loadRoleRows(
+  authUserId: string,
+  email: string,
+  options: { fresh?: boolean } = {},
+): Promise<RoleRows> {
+  if (options.fresh) return loadRoleRowsUncached(authUserId, email);
+  return loadRoleRowsCached(authUserId, email);
+}
+
+const loadRoleRowsCached = cache(loadRoleRowsUncached);
+
+async function loadRoleRowsUncached(authUserId: string, email: string): Promise<RoleRows> {
   const admin = createAdminClient();
   const normalizedEmail = email.trim().toLowerCase();
   const [patient, doctor, medicalAdmin, adminInvitation] = await Promise.all([

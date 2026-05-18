@@ -1,12 +1,16 @@
 import { z } from "zod";
 
-export type EnvGroup = "core" | "email" | "ai" | "blockchain";
+export type EnvGroup = "supabase" | "core" | "email" | "ai" | "blockchain";
 
 export type ParsedEnv =
   | { ok: true; data: Record<string, string>; adminEmailAllowlist: string[] }
   | { ok: false; errors: string[] };
 
 const envSchemas: Record<EnvGroup, z.ZodObject<Record<string, z.ZodString>>> = {
+  supabase: z.object({
+    NEXT_PUBLIC_SUPABASE_URL: z.string().url(),
+    NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: z.string().min(1),
+  }),
   core: z.object({
     NEXT_PUBLIC_SUPABASE_URL: z.string().url(),
     NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: z.string().min(1),

@@ -70,7 +70,6 @@ html {
   --color-background: var(--color-warm-canvas);
   --color-foreground: var(--color-graphite);
   --font-sans: var(--font-inter);
-  --font-serif: var(--font-fraunces);
 }
 
 body {

@@ -166,6 +166,22 @@ describe("admin pages contract", () => {
     expect(modal).toContain("download");
   });
 
+  it("uses mobile card lists and viewport-safe dialogs for admin review flows", () => {
+    const table = route("admin/_components/admin-doctor-table.tsx");
+    const modal = route("admin/_components/admin-review-modal.tsx");
+    const skeleton = readFileSync(join(appDir, "../components/loading-skeletons.tsx"), "utf8");
+
+    expect(table).toContain("data-admin-doctor-cards");
+    expect(table).toContain("md:hidden");
+    expect(table).toContain("hidden overflow-x-auto md:block");
+    expect(table).toContain("w-full rounded-[10px]");
+    expect(modal).toContain("max-h-[calc(100dvh-2rem)]");
+    expect(modal).toContain("h-[calc(100dvh-2rem)]");
+    expect(modal).toContain("grid gap-2 sm:flex sm:justify-end");
+    expect(skeleton).toContain("data-skeleton-mobile-cards");
+    expect(skeleton).toContain("data-skeleton-desktop-table");
+  });
+
   it("keeps admin navigation path-driven like the patient portal", () => {
     const adminNavigation = route("admin/_components/admin-nav-model.ts");
 

@@ -4,6 +4,7 @@ import { useMemo, useRef, useState } from "react";
 import { Download, Eye, X } from "lucide-react";
 
 import { approveDoctorAction, rejectDoctorAction } from "@/app/admin/doctors/actions";
+import { LoadingActionButton } from "@/components/ui/async-action-button";
 import { Button } from "@/components/ui/button";
 import type { Dictionary } from "@/lib/i18n/dictionary";
 import type { AdminDoctorReview } from "@/lib/admin/service";
@@ -25,16 +26,17 @@ export function AdminReviewModal({
   const rejectFormRef = useRef<HTMLFormElement>(null);
   const [previewDocumentId, setPreviewDocumentId] = useState<string | null>(null);
   const [confirmation, setConfirmation] = useState<ConfirmationKind | null>(null);
+  const [submittingDecision, setSubmittingDecision] = useState<ConfirmationKind | null>(null);
   const actionLabels = useMemo(() => doctorActionLabels(doctor.accountStatus, copy.admin), [copy, doctor.accountStatus]);
   const previewDocument = doctor.documents.find((document) => document.documentId === previewDocumentId);
 
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-black/35 px-4 py-6" data-admin-review-modal>
+    <div className="fixed inset-0 z-50 grid place-items-center bg-black/35 px-3 py-4 sm:px-4 sm:py-6" data-admin-review-modal>
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="admin-review-title"
-        className="max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-[10px] border border-[var(--color-stone-surface)] bg-[var(--color-card)] p-5 shadow-[var(--shadow-elevated)]"
+        className="max-h-[calc(100dvh-2rem)] w-full max-w-3xl overflow-y-auto rounded-[10px] border border-[var(--color-stone-surface)] bg-[var(--color-card)] p-4 shadow-[var(--shadow-elevated)] sm:p-5"
       >
         <div className="mb-5 flex items-start justify-between gap-4">
           <div>
@@ -74,16 +76,16 @@ export function AdminReviewModal({
             return (
               <div
                 key={document.documentType}
-                className="flex flex-wrap items-center justify-between gap-3 rounded-[10px] border border-[var(--color-stone-surface)] p-4"
+                className="flex flex-col items-stretch gap-3 rounded-[10px] border border-[var(--color-stone-surface)] p-4 sm:flex-row sm:items-center sm:justify-between"
               >
-                <p className="font-semibold text-[var(--color-midnight)]">
+                <p className="min-w-0 break-words font-semibold text-[var(--color-midnight)]">
                   {index + 1}. {copy.admin.review.documentTitles[document.documentType]}
                 </p>
-                <div className="flex flex-wrap gap-2">
+                <div className="grid gap-2 sm:flex sm:w-auto sm:flex-wrap">
                   <Button
                     type="button"
                     variant="ghost"
-                    className="rounded-[10px]"
+                    className="w-full rounded-[10px] sm:w-auto"
                     disabled={!document.documentId}
                     onClick={() => setPreviewDocumentId(document.documentId)}
                   >
@@ -91,14 +93,14 @@ export function AdminReviewModal({
                     {copy.admin.review.viewDocument}
                   </Button>
                   {document.documentId ? (
-                    <Button asChild variant="secondary" className="rounded-[10px]">
+                    <Button asChild variant="secondary" className="w-full rounded-[10px] sm:w-auto">
                       <a href={downloadHref} download>
                         <Download size={16} aria-hidden="true" />
                         {copy.admin.review.downloadDocument}
                       </a>
                     </Button>
                   ) : (
-                    <Button type="button" variant="secondary" className="rounded-[10px]" disabled>
+                    <Button type="button" variant="secondary" className="w-full rounded-[10px] sm:w-auto" disabled>
                       <Download size={16} aria-hidden="true" />
                       {copy.admin.review.downloadDocument}
                     </Button>
@@ -120,23 +122,40 @@ export function AdminReviewModal({
           <input type="hidden" name="redirect_to" value={returnPath} />
         </form>
 
-        <div className="mt-6 flex flex-wrap justify-end gap-3 border-t border-[var(--color-stone-surface)] pt-5">
-          <Button type="button" variant="destructive" className="rounded-[10px]" onClick={() => setConfirmation("reject")}>
+        <div className="mt-6 grid gap-2 border-t border-[var(--color-stone-surface)] pt-5 sm:flex sm:flex-wrap sm:justify-end sm:gap-3">
+          <LoadingActionButton
+            type="button"
+            variant="destructive"
+            className="w-full rounded-[10px] sm:w-auto"
+            disabled={submittingDecision !== null}
+            isLoading={submittingDecision === "reject"}
+            loadingLabel={copy.admin.detail.submitting}
+            onClick={() => setConfirmation("reject")}
+            slotClassName="w-full sm:w-auto"
+          >
             {actionLabels.reject}
-          </Button>
-          <Button type="button" className="rounded-[10px]" onClick={() => setConfirmation("approve")}>
+          </LoadingActionButton>
+          <LoadingActionButton
+            type="button"
+            className="w-full rounded-[10px] sm:w-auto"
+            disabled={submittingDecision !== null}
+            isLoading={submittingDecision === "approve"}
+            loadingLabel={copy.admin.detail.submitting}
+            onClick={() => setConfirmation("approve")}
+            slotClassName="w-full sm:w-auto"
+          >
             {actionLabels.approve}
-          </Button>
+          </LoadingActionButton>
         </div>
       </div>
 
       {previewDocument && previewDocument.documentId ? (
-        <div className="fixed inset-0 z-[60] grid place-items-center bg-black/50 px-4 py-6" data-document-preview-lightbox>
+        <div className="fixed inset-0 z-[60] grid place-items-center bg-black/50 px-3 py-4 sm:px-4 sm:py-6" data-document-preview-lightbox>
           <div
             role="dialog"
             aria-modal="true"
             aria-labelledby="admin-preview-title"
-            className="grid h-[88vh] w-full max-w-5xl grid-rows-[auto_minmax(0,1fr)] rounded-[10px] bg-[var(--color-card)] shadow-[var(--shadow-elevated)]"
+            className="grid h-[calc(100dvh-2rem)] w-full max-w-5xl grid-rows-[auto_minmax(0,1fr)] rounded-[10px] bg-[var(--color-card)] shadow-[var(--shadow-elevated)]"
           >
             <div className="flex items-center justify-between gap-3 border-b border-[var(--color-stone-surface)] p-4">
               <h3 id="admin-preview-title" className="font-semibold text-[var(--color-midnight)]">
@@ -144,7 +163,7 @@ export function AdminReviewModal({
               </h3>
               <button
                 type="button"
-                className="grid size-9 cursor-pointer place-items-center rounded-full bg-[var(--color-stone-surface)]"
+                className="grid size-10 cursor-pointer place-items-center rounded-full bg-[var(--color-stone-surface)]"
                 aria-label={copy.admin.review.closePreview}
                 onClick={() => setPreviewDocumentId(null)}
               >
@@ -169,9 +188,12 @@ export function AdminReviewModal({
           tone={confirmation}
           onCancel={() => setConfirmation(null)}
           onConfirm={() => {
-            const form = confirmation === "approve" ? approveFormRef.current : rejectFormRef.current;
+            const nextDecision = confirmation;
+            const form = nextDecision === "approve" ? approveFormRef.current : rejectFormRef.current;
+            if (!form) return;
+            setSubmittingDecision(nextDecision);
             setConfirmation(null);
-            form?.requestSubmit();
+            form.requestSubmit();
           }}
         />
       ) : null}
@@ -197,22 +219,22 @@ function ConfirmationDialog({
   onConfirm: () => void;
 }) {
   return (
-    <div className="fixed inset-0 z-[70] grid place-items-center bg-black/45 px-4">
+    <div className="fixed inset-0 z-[70] grid place-items-center bg-black/45 px-3 py-4 sm:px-4">
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="admin-confirm-title"
-        className="w-full max-w-md rounded-[10px] bg-[var(--color-card)] p-5 shadow-[var(--shadow-elevated)]"
+        className="max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-y-auto rounded-[10px] bg-[var(--color-card)] p-4 shadow-[var(--shadow-elevated)] sm:p-5"
       >
         <h3 id="admin-confirm-title" className="text-lg font-semibold text-[var(--color-midnight)]">
           {title}
         </h3>
         <p className="mt-2 text-sm leading-6 text-[var(--color-graphite)]">{message}</p>
-        <div className="mt-5 flex justify-end gap-2">
-          <Button type="button" variant="ghost" className="rounded-[10px]" onClick={onCancel}>
+        <div className="mt-5 grid gap-2 sm:flex sm:justify-end">
+          <Button type="button" variant="ghost" className="w-full rounded-[10px] sm:w-auto" onClick={onCancel}>
             {cancel}
           </Button>
-          <Button type="button" variant={tone === "reject" ? "destructive" : "primary"} className="rounded-[10px]" onClick={onConfirm}>
+          <Button type="button" variant={tone === "reject" ? "destructive" : "primary"} className="w-full rounded-[10px] sm:w-auto" onClick={onConfirm}>
             {confirm}
           </Button>
         </div>

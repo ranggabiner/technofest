@@ -4,7 +4,7 @@ import { DashboardCard } from "@/app/_components/portal-layout";
 import { approveDoctorAction, rejectDoctorAction } from "@/app/admin/doctors/actions";
 import { ProofStatus } from "@/components/proof-status";
 import { StatusBadge } from "@/components/status-badge";
-import { Button } from "@/components/ui/button";
+import { PendingSubmitButton } from "@/components/ui/async-action-button";
 import { Field, Label, Textarea } from "@/components/ui/form";
 import { loadAdminDoctorDetailState } from "@/lib/admin/service";
 import { formatDateTime } from "@/lib/i18n/format";
@@ -32,10 +32,10 @@ export default async function AdminDoctorDetailPage({
   return (
     <section className="grid gap-8" data-admin-doctor-detail-page="main">
       <header className="border-b border-[var(--color-stone-surface)] pb-5">
-        <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-ash)]">
+        <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-[var(--color-ash)]">
           {copy.admin.nav.doctorVerification}
         </p>
-        <h1 className="text-[36px] font-semibold leading-[1.1] text-[var(--color-midnight)] md:text-[44px]">
+        <h1 className="text-3xl font-semibold leading-tight text-[var(--color-midnight)] sm:text-4xl md:text-5xl">
           {copy.admin.detail.title}
         </h1>
         <p className="mt-3 max-w-2xl text-base leading-7 text-[var(--color-ash)]">
@@ -53,8 +53,8 @@ export default async function AdminDoctorDetailPage({
                 : copy.admin.doctors.rejected}
           </StatusBadge>
         </div>
-        <h2 className="text-[23px] font-semibold leading-tight text-[var(--color-midnight)]">{doctor.full_name}</h2>
-        <p className="mt-1 text-sm leading-6 text-[var(--color-ash)]">
+        <h2 className="break-words text-xl font-semibold leading-tight text-[var(--color-midnight)]">{doctor.full_name}</h2>
+        <p className="mt-1 break-words text-sm leading-6 text-[var(--color-ash)] [overflow-wrap:anywhere]">
           {doctor.specialization ?? copy.common.noSpecializationShort} · {doctor.email} · {doctor.phone_number ?? copy.common.noPhone}
         </p>
         <div className="mt-5 rounded-[10px] bg-[var(--color-parchment-card)] p-4 text-sm leading-6">
@@ -64,7 +64,7 @@ export default async function AdminDoctorDetailPage({
 
       <DashboardCard className="p-6 md:p-8">
         <div className="mb-5">
-          <h2 className="text-[23px] font-semibold leading-tight text-[var(--color-midnight)]">
+          <h2 className="text-xl font-semibold leading-tight text-[var(--color-midnight)]">
             {copy.admin.detail.kycDocuments}
           </h2>
           <p className="mt-1 text-sm leading-6 text-[var(--color-ash)]">{copy.admin.detail.kycDescription}</p>
@@ -74,7 +74,7 @@ export default async function AdminDoctorDetailPage({
             <Link
               key={document.document_id}
               href={`/admin/doctors/${doctorId}/documents/${document.document_id}`}
-              className="cursor-pointer rounded-[10px] bg-[var(--color-parchment-card)] p-4 text-sm font-semibold uppercase text-[var(--color-midnight)] transition hover:bg-[var(--color-teal-surface)]"
+              className="inline-flex min-h-11 cursor-pointer items-center rounded-[10px] bg-[var(--color-parchment-card)] p-4 text-sm font-semibold uppercase text-[var(--color-midnight)] transition hover:bg-[var(--color-teal-surface)]"
             >
               {document.document_type}
             </Link>
@@ -84,7 +84,7 @@ export default async function AdminDoctorDetailPage({
 
       <DashboardCard className="p-6 md:p-8">
         <div className="mb-5">
-          <h2 className="text-[23px] font-semibold leading-tight text-[var(--color-midnight)]">
+          <h2 className="text-xl font-semibold leading-tight text-[var(--color-midnight)]">
             {copy.admin.detail.decisionTitle}
           </h2>
           <p className="mt-1 text-sm leading-6 text-[var(--color-ash)]">{copy.admin.detail.decisionDescription}</p>
@@ -92,9 +92,9 @@ export default async function AdminDoctorDetailPage({
         <div className="grid gap-4 sm:grid-cols-2">
           <form action={approveDoctorAction}>
             <input type="hidden" name="doctor_id" value={doctorId} />
-            <Button type="submit" className="w-full">
+            <PendingSubmitButton type="submit" className="w-full" loadingLabel={copy.admin.detail.submitting} slotClassName="w-full">
               {copy.admin.detail.approve}
-            </Button>
+            </PendingSubmitButton>
           </form>
           <form action={rejectDoctorAction} className="grid gap-3">
             <input type="hidden" name="doctor_id" value={doctorId} />
@@ -102,16 +102,22 @@ export default async function AdminDoctorDetailPage({
               <Label htmlFor="rejection_reason">{copy.admin.detail.rejectionReason}</Label>
               <Textarea id="rejection_reason" name="rejection_reason" required />
             </Field>
-            <Button type="submit" variant="destructive">
+            <PendingSubmitButton
+              type="submit"
+              variant="destructive"
+              className="w-full"
+              loadingLabel={copy.admin.detail.submitting}
+              slotClassName="w-full"
+            >
               {copy.admin.detail.reject}
-            </Button>
+            </PendingSubmitButton>
           </form>
         </div>
       </DashboardCard>
 
       <DashboardCard className="p-6 md:p-8">
         <div className="mb-5">
-          <h2 className="text-[23px] font-semibold leading-tight text-[var(--color-midnight)]">
+          <h2 className="text-xl font-semibold leading-tight text-[var(--color-midnight)]">
             {copy.admin.detail.auditTitle}
           </h2>
           <p className="mt-1 text-sm leading-6 text-[var(--color-ash)]">{copy.admin.detail.auditDescription}</p>
@@ -129,8 +135,8 @@ export default async function AdminDoctorDetailPage({
                     {copy.common.proofPrefix} {proofLabel(copy, audit.blockchain_status)}
                   </StatusBadge>
                 </div>
-                <p className="font-semibold text-[var(--color-midnight)]">{describeAuditAction(copy, audit.action)}</p>
-                <p className="text-sm text-[var(--color-ash)]">
+                <p className="break-words font-semibold text-[var(--color-midnight)]">{describeAuditAction(copy, audit.action)}</p>
+                <p className="break-words text-sm text-[var(--color-ash)] [overflow-wrap:anywhere]">
                   {formatDateTime(audit.created_at, locale)}
                   {audit.reason ? ` · ${audit.reason}` : ""}
                 </p>

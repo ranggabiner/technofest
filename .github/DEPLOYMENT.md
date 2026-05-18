@@ -1,16 +1,27 @@
-# MedProof Deployment Setup
+# MedProof CI/CD Setup
 
-This repository uses GitHub Actions for validation and Supabase migrations. Vercel Git deploys the web app from `apps/web`.
+This repository separates app validation, Supabase validation, Supabase deployment, and Vercel environment variable sync. Vercel Git remains responsible for app deployments from `apps/web`.
 
 ## Branch To Environment Map
 
 | Git branch | App environment | Supabase target | Vercel target |
 |---|---|---|---|
-| `development` | Staging | Staging Supabase project | Preview deployment scoped to `development` |
-| `master` | Production | Production Supabase project | Production deployment |
-| `main` | Production alias | Production Supabase project | Use if the repo is later renamed from `master` |
+| `develop` | Staging | Staging Supabase project | Preview env scoped to `develop` |
+| `main` | Production | Production Supabase project | Production env |
 
 The local environment uses a separate local Supabase project and a separate Google OAuth client.
+
+## Workflow Responsibilities
+
+| Workflow | Responsibility | Push/PR path trigger |
+|---|---|---|
+| `Code Validation` | App lint, typecheck, test, and build only | `apps/web/**`, excluding env files, `apps/web/README.md`, and the Vercel env sync script; `.github/workflows/ci.yml` |
+| `Secret File Guard` | Blocks committed real `.env*` files | Real env file patterns; `.github/workflows/secret-file-guard.yml` |
+| `Supabase Validation` | Local Supabase reset, pgTAP tests, local advisors, and remote privacy validation after successful Supabase deploy | `apps/supabase/**`; `.github/workflows/supabase-validation.yml`; successful `Supabase Deploy` |
+| `Supabase Deploy` | Linked Supabase migration preview, apply, migration list, and PostgREST schema-cache refresh | `apps/supabase/supabase/config.toml`, `apps/supabase/supabase/migrations/**`, `.github/workflows/supabase-deploy.yml` |
+| `Vercel Env Sync` | Idempotent Vercel env upsert only; no deploy | `apps/web/scripts/vercel-env-sync.mjs`, `apps/web/.env.staging.example`, `apps/web/.env.production.example`, `.github/workflows/vercel-env-sync.yml` |
+
+`Supabase Deploy` does not run app build, lint, typecheck, tests, or Vercel commands. `Vercel Env Sync` does not deploy the app and uses Vercel's `upsert=true` API behavior so existing variables are updated instead of duplicated.
 
 ## Required GitHub Environments
 
@@ -19,6 +30,8 @@ Create GitHub Environments named `staging` and `production`. Configure productio
 Environment variables:
 
 ```text
+VERCEL_ORG_ID
+VERCEL_PROJECT_ID
 NEXT_PUBLIC_APP_URL
 NEXT_PUBLIC_SUPABASE_URL
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
@@ -34,6 +47,7 @@ MEDPROOF_PRIVACY_SENTINELS
 Environment secrets:
 
 ```text
+VERCEL_TOKEN
 SUPABASE_ACCESS_TOKEN
 SUPABASE_DB_PASSWORD
 SUPABASE_SERVICE_ROLE_KEY
@@ -48,21 +62,36 @@ RELAYER_PRIVATE_KEY
 
 Use staging values in the `staging` environment and production values in the `production` environment. Do not reuse staging Supabase credentials for production or production credentials for staging.
 
-The Supabase deploy workflow runs remote privacy validation after migrations are applied. `NEXT_PUBLIC_SUPABASE_URL` must match `SUPABASE_PROJECT_REF` for that GitHub Environment, and `SUPABASE_SERVICE_ROLE_KEY` must come from the same Supabase project. The workflow refreshes the PostgREST schema cache before `pnpm validate:privacy` so validation checks the newly migrated schema.
+## Supabase Deployment
 
-## Required Vercel Setup
+`Supabase Deploy` links the CLI to the environment's Supabase project with `SUPABASE_PROJECT_REF`, authenticated by `SUPABASE_ACCESS_TOKEN` and `SUPABASE_DB_PASSWORD`, then runs:
 
-Connect the Git repository to Vercel and set:
+```bash
+supabase --workdir apps/supabase link --project-ref "$SUPABASE_PROJECT_REF"
+supabase --workdir apps/supabase db push --linked --dry-run
+supabase --workdir apps/supabase db push --linked
+supabase --workdir apps/supabase migration list --linked
+```
+
+The workflow intentionally does not run `supabase config push` because `apps/supabase/supabase/config.toml` contains localhost settings for local development.
+
+Remote `pnpm validate:privacy` runs in `Supabase Validation` after `Supabase Deploy` succeeds. It uses `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_PROJECT_REF`, `SUPABASE_SERVICE_ROLE_KEY`, and optional `MEDPROOF_PRIVACY_SENTINELS` from the same GitHub Environment.
+
+## Vercel Env Sync
+
+`Vercel Env Sync` reads values from the active GitHub Environment and upserts them into the Vercel project identified by `VERCEL_PROJECT_ID` and `VERCEL_ORG_ID`.
+
+- Staging sync writes Vercel `preview` variables scoped to Git branch `develop`.
+- Production sync writes Vercel `production` variables.
+- Secret values must come from GitHub Secrets, not repository files.
+- The sync script calls the Vercel Project Env API with `upsert=true`; it does not call any deployment endpoint.
+
+Vercel project setup:
 
 ```text
 Root Directory: apps/web
-Production Branch: master
+Production Branch: main
 ```
-
-Vercel environment variables must mirror the GitHub environment values:
-
-- Production variables use the production Supabase project, production Google OAuth client, and `https://medproof.binerlabs.com`.
-- Preview variables scoped to the `development` branch use the staging Supabase project, staging Google OAuth client, and `https://staging.medproof.binerlabs.com`.
 
 Recommended Vercel Deployment Checks for production:
 
@@ -96,7 +125,7 @@ App URL: https://medproof.binerlabs.com
 Supabase callback URL: https://<production-project-ref>.supabase.co/auth/v1/callback
 ```
 
-Configure each Supabase project dashboard with the matching Google OAuth client ID and secret. The CI workflow intentionally does not run `supabase config push` because `apps/supabase/supabase/config.toml` contains localhost settings for local development.
+Configure each Supabase project dashboard with the matching Google OAuth client ID and secret.
 
 ## Local Env Files
 

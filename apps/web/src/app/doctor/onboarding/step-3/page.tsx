@@ -4,7 +4,7 @@ import { ArrowLeft, FileText, UserRound } from "lucide-react";
 
 import { KycDocumentCompactPreview } from "@/components/kyc-document-preview";
 import { OnboardingShell } from "@/components/onboarding-shell";
-import { Button } from "@/components/ui/button";
+import { PendingSubmitButton } from "@/components/ui/async-action-button";
 import { roleEntryPath } from "@/lib/auth/roles";
 import { requireRole } from "@/lib/auth/session";
 import { getDictionary } from "@/lib/i18n/server";
@@ -55,20 +55,20 @@ export default async function DoctorOnboardingStep3Page() {
       themeLabels={copy.common.theme}
     >
       <div className="mx-auto w-full max-w-3xl">
-        <div className="mb-12 text-center">
-          <h1 className="font-serif text-[32px] font-medium leading-[1.15] tracking-[-0.8px] text-[var(--color-charcoal-primary)] md:text-[44px] md:leading-[1.09] md:tracking-[-1.14px]">
+        <div className="mb-8 text-center sm:mb-12">
+          <h1 className="text-3xl font-medium leading-tight tracking-normal text-[var(--color-charcoal-primary)] sm:text-3xl md:text-5xl md:leading-tight">
             {copy.doctor.onboarding.step3.title}
           </h1>
-          <p className="mx-auto mt-4 max-w-lg text-[15px] leading-[1.47] tracking-[-0.2px] text-[var(--color-graphite)]">
+          <p className="mx-auto mt-4 max-w-lg text-sm leading-6 tracking-normal text-[var(--color-graphite)]">
             {copy.doctor.onboarding.step3.description}
           </p>
         </div>
 
-        <section className="rounded-xl border border-[var(--color-stone-surface)] bg-[var(--color-card)] p-6 shadow-[var(--shadow-subtle)] md:p-12">
-          <div className="mb-12">
+        <section className="rounded-xl border border-[var(--color-stone-surface)] bg-[var(--color-card)] p-5 shadow-[var(--shadow-subtle)] sm:p-6 md:p-12">
+          <div className="mb-10 sm:mb-12">
             <div className="mb-6 flex items-center gap-4 border-b border-[var(--color-stone-surface)] pb-2">
               <UserRound size={22} className="text-[var(--color-midnight)]" aria-hidden="true" />
-              <h2 className="text-[23px] font-semibold leading-[1.2] tracking-[-0.44px] text-[var(--color-charcoal-primary)]">
+              <h2 className="text-xl font-semibold leading-tight tracking-normal text-[var(--color-charcoal-primary)]">
                 {copy.doctor.onboarding.step3.profileTitle}
               </h2>
             </div>
@@ -87,7 +87,7 @@ export default async function DoctorOnboardingStep3Page() {
           <div>
             <div className="mb-6 flex items-center gap-4 border-b border-[var(--color-stone-surface)] pb-2">
               <FileText size={22} className="text-[var(--color-midnight)]" aria-hidden="true" />
-              <h2 className="text-[23px] font-semibold leading-[1.2] tracking-[-0.44px] text-[var(--color-charcoal-primary)]">
+              <h2 className="text-xl font-semibold leading-tight tracking-normal text-[var(--color-charcoal-primary)]">
                 {copy.doctor.onboarding.step3.documentsTitle}
               </h2>
             </div>
@@ -97,7 +97,7 @@ export default async function DoctorOnboardingStep3Page() {
 
                 return previewUrl ? (
                   <div key={document.documentType} className="space-y-3">
-                    <h3 className="text-[19px] font-medium leading-[1.38] tracking-[-0.25px] text-[var(--color-charcoal-primary)]">
+                    <h3 className="text-lg font-medium leading-snug tracking-normal text-[var(--color-charcoal-primary)]">
                       {copy.doctor.onboarding.step2.documentTitles[document.documentType]}
                     </h3>
                     <KycDocumentCompactPreview
@@ -114,20 +114,22 @@ export default async function DoctorOnboardingStep3Page() {
           </div>
         </section>
 
-        <form action={completeDoctorOnboardingAction} className="mt-12 flex items-center justify-between gap-4">
+        <form action={completeDoctorOnboardingAction} className="mt-10 grid gap-3 sm:mt-12 sm:flex sm:items-center sm:justify-between sm:gap-4">
           <Link
             href="/doctor/onboarding/step-2"
-            className="inline-flex items-center gap-2 text-[15px] font-medium leading-[1.47] tracking-[-0.2px] text-[var(--color-ash)] transition hover:text-[var(--color-midnight)]"
+            className="inline-flex min-h-11 items-center gap-2 text-sm font-medium leading-6 tracking-normal text-[var(--color-ash)] transition hover:text-[var(--color-midnight)]"
           >
             <ArrowLeft size={18} aria-hidden="true" />
             {copy.doctor.onboarding.back}
           </Link>
-          <Button
+          <PendingSubmitButton
             type="submit"
-            className="min-h-12 rounded-full bg-[var(--color-midnight)] px-12 py-[14px] text-[19px] font-medium leading-[1.38] tracking-[-0.25px] text-[var(--color-inverted)] shadow-[var(--shadow-elevated)] hover:bg-[var(--color-charcoal-primary)] hover:text-[var(--color-warm-canvas)]"
+            className="min-h-12 w-full rounded-full bg-[var(--color-midnight)] px-8 py-[14px] text-base font-medium leading-snug tracking-normal text-[var(--color-inverted)] shadow-[var(--shadow-elevated)] hover:bg-[var(--color-charcoal-primary)] hover:text-[var(--color-warm-canvas)] sm:w-auto sm:px-12 sm:text-lg"
+            loadingLabel={copy.marketing.role.submitting}
+            slotClassName="w-full sm:w-auto"
           >
             {copy.doctor.onboarding.complete}
-          </Button>
+          </PendingSubmitButton>
         </form>
       </div>
     </OnboardingShell>
@@ -137,14 +139,14 @@ export default async function DoctorOnboardingStep3Page() {
 function ReviewItem({ label, value, strong = false }: { label: string; value: string; strong?: boolean }) {
   return (
     <div className="space-y-1">
-      <dt className="text-[12px] font-semibold uppercase leading-[1.58] tracking-[0.5px] text-[var(--color-ash)]">
+      <dt className="text-xs font-semibold uppercase leading-6 tracking-widest text-[var(--color-ash)]">
         {label}
       </dt>
       <dd
         className={
           strong
-            ? "text-[19px] font-medium leading-[1.38] tracking-[-0.25px] text-[var(--color-charcoal-primary)]"
-            : "text-[15px] leading-[1.47] tracking-[-0.2px] text-[var(--color-charcoal-primary)]"
+            ? "break-words text-lg font-medium leading-snug tracking-normal text-[var(--color-charcoal-primary)]"
+            : "text-sm leading-6 tracking-normal text-[var(--color-charcoal-primary)]"
         }
       >
         {value}

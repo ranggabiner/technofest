@@ -32,7 +32,6 @@ export default async function LoginPage({
     <LoginPageShell
       authError={authError}
       copy={loginCopy}
-      copyright={copy.common.copyright}
       description={loginCopy.chooserDescription}
       title={loginCopy.chooserTitle}
       renderContent={() => <LoginOptionGrid options={options} />}

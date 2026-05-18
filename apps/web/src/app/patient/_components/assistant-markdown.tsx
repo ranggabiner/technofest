@@ -61,8 +61,8 @@ const markdownComponents: Components = {
         {...props}
         className={cn(
           isBlockCode
-            ? "block min-w-max whitespace-pre font-mono text-[12px] leading-5"
-            : "break-words rounded-md bg-[var(--color-stone-surface)] px-1.5 py-0.5 font-mono text-[0.92em] text-[var(--color-midnight)]",
+            ? "block min-w-max whitespace-pre font-mono text-xs leading-5"
+            : "break-words rounded-md bg-[var(--color-stone-surface)] px-1.5 py-0.5 font-mono text-sm text-[var(--color-midnight)]",
           className,
         )}
       >

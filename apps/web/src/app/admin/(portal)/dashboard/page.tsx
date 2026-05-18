@@ -17,10 +17,10 @@ export default async function AdminDashboardPage() {
   return (
     <section className="grid gap-8" data-admin-dashboard-page="main">
       <header className="border-b border-[var(--color-stone-surface)] pb-5">
-        <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-ash)]">
+        <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-[var(--color-ash)]">
           {copy.admin.doctors.title}
         </p>
-        <h1 className="text-[36px] font-semibold leading-[1.1] text-[var(--color-midnight)] md:text-[44px]">
+        <h1 className="text-3xl font-semibold leading-tight text-[var(--color-midnight)] sm:text-4xl md:text-5xl">
           {copy.admin.dashboard.title}
         </h1>
         <p className="mt-3 max-w-2xl text-base leading-7 text-[var(--color-ash)]">
@@ -36,11 +36,11 @@ export default async function AdminDashboardPage() {
 
       <section className="grid gap-5 lg:grid-cols-[minmax(0,1.45fr)_minmax(280px,0.85fr)]">
         <DashboardCard className="p-6 md:p-8">
-          <div className="mb-5 flex flex-row items-center justify-between gap-3">
-            <h2 className="text-[23px] font-semibold leading-tight text-[var(--color-midnight)]">
+          <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <h2 className="text-xl font-semibold leading-tight text-[var(--color-midnight)]">
               {copy.admin.dashboard.priorityQueue}
             </h2>
-            <Button asChild variant="ghost" className="rounded-[10px]">
+            <Button asChild variant="ghost" className="w-full rounded-[10px] sm:w-auto">
               <PortalTransitionLink href="/admin/approval">{copy.admin.dashboard.viewAll}</PortalTransitionLink>
             </Button>
           </div>
@@ -53,9 +53,9 @@ export default async function AdminDashboardPage() {
           />
         </DashboardCard>
 
-        <DashboardCard className="min-h-[420px] p-6 md:p-8">
+        <DashboardCard className="p-6 md:min-h-[420px] md:p-8">
           <div className="mb-5">
-            <h2 className="text-[23px] font-semibold leading-tight text-[var(--color-midnight)]">
+            <h2 className="text-xl font-semibold leading-tight text-[var(--color-midnight)]">
               {copy.admin.dashboard.auditTrail}
             </h2>
           </div>

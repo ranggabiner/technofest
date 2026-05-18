@@ -45,10 +45,10 @@ export default async function PatientAccessPage({
       data-doctor-access-page="main"
     >
       <header className="border-b border-[var(--color-stone-surface)] pb-5">
-        <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-ash)]">
+        <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-[var(--color-ash)]">
           {copy.patient.access.shortTitle}
         </p>
-        <h1 className="text-[36px] font-semibold leading-[1.1] text-[var(--color-midnight)] md:text-[44px]">
+        <h1 className="text-3xl font-semibold leading-tight text-[var(--color-midnight)] sm:text-4xl md:text-5xl">
           {copy.patient.access.title}
         </h1>
         <p className="mt-3 max-w-2xl text-base leading-7 text-[var(--color-ash)]">
@@ -74,7 +74,7 @@ export default async function PatientAccessPage({
       <section data-doctor-access-section="grant">
         <DashboardCard className="grid gap-8 p-6 md:p-8">
           <div className="max-w-2xl">
-            <h2 className="text-[23px] font-semibold leading-tight text-[var(--color-midnight)]">
+            <h2 className="text-xl font-semibold leading-tight text-[var(--color-midnight)]">
               {copy.patient.access.newAccessTitle}
             </h2>
             <p className="mt-2 text-sm leading-6 text-[var(--color-ash)]">
@@ -87,7 +87,7 @@ export default async function PatientAccessPage({
 
       <section className="grid gap-5" data-doctor-access-section="activity">
         <div>
-          <h2 className="text-[23px] font-semibold leading-tight text-[var(--color-midnight)]">
+          <h2 className="text-xl font-semibold leading-tight text-[var(--color-midnight)]">
             {copy.patient.access.activityTitle}
           </h2>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--color-ash)]">

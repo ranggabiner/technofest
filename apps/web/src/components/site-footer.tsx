@@ -16,23 +16,23 @@ export function SiteFooterContent({ copy }: { copy: Dictionary }) {
       data-scroll-reveal=""
       data-scroll-reveal-group="footer"
       data-site-footer=""
-      className="w-full bg-[var(--color-card)] px-6 pb-10 pt-20 text-[var(--color-graphite)]"
+      className="w-full bg-[var(--color-card)] px-4 pb-8 pt-14 text-[var(--color-graphite)] sm:px-6 sm:pb-10 sm:pt-20"
     >
-      <div className="mx-auto mb-10 flex w-full max-w-[1100px] flex-col items-start justify-between gap-10 border-b border-[var(--color-stone-surface)] pb-10 md:flex-row">
+      <div className="mx-auto mb-8 flex w-full max-w-[1100px] flex-col items-start justify-between gap-8 border-b border-[var(--color-stone-surface)] pb-8 sm:mb-10 sm:gap-10 sm:pb-10 md:flex-row">
         <div data-scroll-reveal="" data-scroll-reveal-group="footer-brand" className="flex w-full max-w-md flex-col gap-6">
           <BrandScrollTopButton
             brand={copy.common.brand}
-            brandClassName="font-serif text-[28px] font-bold leading-none text-[var(--color-midnight)]"
+            brandClassName="text-2xl font-semibold leading-none tracking-tight text-[var(--color-midnight)]"
             className="flex cursor-pointer items-center gap-2"
             logoClassName="h-10 w-auto object-contain"
             logoSrc="/assets/landing/logo.webp"
             scrollToTopLabel={copy.common.scrollToTop}
           />
-          <p className="text-[14px] leading-6 text-[var(--color-graphite)]">{landing.footer.description}</p>
+          <p className="text-sm leading-6 text-[var(--color-graphite)]">{landing.footer.description}</p>
         </div>
       </div>
       <p
-        className="mx-auto w-full max-w-[1100px] text-center text-[14px] text-[color-mix(in_srgb,var(--color-graphite)_70%,transparent)]"
+        className="mx-auto w-full max-w-[1100px] text-center text-sm text-[color-mix(in_srgb,var(--color-graphite)_70%,transparent)]"
       >
         {copy.common.copyright}
       </p>

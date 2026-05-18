@@ -19,8 +19,8 @@ describe("SiteFooter", () => {
     expect(source).toContain('logoSrc="/assets/landing/logo.webp"');
     expect(source).toContain("landing.footer.description");
     expect(source).toContain("copy.common.copyright");
-    expect(source).toContain("w-full bg-[var(--color-card)] px-6 pb-10 pt-20 text-[var(--color-graphite)]");
-    expect(source).toContain("border-b border-[var(--color-stone-surface)] pb-10");
+    expect(source).toContain("w-full bg-[var(--color-card)] px-4 pb-8 pt-14 text-[var(--color-graphite)] sm:px-6 sm:pb-10 sm:pt-20");
+    expect(source).toContain("border-b border-[var(--color-stone-surface)] pb-8");
     expect(source).not.toContain('data-scroll-reveal-group="footer-copyright"');
   });
 

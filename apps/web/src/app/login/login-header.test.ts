@@ -55,6 +55,8 @@ describe("login header", () => {
   it("keeps Google OAuth on the dedicated real-account login page", () => {
     expect(realSurface).toContain("GoogleLoginForm");
     expect(realSurface).toContain("startGoogleOAuthAction");
+    expect(realSurface).toContain("PendingSubmitButton");
+    expect(realSurface).toContain("loadingLabel={loginCopy.oauthSubmitting}");
     expect(realSource).not.toContain("ManualLoginForm");
     expect(realSource).not.toContain("DemoCredentials");
   });
@@ -66,6 +68,8 @@ describe("login header", () => {
     expect(actions).toContain("signInWithPassword");
     expect(actions).toContain("allowedManualDemoEmails");
     expect(actions).toContain("manual_invalid");
+    expect(demoSurface).toContain("PendingSubmitButton");
+    expect(demoSurface).toContain("loadingLabel={copy.manualSubmitting}");
 
     for (const email of ["dokter@test.com", "pasien@test.com", "superadmin@test.com", "admin@test.com"]) {
       expect(actions).toContain(email);
@@ -76,6 +80,14 @@ describe("login header", () => {
     expect(actions).toContain('redirect("/login/real?error=oauth_start_failed")');
     expect(actions).toContain('redirect("/login/demo?error=manual_invalid")');
     expect(callbackRouteSource).toContain('new URL("/login/real", request.url)');
+  });
+
+  it("removes the card-level copyright from login surfaces while keeping privacy copy", () => {
+    for (const surface of [loginSurface, demoSurface, realSurface]) {
+      expect(surface).not.toContain("copyright={copy.common.copyright}");
+      expect(surface).not.toContain("copyright:");
+      expect(surface).toContain("copy.privacy");
+    }
   });
 });
 

@@ -27,12 +27,16 @@ export default async function RealLoginPage({
     <LoginPageShell
       authError={authError}
       copy={loginCopy}
-      copyright={copy.common.copyright}
       description={loginCopy.realPageDescription}
       title={loginCopy.realPageTitle}
       renderContent={() => (
         <>
-          <GoogleLoginForm title={loginCopy.oauthTitle} label={loginCopy.google} className="w-full" />
+          <GoogleLoginForm
+            title={loginCopy.oauthTitle}
+            label={loginCopy.google}
+            loadingLabel={loginCopy.oauthSubmitting}
+            className="w-full"
+          />
           <BackToLoginOptions label={loginCopy.backToChooser} />
         </>
       )}

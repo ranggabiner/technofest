@@ -16,7 +16,7 @@ export function DemoCredentialCopyButton({
   return (
     <button
       type="button"
-      className="cursor-pointer rounded-full border border-[var(--color-stone-surface)] px-2.5 py-1 text-[11px] font-semibold text-[var(--color-midnight)] transition hover:bg-[var(--color-card)] disabled:cursor-not-allowed disabled:opacity-60"
+      className="min-h-11 cursor-pointer rounded-full border border-[var(--color-stone-surface)] px-3 py-1 text-xs font-semibold text-[var(--color-midnight)] transition hover:bg-[var(--color-card)] disabled:cursor-not-allowed disabled:opacity-60"
       onClick={async () => {
         try {
           await navigator.clipboard.writeText(value);

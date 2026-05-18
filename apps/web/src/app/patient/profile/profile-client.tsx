@@ -7,6 +7,7 @@ import {
   ProfilePhotoPicker,
   openProfileConfirmation,
 } from "@/app/_components/profile-shell";
+import { PendingSubmitButton } from "@/components/ui/async-action-button";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Label, Select, Textarea } from "@/components/ui/form";
 import type { Dictionary } from "@/lib/i18n/dictionary";
@@ -29,25 +30,25 @@ export function PatientProfileSettingsClient({
   return (
     <div className="space-y-6">
       <ProfileConfirmationHost />
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-ash)]">
+          <p className="text-xs font-semibold uppercase tracking-widest text-[var(--color-ash)]">
             {copy.patient.eyebrow}
           </p>
-          <h1 className="mt-2 text-[36px] font-semibold leading-tight text-[var(--color-midnight)]">
+          <h1 className="mt-2 text-3xl font-semibold leading-tight text-[var(--color-midnight)] sm:text-4xl">
             {copy.patient.title}
           </h1>
         </div>
       </div>
 
-      <section className="rounded-xl border border-[var(--color-stone-surface)] bg-[var(--color-card)] p-6 shadow-[var(--shadow-subtle)]">
+      <section className="rounded-xl border border-[var(--color-stone-surface)] bg-[var(--color-card)] p-5 shadow-[var(--shadow-subtle)] sm:p-6">
         <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
           <ProfilePhotoPicker src={avatarUrl} name={patient.fullName} changeLabel={copy.photo.changePhoto} />
           <div className="min-w-0 flex-1">
             <h2 className="text-2xl font-semibold text-[var(--color-midnight)]">{patient.fullName}</h2>
             <p className="mt-1 text-sm text-[var(--color-ash)]">{copy.patient.identityGreeting}</p>
           </div>
-          <Button type="button" variant="secondary" className="rounded-[10px]" onClick={() => setIsEditing(true)}>
+          <Button type="button" variant="secondary" className="w-full rounded-[10px] sm:w-auto" onClick={() => setIsEditing(true)}>
             {copy.patient.edit}
           </Button>
         </div>
@@ -56,9 +57,9 @@ export function PatientProfileSettingsClient({
       <form
         ref={formRef}
         action={updatePatientAccountSettingsAction}
-        className="rounded-xl border border-[var(--color-stone-surface)] bg-[var(--color-card)] p-6 shadow-[var(--shadow-subtle)]"
+        className="rounded-xl border border-[var(--color-stone-surface)] bg-[var(--color-card)] p-5 shadow-[var(--shadow-subtle)] sm:p-6"
       >
-        <h2 className="mb-6 text-sm font-semibold uppercase tracking-[0.18em] text-[var(--color-midnight)]">
+        <h2 className="mb-6 text-sm font-semibold uppercase tracking-widest text-[var(--color-midnight)]">
           {copy.patient.personalDataTitle}
         </h2>
         <div className="grid gap-5 md:grid-cols-2">
@@ -116,18 +117,18 @@ export function PatientProfilingClient({
   return (
     <div className="space-y-6">
       <ProfileConfirmationHost />
-      <div className="flex items-center justify-between gap-4">
-        <h1 className="text-[36px] font-semibold leading-tight text-[var(--color-midnight)]">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <h1 className="text-3xl font-semibold leading-tight text-[var(--color-midnight)] sm:text-4xl">
           {copy.patient.profilingTitle}
         </h1>
-        <Button type="button" variant="secondary" className="rounded-[10px]" onClick={() => setIsEditing(true)}>
+        <Button type="button" variant="secondary" className="w-full rounded-[10px] sm:w-auto" onClick={() => setIsEditing(true)}>
           {copy.patient.edit}
         </Button>
       </div>
 
       <form ref={formRef} action={updatePatientProfilingAction} className="space-y-5">
-        <section className="rounded-xl border border-[var(--color-stone-surface)] bg-[var(--color-card)] p-6 shadow-[var(--shadow-subtle)]">
-          <h2 className="mb-5 text-sm font-semibold uppercase tracking-[0.18em] text-[var(--color-midnight)]">
+        <section className="rounded-xl border border-[var(--color-stone-surface)] bg-[var(--color-card)] p-5 shadow-[var(--shadow-subtle)] sm:p-6">
+          <h2 className="mb-5 text-sm font-semibold uppercase tracking-widest text-[var(--color-midnight)]">
             {copy.patient.dailyLifeTitle}
           </h2>
           <div className="grid gap-5 md:grid-cols-2">
@@ -166,8 +167,8 @@ export function PatientProfilingClient({
           </div>
         </section>
 
-        <section className="rounded-xl border border-[var(--color-stone-surface)] bg-[var(--color-card)] p-6 shadow-[var(--shadow-subtle)]">
-          <h2 className="mb-5 text-sm font-semibold uppercase tracking-[0.18em] text-[var(--color-midnight)]">
+        <section className="rounded-xl border border-[var(--color-stone-surface)] bg-[var(--color-card)] p-5 shadow-[var(--shadow-subtle)] sm:p-6">
+          <h2 className="mb-5 text-sm font-semibold uppercase tracking-widest text-[var(--color-midnight)]">
             {copy.patient.additionalInfoTitle}
           </h2>
           <div className="grid gap-5">
@@ -209,11 +210,11 @@ function ProfileFormControls({
   onCancel: () => void;
 }) {
   return (
-    <div className="mt-6 flex justify-end gap-3">
+    <div className="mt-6 grid gap-2 sm:flex sm:justify-end sm:gap-3">
       <Button
         type="button"
         variant="ghost"
-        className="rounded-[10px]"
+        className="w-full rounded-[10px] sm:w-auto"
         onClick={() =>
           openProfileConfirmation({
             title: copy.confirm.cancelTitle,
@@ -226,9 +227,11 @@ function ProfileFormControls({
       >
         {copy.patient.cancel}
       </Button>
-      <Button
+      <PendingSubmitButton
         type="button"
-        className="rounded-[10px]"
+        className="w-full rounded-[10px] sm:w-auto"
+        loadingLabel={copy.patient.save}
+        slotClassName="w-full sm:w-auto"
         onClick={() =>
           openProfileConfirmation({
             title: copy.confirm.saveTitle,
@@ -240,7 +243,7 @@ function ProfileFormControls({
         }
       >
         {copy.patient.save}
-      </Button>
+      </PendingSubmitButton>
     </div>
   );
 }

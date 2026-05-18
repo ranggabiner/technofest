@@ -34,8 +34,8 @@ export async function PatientOnboardingShell({
     return (
       <div className="flex min-h-screen flex-col bg-[var(--color-warm-canvas)] text-[var(--color-graphite)]">
         <SharedHeader authMode="authenticated" isAuthenticated position="sticky" />
-        <main className="flex min-h-screen flex-1 items-center justify-center px-6 py-20">
-          <section className="w-full max-w-2xl rounded-xl bg-[var(--color-card)] p-8 shadow-[var(--shadow-subtle)] md:p-12">
+        <main className="flex min-h-screen flex-1 items-center justify-center px-4 py-16 sm:px-6 sm:py-20">
+          <section className="w-full max-w-2xl rounded-xl bg-[var(--color-card)] p-5 shadow-[var(--shadow-subtle)] sm:p-8 md:p-12">
             <PatientOnboardingProgress steps={steps} activeStep={activeStep} variant="compact" />
             <PatientOnboardingHeading title={title} description={description} />
             {children}
@@ -49,13 +49,13 @@ export async function PatientOnboardingShell({
   return (
     <div className="flex min-h-screen flex-col bg-[var(--color-warm-canvas)] text-[var(--color-graphite)]">
       <SharedHeader authMode="authenticated" isAuthenticated position="sticky" />
-      <main className="flex min-h-screen flex-1 items-center justify-center px-6 py-20 md:py-24">
+      <main className="flex min-h-screen flex-1 items-center justify-center px-4 py-16 sm:px-6 sm:py-20 md:py-24">
         <div className="mx-auto w-full max-w-[720px]">
-          <header className="mb-20 text-center">
+          <header className="mb-10 text-center sm:mb-20">
             <PatientOnboardingProgress steps={steps} activeStep={activeStep} variant="bar" />
             <PatientOnboardingHeading title={title} description={description} />
           </header>
-          <section className="relative overflow-hidden rounded-xl bg-[var(--color-card)] p-6 shadow-[var(--shadow-subtle)] transition md:p-12">
+          <section className="relative overflow-hidden rounded-xl bg-[var(--color-card)] p-5 shadow-[var(--shadow-subtle)] transition sm:p-6 md:p-12">
             <div className="absolute left-0 top-0 h-1 w-full bg-[var(--color-stone-surface)]" />
             {children}
           </section>
@@ -75,10 +75,10 @@ function PatientOnboardingHeading({
 }) {
   return (
     <div className="text-center">
-      <h1 className="mx-auto max-w-[560px] font-serif text-[32px] font-medium leading-[1.15] text-[var(--color-charcoal-primary)] md:text-[44px] md:leading-[1.09]">
+      <h1 className="mx-auto max-w-[560px] text-3xl font-medium leading-tight text-[var(--color-charcoal-primary)] sm:text-3xl md:text-5xl md:leading-tight">
         {title}
       </h1>
-      <p className="mx-auto mt-4 max-w-[560px] text-[15px] leading-[1.47] text-[var(--color-graphite)]">
+      <p className="mx-auto mt-4 max-w-[560px] text-sm leading-6 text-[var(--color-graphite)]">
         {description}
       </p>
     </div>
@@ -98,7 +98,7 @@ function PatientOnboardingProgress({
 
   if (variant === "bar") {
     return (
-      <ol className="relative mb-12 flex items-start justify-between before:absolute before:left-0 before:top-4 before:z-0 before:h-px before:w-full before:bg-[var(--color-stone-surface)]">
+      <ol className="relative mb-8 flex items-start justify-between before:absolute before:left-0 before:top-4 before:z-0 before:h-px before:w-full before:bg-[var(--color-stone-surface)] sm:mb-12">
         {items.map((item) => (
           <li key={item.label} className="relative z-10 flex min-w-16 flex-col items-center gap-2">
             <StepCircle item={item} ring={item.status === "active"} />
@@ -110,10 +110,10 @@ function PatientOnboardingProgress({
   }
 
   return (
-    <ol className="mb-20 flex items-start justify-center gap-3 px-2 sm:gap-4 sm:px-4">
+    <ol className="mb-10 flex items-start justify-center gap-2 px-1 sm:mb-20 sm:gap-4 sm:px-4">
       {items.map((item, index) => (
         <li key={item.label} className="contents">
-          <div className="flex min-w-14 flex-col items-center gap-2">
+          <div className="flex min-w-0 flex-1 flex-col items-center gap-2 sm:min-w-14">
             <StepCircle item={item} />
             <StepLabel item={item} />
           </div>
@@ -158,7 +158,7 @@ function StepLabel({
   return (
     <span
       className={cn(
-        "text-center text-[10px] font-semibold uppercase leading-[1.58] tracking-[0.5px]",
+        "text-center text-xs font-semibold uppercase leading-6 tracking-widest",
         item.status === "active" ? "text-[var(--color-midnight)]" : "text-[var(--color-ash)]",
       )}
     >
