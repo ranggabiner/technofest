@@ -55,7 +55,7 @@ export default async function PatientHealthJournalPage({ searchParams }: PagePro
           description={detailCopy.errorDescription}
           tone="warning"
           action={
-            <Button asChild variant="secondary" className="mt-4 w-fit">
+            <Button asChild variant="secondary" className="mt-4 w-full sm:w-fit">
               <PatientTransitionLink href="/patient/health-history/journal">
                 {detailCopy.retry}
               </PatientTransitionLink>
@@ -76,7 +76,7 @@ export default async function PatientHealthJournalPage({ searchParams }: PagePro
             key={filter}
             asChild
             variant={filter === state.activeFilter ? "secondary" : "ghost"}
-            className="min-h-10 px-5"
+            className="min-h-11 px-5"
           >
             <PatientTransitionLink
               href={journalFilterHref(filter)}
@@ -94,7 +94,7 @@ export default async function PatientHealthJournalPage({ searchParams }: PagePro
           <div>
             <h2
               id="journal-history-heading"
-              className="text-[28px] font-semibold leading-tight text-[var(--color-midnight)]"
+              className="text-2xl font-semibold leading-tight text-[var(--color-midnight)]"
             >
               {detailCopy.historyTitle}
             </h2>
@@ -130,7 +130,7 @@ function JournalHeader({
       <div className="mb-5 flex flex-wrap items-center gap-2 text-sm text-[var(--color-ash)]">
         <PatientTransitionLink
           href="/patient/health-history"
-          className="inline-flex cursor-pointer items-center gap-2 font-semibold text-[var(--color-teal-deep)] transition hover:text-[var(--color-midnight)]"
+          className="inline-flex min-h-11 cursor-pointer items-center gap-2 font-semibold text-[var(--color-teal-deep)] transition hover:text-[var(--color-midnight)]"
         >
           <ArrowLeft size={16} aria-hidden="true" />
           {detailCopy.back}
@@ -146,14 +146,14 @@ function JournalHeader({
             <StatusBadge tone="approved">{detailCopy.scopeBadge}</StatusBadge>
             <StatusBadge tone="neutral">{detailCopy.aiBadge}</StatusBadge>
           </div>
-          <h1 className="font-serif text-[44px] font-semibold leading-none tracking-[-0.01em] text-[var(--color-midnight)] md:text-[56px]">
+          <h1 className="text-3xl font-semibold leading-tight tracking-normal text-[var(--color-midnight)] sm:text-4xl md:text-5xl">
             {detailCopy.title}
           </h1>
           <p className="mt-4 max-w-2xl text-base leading-7 text-[var(--color-graphite)]">
             {detailCopy.description}
           </p>
         </div>
-        <Button asChild className="min-h-12 w-fit shrink-0 px-7">
+        <Button asChild className="min-h-12 w-full shrink-0 px-7 sm:w-fit">
           <PatientTransitionLink href="/patient/chat">
             <FileHeart size={17} aria-hidden="true" />
             {detailCopy.startJournal}

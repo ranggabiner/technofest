@@ -163,14 +163,19 @@ export async function loadAdminDashboardState(): Promise<AdminDashboardState> {
   if (queue.error) throw queue.error;
   if (audits.error) throw audits.error;
 
+  const [priorityQueue, auditTrail] = await Promise.all([
+    hydrateDoctors(queue.data ?? []),
+    hydrateAuditTrail(audits.data ?? []),
+  ]);
+
   return {
     stats: {
       pending: pendingCount,
       approved: approvedCount,
       rejected: rejectedCount,
     },
-    priorityQueue: await hydrateDoctors(queue.data ?? []),
-    auditTrail: await hydrateAuditTrail(audits.data ?? []),
+    priorityQueue,
+    auditTrail,
   };
 }
 
@@ -229,23 +234,23 @@ export async function loadAdminDoctorDetailState(doctorId: string): Promise<Admi
 
   if (doctorResult.error) throw doctorResult.error;
 
-  const documents = await admin
-    .from("doctor_kyc_documents")
-    .select("document_id,document_type,created_at")
-    .eq("doctor_id", doctorId)
-    .order("document_type", { ascending: true });
+  const [documents, audits] = await Promise.all([
+    admin
+      .from("doctor_kyc_documents")
+      .select("document_id,document_type,created_at")
+      .eq("doctor_id", doctorId)
+      .order("document_type", { ascending: true }),
+    admin
+      .from("audit_logs")
+      .select("log_id,action,access_status,reason,blockchain_status,blockchain_tx_hash,blockchain_last_error,created_at")
+      .eq("doctor_id", doctorId)
+      .is("patient_id", null)
+      .in("action", [...kycAuditActions])
+      .order("created_at", { ascending: false })
+      .limit(10),
+  ]);
 
   if (documents.error) throw documents.error;
-
-  const audits = await admin
-    .from("audit_logs")
-    .select("log_id,action,access_status,reason,blockchain_status,blockchain_tx_hash,blockchain_last_error,created_at")
-    .eq("doctor_id", doctorId)
-    .is("patient_id", null)
-    .in("action", [...kycAuditActions])
-    .order("created_at", { ascending: false })
-    .limit(10);
-
   if (audits.error) throw audits.error;
 
   return {

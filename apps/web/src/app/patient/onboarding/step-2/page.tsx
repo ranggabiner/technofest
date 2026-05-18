@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import type { ComponentPropsWithoutRef, ReactNode } from "react";
 import { Activity, ArrowRight, Home, Smile } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
+import { PendingSubmitButton } from "@/components/ui/async-action-button";
 import { Field, Input, Label, Select, Textarea } from "@/components/ui/form";
 import { roleEntryPath } from "@/lib/auth/roles";
 import { requireRole } from "@/lib/auth/session";
@@ -31,7 +31,7 @@ export default async function PatientOnboardingStep2Page() {
       variant="form-card"
       themeLabels={copy.common.theme}
     >
-      <form action={savePatientHealthOnboardingAction} className="space-y-12">
+      <form action={savePatientHealthOnboardingAction} className="space-y-10 sm:space-y-12">
         <PatientOnboardingSection
           icon={<Activity size={20} aria-hidden="true" />}
           title={copy.patient.onboarding.step2.activitySectionTitle}
@@ -91,7 +91,7 @@ export default async function PatientOnboardingStep2Page() {
                     defaultChecked={index === 0}
                     required
                   />
-                  <span className="flex min-h-10 items-center justify-center rounded-full border border-[var(--color-stone-surface)] bg-[var(--color-warm-canvas)] px-4 text-sm text-[var(--color-graphite)] transition-colors peer-checked:border-[var(--color-midnight)] peer-checked:bg-[var(--color-stone-surface)] peer-checked:text-[var(--color-midnight)]">
+                  <span className="flex min-h-11 items-center justify-center rounded-full border border-[var(--color-stone-surface)] bg-[var(--color-warm-canvas)] px-4 text-sm text-[var(--color-graphite)] transition-colors peer-checked:border-[var(--color-midnight)] peer-checked:bg-[var(--color-stone-surface)] peer-checked:text-[var(--color-midnight)]">
                     {option.label}
                   </span>
                 </label>
@@ -120,23 +120,29 @@ export default async function PatientOnboardingStep2Page() {
                 id="allergies"
                 name="allergies"
                 placeholder={copy.patient.onboarding.step2.allergiesPlaceholder}
-        className="min-h-24 resize-none border-[var(--color-stone-surface)] bg-[var(--color-warm-canvas)] px-4 py-2 text-[15px] leading-[1.47] placeholder:text-[var(--color-ash)] focus:border-[var(--color-stone-surface)] hover:ring-1 hover:ring-inset hover:ring-[var(--color-stone-surface)]"
+                className="min-h-28 resize-none border-[var(--color-stone-surface)] bg-[var(--color-warm-canvas)] px-4 py-2 text-sm leading-6 placeholder:text-[var(--color-ash)] focus:border-[var(--color-stone-surface)] hover:ring-1 hover:ring-inset hover:ring-[var(--color-stone-surface)]"
               />
             </Field>
           </div>
         </PatientOnboardingSection>
 
-        <div className="flex items-center justify-between border-t border-[var(--color-stone-surface)] pt-6">
+        <div className="grid gap-3 border-t border-[var(--color-stone-surface)] pt-6 sm:flex sm:items-center sm:justify-between">
           <Link
             href="/patient/onboarding/step-1"
-            className="rounded-full px-4 py-2 text-[15px] leading-[1.47] text-[var(--color-graphite)] transition-colors hover:bg-[var(--color-warm-canvas)] hover:text-[var(--color-midnight)]"
+            className="inline-flex min-h-11 items-center rounded-full px-4 py-2 text-sm leading-6 text-[var(--color-graphite)] transition-colors hover:bg-[var(--color-warm-canvas)] hover:text-[var(--color-midnight)]"
           >
             {copy.patient.onboarding.back}
           </Link>
-          <Button type="submit" variant="secondary" className="min-h-10 px-4 text-[15px] font-medium leading-[1.47]">
+          <PendingSubmitButton
+            type="submit"
+            variant="secondary"
+            className="w-full px-4 text-sm font-medium leading-6 sm:w-auto"
+            loadingLabel={copy.marketing.role.submitting}
+            slotClassName="w-full sm:w-auto"
+          >
             {copy.patient.onboarding.step2.confirmNext}
             <ArrowRight size={16} aria-hidden="true" />
-          </Button>
+          </PendingSubmitButton>
         </div>
       </form>
     </PatientOnboardingShell>
@@ -144,7 +150,7 @@ export default async function PatientOnboardingStep2Page() {
 }
 
 const fieldControlClassName =
-  "min-h-10 border-[var(--color-stone-surface)] bg-[var(--color-warm-canvas)] px-4 py-2 text-[15px] leading-[1.47] placeholder:text-[var(--color-ash)] focus:border-[var(--color-stone-surface)] hover:ring-1 hover:ring-inset hover:ring-[var(--color-stone-surface)]";
+  "min-h-11 border-[var(--color-stone-surface)] bg-[var(--color-warm-canvas)] px-4 py-2 text-sm leading-6 placeholder:text-[var(--color-ash)] focus:border-[var(--color-stone-surface)] hover:ring-1 hover:ring-inset hover:ring-[var(--color-stone-surface)]";
 
 function PatientOnboardingSection({
   icon,
@@ -159,7 +165,7 @@ function PatientOnboardingSection({
     <section className="space-y-6">
       <div className="flex items-center gap-2 border-b border-[var(--color-stone-surface)] pb-2">
         <span className="text-[var(--color-ash)]">{icon}</span>
-        <h2 className="text-[23px] font-semibold leading-[1.2] text-[var(--color-charcoal-primary)]">{title}</h2>
+        <h2 className="text-xl font-semibold leading-tight text-[var(--color-charcoal-primary)] sm:text-xl">{title}</h2>
       </div>
       {children}
     </section>
@@ -170,7 +176,7 @@ function PatientLabel({ className, ...props }: ComponentPropsWithoutRef<typeof L
   return (
     <Label
       className={[
-        "mb-2 block text-[12px] font-semibold leading-[1.58] tracking-[0.5px] text-[var(--color-charcoal-primary)]",
+        "mb-2 block text-xs font-semibold leading-6 tracking-widest text-[var(--color-charcoal-primary)]",
         className,
       ]
         .filter(Boolean)

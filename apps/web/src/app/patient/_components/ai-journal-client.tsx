@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import {
   ArrowUp,
-  Ban,
   BrainCircuit,
   ChevronLeft,
   ClipboardList,
@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 
 import { AssistantBubbleSkeleton } from "@/components/loading-skeletons";
+import { LoadingActionButton } from "@/components/ui/async-action-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import type {
   JournalMessageView,
@@ -27,7 +28,14 @@ import type {
 } from "@/lib/ai/journal-service";
 import { cn } from "@/lib/utils";
 import { finishAiSessionAction, retryAiSessionSummaryAction } from "../actions";
-import { AssistantMarkdown } from "./assistant-markdown";
+
+const AssistantMarkdown = dynamic(
+  () => import("./assistant-markdown").then((module) => module.AssistantMarkdown),
+  {
+    ssr: false,
+    loading: () => <AssistantMarkdownFallback />,
+  },
+);
 
 type ChatMessage = JournalMessageView | {
   id: string;
@@ -396,9 +404,11 @@ export function AiJournalClient({
         <div className="grid grid-cols-2 gap-2 lg:grid-cols-1 lg:gap-1">
           <ActionRailButton
             icon={<Plus size={18} />}
+            isLoading={isCreatingNewChat}
             label={copy.newChat}
+            loadingLabel={copy.newChatConfirm}
             title={copy.newChatTitle}
-            disabled={isStreaming || isCreatingNewChat}
+            disabled={isStreaming}
             onClick={requestNewChat}
           />
           <ActionRailButton
@@ -435,7 +445,7 @@ export function AiJournalClient({
                     disabled={isSessionLoading}
                   >
                     <span className="truncate font-semibold">{item.title ?? copy.clientTitle}</span>
-                    <span className="truncate text-[11px] text-[var(--color-ash)]">
+                    <span className="truncate text-xs text-[var(--color-ash)]">
                       {item.preview ?? copy.emptyChat}
                     </span>
                   </button>
@@ -453,20 +463,22 @@ export function AiJournalClient({
         {showFinishAction ? (
           <div data-chat-actions="main-session" className="shrink-0 px-3 pt-3 sm:px-5 md:px-10 md:pt-8">
             <div className="flex w-full justify-start">
-              <button
+              <LoadingActionButton
                 type="button"
-                disabled={isStreaming || isFinishing}
+                disabled={isStreaming}
+                isLoading={isFinishing}
+                loadingLabel={copy.finish}
                 title={copy.finishTitle}
                 onClick={() => {
                   startFinishTransition(async () => {
                     await finishAiSessionAction();
                   });
                 }}
-                className="inline-flex min-h-10 cursor-pointer items-center gap-2 rounded-full border border-[var(--color-error-red)] bg-[var(--color-card)] px-4 text-sm font-medium text-[var(--color-error-red)] shadow-[var(--shadow-subtle)] transition hover:bg-[var(--color-error-surface)] disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full border border-[var(--color-error-red)] bg-[var(--color-card)] px-4 text-sm font-medium text-[var(--color-error-red)] shadow-[var(--shadow-subtle)] transition hover:bg-[var(--color-error-surface)] disabled:cursor-not-allowed"
               >
                 <Square size={18} aria-hidden="true" />
                 <span>{copy.finish}</span>
-              </button>
+              </LoadingActionButton>
             </div>
           </div>
         ) : null}
@@ -486,7 +498,7 @@ export function AiJournalClient({
           ) : !hasMessages ? (
             <div className="mx-auto grid w-full max-w-[760px] gap-6 text-center sm:gap-8 md:gap-14">
               <div className="grid gap-3">
-                <h2 className="font-serif text-[28px] font-medium leading-[1.15] text-[var(--color-charcoal-primary)] sm:text-[32px] md:text-[44px]">
+                <h2 className="text-2xl font-medium leading-tight text-[var(--color-charcoal-primary)] sm:text-3xl md:text-5xl">
                   {copy.heroPrompt}
                 </h2>
               </div>
@@ -587,17 +599,20 @@ export function AiJournalClient({
                   className="min-h-11 min-w-0 flex-1 bg-transparent px-3 text-base sm:text-sm text-[var(--color-charcoal-primary)] outline-none placeholder:text-[var(--color-ash)] disabled:text-[var(--color-ash)]"
                   placeholder={copy.messagePlaceholder}
                 />
-                <button
+                <LoadingActionButton
                   type="submit"
                   disabled={!canSend}
+                  isLoading={isStreaming}
+                  loadingLabel={copy.sendDisabledTitle}
                   title={isStreaming ? copy.sendDisabledTitle : copy.sendTitle}
                   aria-label={isStreaming ? copy.sendDisabledTitle : copy.sendTitle}
-                  className="inline-flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-full bg-[var(--color-midnight)] text-[var(--color-inverted)] shadow-[var(--shadow-subtle)] transition hover:bg-[var(--color-charcoal-primary)] disabled:cursor-not-allowed disabled:opacity-50"
+                  className="inline-flex size-11 min-h-11 shrink-0 cursor-pointer items-center justify-center rounded-full bg-[var(--color-midnight)] px-0 text-[var(--color-inverted)] shadow-[var(--shadow-subtle)] transition hover:bg-[var(--color-charcoal-primary)] disabled:cursor-not-allowed"
+                  slotClassName="size-11 shrink-0"
                 >
-                  {isStreaming ? <Ban size={20} aria-hidden="true" /> : <ArrowUp size={20} aria-hidden="true" />}
-                </button>
+                  <ArrowUp size={20} aria-hidden="true" />
+                </LoadingActionButton>
               </div>
-              <p className="mx-auto mt-3 max-w-[640px] px-1 text-center text-[11px] leading-5 text-[var(--color-ash)] sm:mt-4 sm:px-0">
+              <p className="mx-auto mt-3 max-w-[640px] px-1 text-center text-xs leading-5 text-[var(--color-ash)] sm:mt-4 sm:px-0">
                 {copy.bottomDisclosure}
               </p>
             </div>
@@ -715,6 +730,16 @@ function EmptyGuidanceCard({
   );
 }
 
+function AssistantMarkdownFallback() {
+  return (
+    <div className="grid min-w-0 gap-2" aria-hidden="true">
+      <span className="h-4 w-44 max-w-full animate-pulse rounded-[10px] bg-[color-mix(in_srgb,var(--color-ash)_18%,transparent)]" />
+      <span className="h-4 w-64 max-w-full animate-pulse rounded-[10px] bg-[color-mix(in_srgb,var(--color-ash)_18%,transparent)]" />
+      <span className="h-4 w-36 max-w-full animate-pulse rounded-[10px] bg-[color-mix(in_srgb,var(--color-ash)_18%,transparent)]" />
+    </div>
+  );
+}
+
 function SessionSummaryPanel({
   summary,
   summaryStatus,
@@ -753,7 +778,7 @@ function SessionSummaryPanel({
           data-chat-summary-status="generating"
           className="grid gap-3 rounded-xl border border-[var(--color-stone-surface)] bg-[color-mix(in_srgb,var(--color-card)_76%,transparent)] p-5 text-sm leading-6 text-[var(--color-charcoal-primary)] shadow-[var(--shadow-subtle)]"
         >
-          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--color-ash)]">
+          <p className="text-xs font-semibold uppercase tracking-widest text-[var(--color-ash)]">
             {copy.latestSummaryTitle}
           </p>
           <div className="grid gap-2">
@@ -785,7 +810,7 @@ function SessionSummaryPanel({
           data-chat-summary-status="failed"
           className="grid gap-3 rounded-xl border border-[var(--color-error-red)] bg-[var(--color-error-surface)] p-5 text-sm leading-6 text-[var(--color-error-red)] shadow-[var(--shadow-subtle)]"
         >
-          <p className="text-xs font-semibold uppercase tracking-[0.12em]">
+          <p className="text-xs font-semibold uppercase tracking-widest">
             {copy.latestSummaryTitle}
           </p>
           <div className="grid gap-1">
@@ -796,14 +821,16 @@ function SessionSummaryPanel({
               {copy.summaryFailedDescription}
             </p>
           </div>
-          <button
+          <LoadingActionButton
             type="button"
             onClick={onRetrySummary}
-            disabled={isRetryingSummary}
-            className="mt-1 inline-flex min-h-9 w-fit cursor-pointer items-center rounded-full border border-[var(--color-error-red)] bg-[var(--color-card)] px-3 text-sm font-medium text-[var(--color-error-red)] transition hover:bg-[var(--color-error-surface)] disabled:cursor-not-allowed disabled:opacity-60"
+            isLoading={isRetryingSummary}
+            loadingLabel={copy.retrySummary}
+            className="mt-1 inline-flex min-h-11 w-full cursor-pointer items-center justify-center rounded-full border border-[var(--color-error-red)] bg-[var(--color-card)] px-3 text-sm font-medium text-[var(--color-error-red)] transition hover:bg-[var(--color-error-surface)] disabled:cursor-not-allowed sm:w-fit"
+            slotClassName="mt-1 w-full sm:w-fit"
           >
             {copy.retrySummary}
-          </button>
+          </LoadingActionButton>
         </div>
       </div>
     );
@@ -831,7 +858,7 @@ function SessionSummaryPanel({
         className="h-px w-full bg-[var(--color-stone-surface)]"
       />
       <div className="grid gap-4 rounded-xl border border-[var(--color-stone-surface)] bg-[color-mix(in_srgb,var(--color-card)_76%,transparent)] p-5 text-sm leading-6 text-[var(--color-charcoal-primary)] shadow-[var(--shadow-subtle)]">
-        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--color-ash)]">
+        <p className="text-xs font-semibold uppercase tracking-widest text-[var(--color-ash)]">
           {copy.latestSummaryTitle}
         </p>
         {sections.map((section) => (
@@ -879,7 +906,7 @@ function ReadonlyClosedSessionComposer({
             </span>
           </span>
         </div>
-        <p className="mx-auto mt-3 max-w-[640px] px-1 text-center text-[11px] leading-5 text-[var(--color-ash)] sm:mt-4 sm:px-0">
+        <p className="mx-auto mt-3 max-w-[640px] px-1 text-center text-xs leading-5 text-[var(--color-ash)] sm:mt-4 sm:px-0">
           {copy.bottomDisclosure}
         </p>
       </div>
@@ -928,7 +955,7 @@ function BackNavigationMenu({
         aria-haspopup="menu"
         onClick={() => setIsOpen((current) => !current)}
         className={cn(
-          "inline-flex size-9 cursor-pointer items-center justify-center rounded-full text-[var(--color-graphite)] transition hover:bg-[var(--color-card)] hover:text-[var(--color-midnight)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-teal-primary)]",
+          "inline-flex size-11 cursor-pointer items-center justify-center rounded-full text-[var(--color-graphite)] transition hover:bg-[var(--color-card)] hover:text-[var(--color-midnight)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-teal-primary)] lg:size-9",
           isOpen && "bg-[var(--color-card)] text-[var(--color-midnight)] shadow-[var(--shadow-subtle)]",
         )}
       >
@@ -1000,7 +1027,7 @@ function BackNavigationMenuItem({
 
 function RailHeading({ children }: { children: React.ReactNode }) {
   return (
-    <h3 className="hidden px-2 text-[11px] font-semibold uppercase leading-5 tracking-[0.12em] text-[var(--color-ash)] lg:block">
+    <h3 className="hidden px-2 text-xs font-semibold uppercase leading-5 tracking-widest text-[var(--color-ash)] lg:block">
       {children}
     </h3>
   );
@@ -1008,37 +1035,45 @@ function RailHeading({ children }: { children: React.ReactNode }) {
 
 function ActionRailButton({
   icon,
+  isLoading = false,
   label,
+  loadingLabel,
   title,
   disabled = false,
   onClick,
 }: {
   icon: React.ReactNode;
+  isLoading?: boolean;
   label: string;
+  loadingLabel?: string;
   title: string;
   disabled?: boolean;
   onClick: () => void;
 }) {
   return (
-    <button
+    <LoadingActionButton
       type="button"
       title={title}
       disabled={disabled}
+      isLoading={isLoading}
+      loadingLabel={loadingLabel ?? label}
       onClick={onClick}
-      className="flex min-h-10 w-full min-w-0 cursor-pointer items-center justify-center gap-2 rounded-xl px-2 text-sm font-medium text-[var(--color-graphite)] transition hover:bg-[var(--color-card)] hover:text-[var(--color-midnight)] disabled:cursor-not-allowed disabled:opacity-50 lg:justify-start lg:gap-3 lg:px-3"
+      variant="ghost"
+      className="flex min-h-11 w-full min-w-0 cursor-pointer items-center justify-center gap-2 rounded-xl bg-transparent px-2 text-sm font-medium text-[var(--color-graphite)] transition hover:bg-[var(--color-card)] hover:text-[var(--color-midnight)] disabled:cursor-not-allowed lg:justify-start lg:gap-3 lg:px-3"
+      slotClassName="w-full"
     >
       {icon}
       <span className="truncate">{label}</span>
-    </button>
+    </LoadingActionButton>
   );
 }
 
 function HistorySkeleton() {
   return (
-    <div className="grid gap-2" aria-hidden="true">
-      <Skeleton className="h-12 rounded-xl" />
-      <Skeleton className="h-12 rounded-xl" />
-      <Skeleton className="h-12 rounded-xl" />
+    <div className="flex min-w-0 gap-2 lg:grid lg:gap-1" aria-hidden="true">
+      <Skeleton className="h-12 w-[min(220px,70vw)] shrink-0 rounded-xl lg:w-auto lg:shrink" />
+      <Skeleton className="h-12 w-[min(220px,70vw)] shrink-0 rounded-xl lg:w-auto lg:shrink" />
+      <Skeleton className="h-12 w-[min(220px,70vw)] shrink-0 rounded-xl lg:w-auto lg:shrink" />
     </div>
   );
 }
@@ -1058,12 +1093,12 @@ function ConfirmNewChatDialog({
   onConfirm: () => void;
 }) {
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-black/30 px-4">
+    <div className="fixed inset-0 z-50 grid place-items-center bg-black/30 px-3 py-4 sm:px-4">
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="new-chat-confirm-title"
-        className="w-full max-w-md rounded-xl border border-[var(--color-stone-surface)] bg-[var(--color-card)] p-5 shadow-[var(--shadow-elevated)]"
+        className="max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-y-auto rounded-xl border border-[var(--color-stone-surface)] bg-[var(--color-card)] p-4 shadow-[var(--shadow-elevated)] sm:p-5"
       >
         <h2
           id="new-chat-confirm-title"
@@ -1074,23 +1109,24 @@ function ConfirmNewChatDialog({
         <p className="mt-2 text-sm leading-6 text-[var(--color-graphite)]">
           {copy.newChatConfirmDescription}
         </p>
-        <div className="mt-5 flex justify-end gap-2">
+        <div className="mt-5 grid gap-2 sm:flex sm:justify-end">
           <button
             type="button"
             onClick={onCancel}
             disabled={isCreating}
-            className="min-h-10 cursor-pointer rounded-full border border-[var(--color-stone-surface)] px-4 text-sm font-medium text-[var(--color-graphite)] transition hover:bg-[var(--color-stone-surface)] disabled:cursor-not-allowed disabled:opacity-60"
+            className="min-h-11 cursor-pointer rounded-full border border-[var(--color-stone-surface)] px-4 text-sm font-medium text-[var(--color-graphite)] transition hover:bg-[var(--color-stone-surface)] disabled:cursor-not-allowed disabled:opacity-60"
           >
             {copy.newChatCancel}
           </button>
-          <button
+          <LoadingActionButton
             type="button"
             onClick={onConfirm}
-            disabled={isCreating}
-            className="min-h-10 cursor-pointer rounded-full bg-[var(--color-midnight)] px-4 text-sm font-medium text-[var(--color-inverted)] transition hover:bg-[var(--color-charcoal-primary)] disabled:cursor-not-allowed disabled:opacity-60"
+            isLoading={isCreating}
+            loadingLabel={copy.newChatConfirm}
+            className="min-h-11 cursor-pointer rounded-full bg-[var(--color-midnight)] px-4 text-sm font-medium text-[var(--color-inverted)] transition hover:bg-[var(--color-charcoal-primary)] disabled:cursor-not-allowed"
           >
             {copy.newChatConfirm}
-          </button>
+          </LoadingActionButton>
         </div>
       </div>
     </div>

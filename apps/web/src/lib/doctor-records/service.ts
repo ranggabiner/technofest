@@ -572,21 +572,22 @@ async function authorizeDoctorGrant(
     throw new DoctorAccessError(deniedMessage(access.reason), access.reason);
   }
 
-  if (options.auditAllowedView) {
-    await writeAuditLog({
-      actorAuthUserId: role.authUserId,
-      actorRole: "doctor",
-      action: "doctor_patient_view_allowed",
-      accessStatus: "allowed",
-      targetType: "access_grant",
-      targetId: grant.grant_id,
-      patientId: grant.patient_id,
-      doctorId: grant.doctor_id,
-    });
-  }
-
   const patient = normalizePatientJoin(grant.patients);
-  const granularPermissions = await loadGrantGranularPermissions(grant.grant_id);
+  const [granularPermissions] = await Promise.all([
+    loadGrantGranularPermissions(grant.grant_id),
+    options.auditAllowedView
+      ? writeAuditLog({
+          actorAuthUserId: role.authUserId,
+          actorRole: "doctor",
+          action: "doctor_patient_view_allowed",
+          accessStatus: "allowed",
+          targetType: "access_grant",
+          targetId: grant.grant_id,
+          patientId: grant.patient_id,
+          doctorId: grant.doctor_id,
+        })
+      : Promise.resolve(),
+  ]);
   return {
     grantId: grant.grant_id,
     patientId: grant.patient_id,

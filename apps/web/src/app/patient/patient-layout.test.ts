@@ -99,14 +99,28 @@ describe("patient layout shell", () => {
     expect(dashboardHtml).not.toContain("Riwayat Akses");
   });
 
-  it("keeps profile logout visually secondary with a soft red token border", () => {
+  it("keeps profile logout in a soft red tone instead of gray while loading", () => {
     const source = readFileSync(new URL("../_components/portal-layout.tsx", import.meta.url), "utf8");
 
-    expect(source).toContain("border border-[color-mix(in_srgb,var(--color-error-red)_55%,white)] px-4 py-2");
-    expect(source).toContain("text-[var(--color-ash)] transition hover:bg-[var(--color-stone-surface)]");
+    expect(source).toContain("border border-[color-mix(in_srgb,var(--color-error-red)_55%,white)] bg-[color-mix(in_srgb,var(--color-error-red)_8%,transparent)]");
+    expect(source).toContain("text-[var(--color-error-red)] transition hover:bg-[color-mix(in_srgb,var(--color-error-red)_14%,transparent)]");
+    expect(source).toContain("loadingLabel={logoutLabel}");
     expect(source).not.toContain("border border-transparent");
     expect(source).not.toContain("hover:border-[var(--color-stone-surface)]");
+    expect(source).not.toContain("text-[var(--color-ash)] transition hover:bg-[var(--color-stone-surface)]");
     expect(source).not.toContain("gap-2 rounded-full bg-[var(--color-midnight)] px-4 py-2 text-xs font-semibold uppercase");
+  });
+
+  it("uses compact mobile portal spacing with comfortable touch targets", () => {
+    const source = readFileSync(new URL("../_components/portal-layout.tsx", import.meta.url), "utf8");
+    const buttonSource = readFileSync(new URL("../../components/ui/button.tsx", import.meta.url), "utf8");
+
+    expect(source).toContain("gap-5 px-4 pb-16 pt-20 sm:px-6 sm:pb-24 sm:pt-[100px]");
+    expect(source).toContain("col-span-1 flex flex-col gap-5 md:col-span-9 md:gap-8");
+    expect(source).toContain("inline-flex min-h-11 w-full cursor-pointer");
+    expect(buttonSource).toContain("inline-flex min-h-11 max-w-full cursor-pointer");
+    expect(buttonSource).toContain("text-center transition");
+    expect(buttonSource).toContain("typography.button");
   });
 
   it("resolves only patient portal navigation targets for optimistic loading", () => {
@@ -125,7 +139,8 @@ describe("patient layout shell", () => {
     expect(patientPendingSkeletonKey("/patient/chat")).toBeNull();
     expect(patientPendingSkeletonKey("/patient/access")).toBe("access");
     expect(patientPendingSkeletonKey("/patient/health-history")).toBe("health-history");
-    expect(patientPendingSkeletonKey("/patient/health-history/records")).toBe("health-history");
+    expect(patientPendingSkeletonKey("/patient/health-history/records")).toBe("health-history-records");
+    expect(patientPendingSkeletonKey("/patient/health-history/journal")).toBe("health-history-journal");
     expect(patientPendingSkeletonKey("/patient/health-history/detail")).toBeNull();
     expect(patientPendingSkeletonKey("/patient/access-history")).toBeNull();
     expect(patientPendingSkeletonKey("/patient/access-history/detail")).toBeNull();

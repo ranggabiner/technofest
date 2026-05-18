@@ -1,5 +1,6 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useCallback, useEffect, useState } from "react";
 import {
   AlertTriangle,
@@ -23,9 +24,15 @@ import {
 } from "@/lib/patient/health-journal";
 import { cn } from "@/lib/utils";
 
-import { AssistantMarkdown } from "../../../../_components/assistant-markdown";
-
 type JournalDetailCopy = Dictionary["patient"]["healthHistory"]["journalDetail"];
+
+const AssistantMarkdown = dynamic(
+  () => import("../../../../_components/assistant-markdown").then((module) => module.AssistantMarkdown),
+  {
+    ssr: false,
+    loading: () => <JournalAssistantMarkdownFallback />,
+  },
+);
 
 export function JournalHistoryClient({
   copy,
@@ -86,7 +93,7 @@ export function JournalHistoryClient({
   return (
     <>
       <div
-        className="relative grid gap-8 pl-7 before:absolute before:bottom-0 before:left-[9px] before:top-2 before:border-l-2 before:border-[var(--color-stone-surface)]"
+        className="relative grid gap-6 pl-5 before:absolute before:bottom-0 before:left-[7px] before:top-2 before:border-l-2 before:border-[var(--color-stone-surface)] sm:gap-8 sm:pl-7 sm:before:left-[9px]"
         data-journal-filter={filter}
         data-journal-history="items"
       >
@@ -104,7 +111,7 @@ export function JournalHistoryClient({
 
       {activeItem ? (
         <div
-          className="fixed inset-0 z-50 flex min-h-dvh items-center justify-center bg-[rgba(29,27,25,0.24)] p-4 backdrop-blur-[2px] md:p-8"
+          className="fixed inset-0 z-50 flex min-h-dvh items-center justify-center bg-[rgba(29,27,25,0.24)] p-3 backdrop-blur-[2px] sm:p-4 md:p-8"
           data-journal-chat-dialog="overlay"
           onMouseDown={(event) => {
             if (event.target === event.currentTarget) closeDialog();
@@ -113,7 +120,7 @@ export function JournalHistoryClient({
           <section
             aria-labelledby="journal-chat-dialog-title"
             aria-modal="true"
-            className="flex max-h-[min(720px,calc(100dvh-48px))] w-full max-w-[520px] flex-col overflow-hidden rounded-[18px] border border-[color-mix(in_srgb,var(--color-card)_80%,transparent)] bg-[color-mix(in_srgb,var(--color-card)_86%,transparent)] shadow-[0_24px_70px_-32px_rgba(0,107,94,0.72)] backdrop-blur-md"
+            className="flex max-h-[calc(100dvh-2rem)] w-full max-w-[520px] flex-col overflow-hidden rounded-[18px] border border-[color-mix(in_srgb,var(--color-card)_80%,transparent)] bg-[color-mix(in_srgb,var(--color-card)_86%,transparent)] shadow-[0_24px_70px_-32px_rgba(0,107,94,0.72)] backdrop-blur-md"
             data-journal-chat-dialog="box"
             role="dialog"
           >
@@ -136,7 +143,7 @@ export function JournalHistoryClient({
               </div>
               <button
                 aria-label={copy.closeChatPopup}
-                className="grid size-9 cursor-pointer place-items-center rounded-full text-[var(--color-ash)] transition hover:bg-[var(--color-stone-surface)] hover:text-[var(--color-midnight)]"
+                className="grid size-10 cursor-pointer place-items-center rounded-full text-[var(--color-ash)] transition hover:bg-[var(--color-stone-surface)] hover:text-[var(--color-midnight)]"
                 onClick={closeDialog}
                 type="button"
               >
@@ -188,7 +195,7 @@ export function JournalHistoryClient({
             </div>
 
             <footer className="border-t border-[color-mix(in_srgb,var(--color-stone-surface)_75%,transparent)] bg-[color-mix(in_srgb,var(--color-card)_58%,transparent)] px-5 py-3 text-center">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--color-ash)]">
+              <p className="text-xs font-semibold uppercase tracking-widest text-[var(--color-ash)]">
                 {formatChatFooter(activeItem, copy, locale)}
               </p>
             </footer>
@@ -217,7 +224,7 @@ function JournalHistoryItem({
       <span
         aria-hidden="true"
         className={cn(
-          "absolute -left-[27px] top-1 grid size-5 place-items-center rounded-full border-4 bg-[var(--color-card)]",
+          "absolute -left-[20px] top-1 grid size-5 place-items-center rounded-full border-4 bg-[var(--color-card)] sm:-left-[27px]",
           index === 0
             ? "border-[var(--color-teal-primary)] text-[var(--color-teal-deep)] ring-2 ring-[var(--color-teal-primary)]"
             : "border-[var(--color-stone-surface)] text-[var(--color-ash)]",
@@ -226,14 +233,14 @@ function JournalHistoryItem({
         <span className="size-1.5 rounded-full bg-current" />
       </span>
 
-      <p className="mb-4 flex flex-wrap items-center gap-2 text-[16px] font-semibold text-[var(--color-midnight)]">
+      <p className="mb-4 flex flex-wrap items-center gap-2 text-base font-semibold text-[var(--color-midnight)]">
         <CalendarDays size={16} aria-hidden="true" />
         {formatJournalDate(item.createdAt, locale)}
       </p>
 
       <Card
         className={cn(
-          "grid gap-5 rounded-[14px] border border-[var(--color-stone-surface)] p-6 shadow-[inset_0_0_0_1px_var(--color-stone-surface)] md:grid-cols-[minmax(0,1fr)_auto] md:p-7",
+          "grid gap-5 rounded-[14px] border border-[var(--color-stone-surface)] p-4 shadow-[inset_0_0_0_1px_var(--color-stone-surface)] sm:p-6 md:grid-cols-[minmax(0,1fr)_auto] md:p-7",
           item.isEmergencyFlagged ? "border-l-4 border-l-[var(--color-error-red)]" : "",
         )}
       >
@@ -253,10 +260,10 @@ function JournalHistoryItem({
             ) : null}
           </div>
 
-          <h3 className="text-[24px] font-semibold leading-tight text-[var(--color-midnight)]">
+          <h3 className="break-words text-xl font-semibold leading-tight text-[var(--color-midnight)] sm:text-2xl">
             {item.title ?? copy.journalFallbackTitle}
           </h3>
-          <p className="mt-3 text-[15px] leading-7 text-[var(--color-graphite)]">
+          <p className="mt-3 text-sm leading-7 text-[var(--color-graphite)]">
             {item.description ?? copy.noSummary}
           </p>
 
@@ -277,7 +284,7 @@ function JournalHistoryItem({
 
         <div className="flex items-start md:justify-end">
           <Button
-            className="min-h-10 border border-[var(--color-teal-primary)] bg-transparent px-5 text-[var(--color-teal-deep)] hover:bg-[var(--color-teal-surface)] hover:text-[var(--color-teal-deep)]"
+            className="w-full border border-[var(--color-teal-primary)] bg-transparent px-5 text-[var(--color-teal-deep)] hover:bg-[var(--color-teal-surface)] hover:text-[var(--color-teal-deep)] sm:w-auto"
             onClick={onViewChat}
             type="button"
             variant="ghost"
@@ -318,6 +325,15 @@ function PopupStateMessage({ message }: { message: string }) {
   return (
     <div className="rounded-[12px] bg-[var(--color-stone-surface)] p-4 text-sm leading-6 text-[var(--color-ash)]">
       {message}
+    </div>
+  );
+}
+
+function JournalAssistantMarkdownFallback() {
+  return (
+    <div className="grid gap-2" aria-hidden="true">
+      <span className="h-4 w-44 max-w-full animate-pulse rounded-[10px] bg-[color-mix(in_srgb,var(--color-ash)_18%,transparent)]" />
+      <span className="h-4 w-56 max-w-full animate-pulse rounded-[10px] bg-[color-mix(in_srgb,var(--color-ash)_18%,transparent)]" />
     </div>
   );
 }

@@ -2,6 +2,7 @@
 
 import type { ClipboardEvent, ReactNode } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import dynamic from "next/dynamic";
 import {
   Download,
   Pencil,
@@ -14,9 +15,9 @@ import {
   X,
 } from "lucide-react";
 
-import { DoctorLookupSkeleton } from "@/components/loading-skeletons";
 import { ProofStatus } from "@/components/proof-status";
 import { StatusBadge } from "@/components/status-badge";
+import { LoadingActionButton, PendingSubmitButton } from "@/components/ui/async-action-button";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Label } from "@/components/ui/form";
 import type { Dictionary } from "@/lib/i18n/dictionary";
@@ -47,7 +48,14 @@ import {
   preventNonNumericDoctorCodeInput,
 } from "./doctor-code-input";
 import { consumePendingDoctorLookupHandoff } from "./doctor-lookup-handoff";
-import { DoctorQrScannerModal } from "./doctor-qr-scanner-modal";
+
+const DoctorQrScannerModal = dynamic(
+  () => import("./doctor-qr-scanner-modal").then((module) => module.DoctorQrScannerModal),
+  {
+    ssr: false,
+    loading: () => <DoctorQrScannerModalFallback />,
+  },
+);
 
 type Scope2DateRangeState = {
   startDate: string;
@@ -203,7 +211,7 @@ export function DoctorAccessClient({
           data-doctor-access-method="code"
         >
           <div>
-            <h3 className="text-[19px] font-semibold leading-tight text-[var(--color-midnight)]">
+            <h3 className="text-lg font-semibold leading-tight text-[var(--color-midnight)]">
               {copy.patient.access.codeMethodTitle}
             </h3>
             <p className="mt-2 text-sm leading-6 text-[var(--color-ash)]">
@@ -213,7 +221,7 @@ export function DoctorAccessClient({
           <Field>
             <Label
               htmlFor="doctor_lookup"
-              className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--color-ash)]"
+              className="text-xs font-semibold uppercase tracking-widest text-[var(--color-ash)]"
             >
               {copy.patient.access.codeInputLabel}
             </Label>
@@ -227,19 +235,21 @@ export function DoctorAccessClient({
               maxLength={DOCTOR_ACCESS_CODE_MAX_LENGTH}
               inputMode="numeric"
               pattern="[0-9]*"
-              className="text-center text-base font-semibold tracking-[0.28em]"
+              className="text-center text-base font-semibold tracking-widest"
             />
           </Field>
-          <Button
+          <LoadingActionButton
             type="button"
             variant="secondary"
             className="w-full rounded-full"
             onClick={() => void lookupDoctor()}
-            disabled={isLookingUp}
+            isLoading={isLookingUp}
+            loadingLabel={copy.patient.access.verifyCode}
+            slotClassName="w-full"
           >
             <Search size={16} />
             {copy.patient.access.verifyCode}
-          </Button>
+          </LoadingActionButton>
         </article>
 
         <article
@@ -247,7 +257,7 @@ export function DoctorAccessClient({
           data-doctor-access-method="qr"
         >
           <div>
-            <h3 className="text-[19px] font-semibold leading-tight text-[var(--color-midnight)]">
+            <h3 className="text-lg font-semibold leading-tight text-[var(--color-midnight)]">
               {copy.patient.access.qrMethodTitle}
             </h3>
             <p className="mt-2 text-sm leading-6 text-[var(--color-ash)]">
@@ -284,17 +294,19 @@ export function DoctorAccessClient({
         <DoctorLookupSkeleton />
       ) : null}
 
-      <DoctorQrScannerModal
-        autoStart={scannerAutoStart}
-        copy={copy}
-        error={error}
-        isBusy={isLookingUp}
-        onClose={closeScannerModal}
-        onScan={(rawValue) => {
-          void lookupDoctor(rawValue, { requireScannerOpen: true });
-        }}
-        open={scannerModalOpen}
-      />
+      {scannerModalOpen ? (
+        <DoctorQrScannerModal
+          autoStart={scannerAutoStart}
+          copy={copy}
+          error={error}
+          isBusy={isLookingUp}
+          onClose={closeScannerModal}
+          onScan={(rawValue) => {
+            void lookupDoctor(rawValue, { requireScannerOpen: true });
+          }}
+          open={scannerModalOpen}
+        />
+      ) : null}
 
       {permissionDoctor && permissionModalOpen ? (
         <PermissionAccessModal
@@ -334,6 +346,48 @@ export function DoctorAccessClient({
           }}
         />
       ) : null}
+    </div>
+  );
+}
+
+function DoctorQrScannerModalFallback() {
+  return (
+    <div className="fixed inset-0 z-50 grid place-items-center overflow-y-auto bg-[color-mix(in_srgb,var(--color-ash)_28%,transparent)] p-3 backdrop-blur-sm sm:p-4">
+      <section className="my-4 grid max-h-[calc(100dvh-2rem)] min-h-[320px] w-full max-w-[560px] animate-pulse overflow-hidden rounded-[18px] border border-[var(--color-stone-surface)] bg-[var(--color-card)] shadow-[0_24px_80px_rgba(18,18,18,0.18),inset_0_0_0_1px_var(--color-stone-surface)] sm:my-6">
+        <div className="px-5 pb-4 pt-5 sm:px-6">
+          <div className="h-7 w-40 rounded-[10px] bg-[color-mix(in_srgb,var(--color-ash)_18%,transparent)]" />
+          <div className="mt-3 h-4 w-full max-w-sm rounded-[10px] bg-[color-mix(in_srgb,var(--color-ash)_18%,transparent)]" />
+        </div>
+        <div className="grid gap-4 px-5 pb-5 sm:px-6">
+          <div className="aspect-video rounded-[14px] bg-[color-mix(in_srgb,var(--color-midnight)_82%,transparent)]" />
+          <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-between">
+            <div className="h-11 rounded-[10px] bg-[color-mix(in_srgb,var(--color-ash)_18%,transparent)] sm:w-28" />
+            <div className="h-11 rounded-[10px] bg-[color-mix(in_srgb,var(--color-ash)_18%,transparent)] sm:w-32" />
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function DoctorLookupSkeleton() {
+  return (
+    <div className="grid animate-pulse gap-4 rounded-[10px] bg-[var(--color-card)] p-4" aria-hidden="true">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="space-y-2">
+          <div className="h-4 w-28 rounded-[10px] bg-[var(--color-stone-surface)]" />
+          <div className="h-7 w-48 rounded-[10px] bg-[var(--color-stone-surface)]" />
+          <div className="h-4 w-36 rounded-[10px] bg-[var(--color-stone-surface)]" />
+        </div>
+        <div className="h-7 w-28 rounded-[10px] bg-[var(--color-stone-surface)]" />
+      </div>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div className="h-12 w-full rounded-[10px] bg-[var(--color-stone-surface)]" />
+        <div className="h-12 w-full rounded-[10px] bg-[var(--color-stone-surface)]" />
+        <div className="h-12 w-full rounded-[10px] bg-[var(--color-stone-surface)]" />
+        <div className="h-12 w-full rounded-[10px] bg-[var(--color-stone-surface)]" />
+      </div>
+      <div className="h-10 w-40 rounded-full bg-[var(--color-stone-surface)]" />
     </div>
   );
 }
@@ -394,7 +448,7 @@ function PermissionAccessModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 grid place-items-center overflow-y-auto bg-[color-mix(in_srgb,var(--color-ash)_28%,transparent)] p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-50 grid place-items-center overflow-y-auto bg-[color-mix(in_srgb,var(--color-ash)_28%,transparent)] p-3 backdrop-blur-sm sm:p-4"
       data-permission-access-modal
       role="dialog"
       aria-modal="true"
@@ -402,14 +456,14 @@ function PermissionAccessModal({
     >
       <form
         action={grantDoctorAccessAction}
-        className="my-6 grid w-full max-w-[640px] overflow-hidden rounded-[18px] border border-[var(--color-stone-surface)] bg-[var(--color-card)] shadow-[0_24px_80px_rgba(18,18,18,0.18),inset_0_0_0_1px_var(--color-stone-surface)]"
+        className="my-4 grid max-h-[calc(100dvh-2rem)] w-full max-w-[640px] overflow-hidden rounded-[18px] border border-[var(--color-stone-surface)] bg-[var(--color-card)] shadow-[0_24px_80px_rgba(18,18,18,0.18),inset_0_0_0_1px_var(--color-stone-surface)] sm:my-6"
       >
         <input type="hidden" name="doctor_id" value={doctor.doctorId} />
         <input type="hidden" name="expires_at" value={expiresAt} />
-        <header className="flex items-center justify-between gap-4 px-6 pb-4 pt-5">
+        <header className="flex items-start justify-between gap-4 px-4 pb-4 pt-5 sm:px-6">
           <h2
             id="doctor-access-permission-title"
-            className="text-[28px] font-semibold leading-tight text-[var(--color-midnight)]"
+            className="text-xl font-semibold leading-tight text-[var(--color-midnight)] sm:text-2xl"
           >
             {copy.patient.access.permissionModalTitle}
           </h2>
@@ -423,11 +477,11 @@ function PermissionAccessModal({
           </button>
         </header>
 
-        <div className="grid max-h-[72vh] gap-6 overflow-y-auto px-6 pb-6">
+        <div className="grid min-h-0 gap-6 overflow-y-auto px-4 pb-5 sm:px-6 sm:pb-6">
           <div className="flex items-start gap-4 border-t border-[var(--color-stone-surface)] pt-5">
             <DoctorAvatar doctor={doctor} />
             <div className="min-w-0">
-              <h3 className="truncate text-[20px] font-semibold leading-tight text-[var(--color-midnight)]">
+              <h3 className="truncate text-lg font-semibold leading-tight text-[var(--color-midnight)]">
                 {doctor.fullName}
               </h3>
               <p className="mt-1 text-sm leading-6 text-[var(--color-ash)]">
@@ -444,7 +498,7 @@ function PermissionAccessModal({
           </p>
 
           <section className="grid gap-3">
-            <h3 className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--color-ash)]">
+            <h3 className="text-xs font-semibold uppercase tracking-widest text-[var(--color-ash)]">
               {copy.patient.access.permissionModalScopeTitle}
             </h3>
             <div className="grid gap-3">
@@ -474,7 +528,7 @@ function PermissionAccessModal({
                   <button
                     type="button"
                     disabled
-                    className="inline-flex w-fit cursor-not-allowed items-center gap-2 text-sm font-semibold text-[var(--color-ash)] opacity-70"
+                  className="inline-flex w-fit cursor-not-allowed items-center gap-2 text-sm font-semibold text-[var(--color-ash)] opacity-70"
                   >
                     <Plus size={15} aria-hidden="true" />
                     {copy.patient.access.permissionAddMedicalRecord}
@@ -543,7 +597,7 @@ function PermissionAccessModal({
           </section>
 
           <section className="grid gap-3">
-            <h3 className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--color-ash)]">
+            <h3 className="text-xs font-semibold uppercase tracking-widest text-[var(--color-ash)]">
               {copy.patient.access.permissionModalTimeTitle}
             </h3>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -604,25 +658,27 @@ function PermissionAccessModal({
           ) : null}
         </div>
 
-        <footer className="flex flex-col-reverse gap-3 border-t border-[var(--color-stone-surface)] bg-[var(--color-stone-surface)] px-6 py-5 sm:flex-row sm:justify-end">
+        <footer className="flex flex-col-reverse gap-3 border-t border-[var(--color-stone-surface)] bg-[var(--color-stone-surface)] px-4 py-4 sm:flex-row sm:justify-end sm:px-6 sm:py-5">
           <Button
             type="button"
             variant="ghost"
-            className="rounded-[10px]"
+            className="w-full rounded-[10px] sm:w-auto"
             data-permission-action="cancel"
             onClick={onCancel}
           >
             {copy.patient.access.permissionModalCancel}
           </Button>
-          <Button
+          <PendingSubmitButton
             type="submit"
-            className="rounded-[10px]"
+            className="w-full rounded-[10px] sm:w-auto"
             data-permission-action="allow"
             disabled={submitDisabled}
+            loadingLabel={copy.patient.access.permissionModalAllow}
+            slotClassName="w-full sm:w-auto"
           >
             <ShieldCheck size={16} aria-hidden="true" />
             {copy.patient.access.permissionModalAllow}
-          </Button>
+          </PendingSubmitButton>
         </footer>
       </form>
     </div>
@@ -678,7 +734,7 @@ function PermissionScopeCard({
           className="mt-1 size-5 cursor-pointer accent-[var(--color-teal-primary)]"
         />
         <span className="min-w-0">
-          <span className="block text-[16px] font-semibold leading-5 text-[var(--color-midnight)]">
+          <span className="block text-base font-semibold leading-5 text-[var(--color-midnight)]">
             {title}
           </span>
           <span className="mt-1 block text-xs leading-5 text-[var(--color-ash)]">
@@ -706,8 +762,8 @@ function MedicalRecordPermissionRow({
       data-permission-record-row
     >
       <div className="min-w-0">
-        <p className="truncate text-sm font-semibold text-[var(--color-midnight)]">{record.title}</p>
-        <p className="mt-1 truncate text-xs text-[var(--color-ash)]">
+        <p className="break-words text-sm font-semibold text-[var(--color-midnight)]">{record.title}</p>
+        <p className="mt-1 break-words text-xs text-[var(--color-ash)]">
           {record.recordType}
           {record.attachmentFilename ? ` · ${record.attachmentFilename}` : ""}
         </p>
@@ -855,7 +911,7 @@ export function DoctorAccessActivity({
                 </span>
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
-                    <h3 className="text-[19px] font-semibold leading-tight text-[var(--color-midnight)]">
+                    <h3 className="text-lg font-semibold leading-tight text-[var(--color-midnight)]">
                       {grant.doctorName}
                     </h3>
                     <StatusBadge tone={proofTone(grant.blockchainStatus)}>
@@ -870,10 +926,15 @@ export function DoctorAccessActivity({
               </div>
               <form action={revokeDoctorAccessAction} className="shrink-0">
                 <input type="hidden" name="grant_id" value={grant.grantId} />
-                <Button type="submit" variant="destructive" className="rounded-full">
+                <PendingSubmitButton
+                  type="submit"
+                  variant="destructive"
+                  className="rounded-full"
+                  loadingLabel={copy.patient.access.revoke}
+                >
                   <Trash2 size={16} />
                   {copy.patient.access.revoke}
-                </Button>
+                </PendingSubmitButton>
               </form>
             </div>
 
@@ -977,7 +1038,7 @@ export function DoctorAccessStatusLog({
           {items.map((item) => (
             <div
               key={item.grantId}
-              className="flex items-center justify-between gap-4 border-b border-[var(--color-stone-surface)] py-4 last:border-b-0"
+            className="flex flex-col gap-4 border-b border-[var(--color-stone-surface)] py-4 last:border-b-0 sm:flex-row sm:items-center sm:justify-between"
             >
               <div className="flex min-w-0 items-center gap-4">
                 <span className="grid size-12 shrink-0 place-items-center rounded-full bg-[var(--color-stone-surface)] text-[var(--color-ash)]">
@@ -992,13 +1053,13 @@ export function DoctorAccessStatusLog({
                   </span>
                 </span>
               </div>
-              <div className="shrink-0 text-right">
+              <div className="text-left sm:shrink-0 sm:text-right">
                 <p className="mb-2 text-xs leading-5 text-[var(--color-ash)]">
                   {formatDateTime(item.grantedAt, locale)}
                 </p>
                 <span
                   className={[
-                    "inline-flex rounded-md px-2.5 py-1 text-[10px] font-semibold leading-4",
+                    "inline-flex rounded-md px-2.5 py-1 text-xs font-semibold leading-4",
                     item.displayStatus === "ongoing"
                       ? "bg-[var(--color-teal-surface)] text-[var(--color-teal-deep)]"
                       : "bg-[var(--color-stone-surface)] text-[var(--color-graphite)]",

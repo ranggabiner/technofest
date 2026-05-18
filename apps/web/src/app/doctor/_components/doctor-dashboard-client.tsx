@@ -2,30 +2,22 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { useState } from "react";
 import {
-  AlertTriangle,
   Bot,
-  Download,
   Eye,
   FilePlus2,
   FileText,
   Filter,
-  Send,
   X,
 } from "lucide-react";
 
 import { DashboardCard } from "@/app/_components/dashboard-card";
-import { ProofStatus } from "@/components/proof-status";
 import { StatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
 import { CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Field, Input, Label, Select, Textarea } from "@/components/ui/form";
-import {
-  createScope1RecordFromDashboardAction,
-  loadDoctorGrantModalStateAction,
-} from "@/app/doctor/actions";
-import { DoctorRagClient } from "@/app/doctor/_components/doctor-rag-client";
+import { loadDoctorGrantModalStateAction } from "@/app/doctor/actions";
 import {
   deriveDoctorSessionStatus,
   filterDoctorDashboardSessions,
@@ -36,15 +28,19 @@ import type { DoctorDashboardState, DoctorGrantPageState } from "@/lib/doctor-re
 import type { Dictionary } from "@/lib/i18n/dictionary";
 import { fillTemplate, formatDateTime } from "@/lib/i18n/format";
 import type { Locale } from "@/lib/i18n/locales";
-import {
-  localizedScopeList,
-  proofLabel,
-  proofStatusMessages,
-  proofTone,
-  recordTypeLabel,
-} from "@/lib/i18n/labels";
+import { localizedScopeList } from "@/lib/i18n/labels";
+import { cn } from "@/lib/utils";
+import type { DoctorDashboardModalKind } from "./doctor-grant-modal-content";
 
-type ModalKind = "chat" | "records" | "create";
+type ModalKind = DoctorDashboardModalKind;
+
+const GrantModalContent = dynamic(
+  () => import("./doctor-grant-modal-content").then((module) => module.GrantModalContent),
+  {
+    ssr: false,
+    loading: () => <GrantModalContentFallback />,
+  },
+);
 
 type ActiveModal = {
   kind: ModalKind;
@@ -192,7 +188,24 @@ export function DoctorDashboardClient({
             </div>
           </div>
 
-          <div className="overflow-x-auto">
+          <div data-doctor-session-cards className="grid gap-3 md:hidden">
+            {sessions.length > 0 ? (
+              sessions.map((session) => (
+                <SessionCard
+                  key={session.grantId}
+                  session={session}
+                  locale={locale}
+                  copy={copy}
+                  now={now}
+                  onOpen={openGrantModal}
+                />
+              ))
+            ) : (
+              <EmptyState message={copy.doctor.dashboard.noActivePatients} />
+            )}
+          </div>
+
+          <div className="hidden overflow-x-auto md:block">
             <table className="w-full min-w-[760px] border-separate border-spacing-y-2 text-left text-sm">
               <thead className="text-xs uppercase text-[var(--color-ash)]">
                 <tr>
@@ -242,9 +255,9 @@ export function DoctorDashboardClient({
               width={320}
               height={320}
               unoptimized
-              className="size-80"
+              className="size-[min(18rem,70vw)] sm:size-80"
             />
-            <p className="font-mono text-2xl font-semibold text-[var(--color-midnight)]">
+            <p className="break-all text-center font-mono text-2xl font-semibold text-[var(--color-midnight)]">
               {state.doctor.doctor_access_code}
             </p>
           </div>
@@ -291,10 +304,7 @@ function SessionRow({
   onOpen: (kind: ModalKind, session: DoctorDashboardSession) => void;
 }) {
   const status = deriveDoctorSessionStatus(session, now);
-  const isActive = status.kind === "active";
-  const canChat = isActive && (session.canViewScope2Mental || session.canViewScope2Physical);
-  const canViewRecords = isActive;
-  const canCreateRecord = isActive && session.canViewScope1;
+  const actionState = getSessionActionState(session, status);
 
   return (
     <tr className="bg-[var(--color-card)] shadow-[var(--shadow-subtle)]">
@@ -311,8 +321,8 @@ function SessionRow({
       <td className="border-y border-[var(--color-fog)] px-3 py-3 align-top">
         <ActionButton
           label={copy.doctor.dashboard.chatAi}
-          title={canChat ? copy.doctor.dashboard.chatAi : copy.doctor.dashboard.unavailableNoScope2}
-          disabled={!canChat}
+          title={actionState.canChat ? copy.doctor.dashboard.chatAi : copy.doctor.dashboard.unavailableNoScope2}
+          disabled={!actionState.canChat}
           icon={<Bot size={15} />}
           onClick={() => onOpen("chat", session)}
         />
@@ -320,8 +330,8 @@ function SessionRow({
       <td className="border-y border-[var(--color-fog)] px-3 py-3 align-top">
         <ActionButton
           label={copy.doctor.dashboard.viewData}
-          title={canViewRecords ? copy.doctor.dashboard.viewMedicalRecords : copy.doctor.dashboard.statusFinished}
-          disabled={!canViewRecords}
+          title={actionState.canViewRecords ? copy.doctor.dashboard.viewMedicalRecords : copy.doctor.dashboard.statusFinished}
+          disabled={!actionState.canViewRecords}
           icon={<Eye size={15} />}
           onClick={() => onOpen("records", session)}
         />
@@ -329,14 +339,87 @@ function SessionRow({
       <td className="rounded-r-[10px] border-y border-r border-[var(--color-fog)] px-3 py-3 align-top">
         <ActionButton
           label={copy.doctor.dashboard.createRecordShort}
-          title={canCreateRecord ? copy.doctor.dashboard.createMedicalRecord : copy.doctor.dashboard.unavailableNoScope1}
-          disabled={!canCreateRecord}
+          title={actionState.canCreateRecord ? copy.doctor.dashboard.createMedicalRecord : copy.doctor.dashboard.unavailableNoScope1}
+          disabled={!actionState.canCreateRecord}
           icon={<FilePlus2 size={15} />}
           onClick={() => onOpen("create", session)}
         />
       </td>
     </tr>
   );
+}
+
+function SessionCard({
+  session,
+  locale,
+  copy,
+  now,
+  onOpen,
+}: {
+  session: DoctorDashboardSession;
+  locale: Locale;
+  copy: Dictionary;
+  now: Date;
+  onOpen: (kind: ModalKind, session: DoctorDashboardSession) => void;
+}) {
+  const status = deriveDoctorSessionStatus(session, now);
+  const actionState = getSessionActionState(session, status);
+
+  return (
+    <article className="grid gap-4 rounded-[10px] border border-[var(--color-fog)] bg-[var(--color-card)] p-4 shadow-[var(--shadow-subtle)]">
+      <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start">
+        <div className="min-w-0">
+          <p className="text-xs font-medium text-[var(--color-ash)]">
+            {formatDateTime(session.grantedAt, locale)}
+          </p>
+          <h3 className="mt-1 break-words font-semibold text-[var(--color-midnight)]">{session.patientName}</h3>
+          <p className="mt-1 break-words text-xs leading-5 text-[var(--color-ash)]">
+            {localizedScopeList(copy, session.scopes).join(", ")}
+          </p>
+        </div>
+        <SessionStatusBadge session={session} status={status} locale={locale} copy={copy} />
+      </div>
+      <div className="grid gap-2 sm:grid-cols-3">
+        <ActionButton
+          label={copy.doctor.dashboard.chatAi}
+          title={actionState.canChat ? copy.doctor.dashboard.chatAi : copy.doctor.dashboard.unavailableNoScope2}
+          disabled={!actionState.canChat}
+          icon={<Bot size={15} />}
+          className="w-full"
+          onClick={() => onOpen("chat", session)}
+        />
+        <ActionButton
+          label={copy.doctor.dashboard.viewData}
+          title={actionState.canViewRecords ? copy.doctor.dashboard.viewMedicalRecords : copy.doctor.dashboard.statusFinished}
+          disabled={!actionState.canViewRecords}
+          icon={<Eye size={15} />}
+          className="w-full"
+          onClick={() => onOpen("records", session)}
+        />
+        <ActionButton
+          label={copy.doctor.dashboard.createRecordShort}
+          title={actionState.canCreateRecord ? copy.doctor.dashboard.createMedicalRecord : copy.doctor.dashboard.unavailableNoScope1}
+          disabled={!actionState.canCreateRecord}
+          icon={<FilePlus2 size={15} />}
+          className="w-full"
+          onClick={() => onOpen("create", session)}
+        />
+      </div>
+    </article>
+  );
+}
+
+function getSessionActionState(
+  session: DoctorDashboardSession,
+  status: ReturnType<typeof deriveDoctorSessionStatus>,
+) {
+  const isActive = status.kind === "active";
+
+  return {
+    canChat: isActive && (session.canViewScope2Mental || session.canViewScope2Physical),
+    canViewRecords: isActive,
+    canCreateRecord: isActive && session.canViewScope1,
+  };
 }
 
 function FilterButton({
@@ -356,7 +439,7 @@ function FilterButton({
       data-filter={dataFilter}
       onClick={onClick}
       className={[
-        "min-h-10 cursor-pointer rounded-[10px] px-3 text-sm font-semibold transition",
+        "min-h-11 cursor-pointer rounded-[10px] px-3 text-sm font-semibold transition",
         active
           ? "bg-[var(--color-teal-muted)] text-[var(--color-midnight)]"
           : "bg-[var(--color-stone-surface)] text-[var(--color-graphite)] hover:bg-[var(--color-parchment-card)]",
@@ -372,19 +455,21 @@ function ActionButton({
   title,
   disabled,
   icon,
+  className,
   onClick,
 }: {
   label: string;
   title: string;
   disabled: boolean;
   icon: React.ReactNode;
+  className?: string;
   onClick: () => void;
 }) {
   return (
     <Button
       type="button"
       variant="ghost"
-      className="rounded-[10px] px-3"
+      className={cn("rounded-[10px] px-3", className)}
       title={title}
       disabled={disabled}
       onClick={onClick}
@@ -442,17 +527,17 @@ function DashboardDialog({
   wide?: boolean;
 }) {
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-black/35 px-4 py-6">
+    <div className="fixed inset-0 z-50 grid place-items-center bg-black/35 px-3 py-4 sm:px-4 sm:py-6">
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="doctor-dashboard-modal-title"
         className={[
-          "max-h-[88vh] w-full overflow-y-auto rounded-[10px] border border-[var(--color-stone-surface)] bg-[var(--color-card)] p-5 shadow-[var(--shadow-elevated)]",
+          "max-h-[calc(100dvh-2rem)] w-full overflow-y-auto rounded-[10px] border border-[var(--color-stone-surface)] bg-[var(--color-card)] p-4 shadow-[var(--shadow-elevated)] sm:p-5",
           wide ? "max-w-5xl" : "max-w-md",
         ].join(" ")}
       >
-        <div className="mb-4 flex items-center justify-between gap-4">
+        <div className="mb-4 flex items-start justify-between gap-4">
           <h2 id="doctor-dashboard-modal-title" className="text-lg font-semibold text-[var(--color-midnight)]">
             {title}
           </h2>
@@ -471,351 +556,16 @@ function DashboardDialog({
   );
 }
 
-function GrantModalContent({
-  kind,
-  state,
-  locale,
-  copy,
-  onRefresh,
-}: {
-  kind: ModalKind;
-  state: DoctorGrantPageState;
-  locale: Locale;
-  copy: Dictionary;
-  onRefresh: (grantId: string) => Promise<void>;
-}) {
-  if (kind === "chat") {
-    return <ChatModal state={state} copy={copy} />;
-  }
-
-  if (kind === "create") {
-    return <CreateRecordModal state={state} copy={copy} onRefresh={onRefresh} />;
-  }
-
-  return <RecordsModal state={state} locale={locale} copy={copy} />;
-}
-
-function GrantSummary({ state, locale, copy }: { state: DoctorGrantPageState; locale: Locale; copy: Dictionary }) {
+function GrantModalContentFallback() {
   return (
-    <div className="mb-4 grid gap-2 rounded-[10px] bg-[var(--color-parchment-card)] p-4 text-sm">
-      <div className="flex flex-wrap items-center gap-2">
-        <StatusBadge tone={proofTone(state.grant.blockchainStatus)}>
-          {copy.common.grant} {proofLabel(copy, state.grant.blockchainStatus)}
-        </StatusBadge>
-        <StatusBadge tone="neutral">
-          {copy.common.until} {formatDateTime(state.grant.expiresAt, locale)}
-        </StatusBadge>
-      </div>
-      <p className="font-semibold text-[var(--color-midnight)]">{state.grant.patientName}</p>
-      <p className="text-[var(--color-ash)]">
-        {fillTemplate(copy.doctor.grant.activeScopes, {
-          scopes: describeGrantFlags(copy, state.grant).join(", "),
-        })}
-      </p>
-    </div>
-  );
-}
-
-function ChatModal({ state, copy }: { state: DoctorGrantPageState; copy: Dictionary }) {
-  if (!state.ragAvailable) {
-    return <EmptyState message={copy.doctor.grant.ragUnavailableDescription} />;
-  }
-
-  return (
-    <div className="grid gap-4">
-      <AuthorizedScope2Preview state={state} copy={copy} />
-      <DoctorRagClient grantId={state.grant.grantId} copy={copy.doctor.rag} />
-    </div>
-  );
-}
-
-function RecordsModal({
-  state,
-  locale,
-  copy,
-}: {
-  state: DoctorGrantPageState;
-  locale: Locale;
-  copy: Dictionary;
-}) {
-  return (
-    <div className="grid gap-4">
-      <GrantSummary state={state} locale={locale} copy={copy} />
-      {state.grant.canViewScope1 ? (
-        <Scope1RecordList state={state} locale={locale} copy={copy} />
-      ) : null}
-      {state.grant.canViewScope2Mental || state.grant.canViewScope2Physical ? (
-        <AuthorizedScope2Preview state={state} copy={copy} />
-      ) : null}
-    </div>
-  );
-}
-
-function CreateRecordModal({
-  state,
-  copy,
-  onRefresh,
-}: {
-  state: DoctorGrantPageState;
-  copy: Dictionary;
-  onRefresh: (grantId: string) => Promise<void>;
-}) {
-  const [error, setError] = useState<string | null>(null);
-  const [status, setStatus] = useState<string | null>(null);
-  const [isSaving, setIsSaving] = useState(false);
-
-  if (!state.grant.canViewScope1) {
-    return <EmptyState message={copy.doctor.dashboard.unavailableNoScope1} />;
-  }
-
-  async function submit(formData: FormData) {
-    setIsSaving(true);
-    setError(null);
-    setStatus(null);
-    const result = await createScope1RecordFromDashboardAction(formData);
-    if (result.ok) {
-      setStatus(copy.doctor.dashboard.recordSaved);
-      await onRefresh(state.grant.grantId);
-    } else {
-      setError(result.error);
-    }
-    setIsSaving(false);
-  }
-
-  return (
-    <form action={(formData) => void submit(formData)} className="grid gap-4">
-      <input type="hidden" name="grant_id" value={state.grant.grantId} />
+    <div className="grid min-h-[360px] animate-pulse gap-4">
+      <div className="h-24 rounded-[10px] bg-[var(--color-stone-surface)]" />
       <div className="grid gap-3 sm:grid-cols-2">
-        <Field>
-          <Label htmlFor="dashboard_record_type">{copy.doctor.grant.recordType}</Label>
-          <Select id="dashboard_record_type" name="record_type" required defaultValue="note">
-            <option value="lab">{copy.common.recordType.lab}</option>
-            <option value="xray">{copy.common.recordType.xray}</option>
-            <option value="diagnosis">{copy.common.recordType.diagnosis}</option>
-            <option value="prescription">{copy.common.recordType.prescription}</option>
-            <option value="vaccine">{copy.common.recordType.vaccine}</option>
-            <option value="action">{copy.common.recordType.action}</option>
-            <option value="note">{copy.common.recordType.note}</option>
-          </Select>
-        </Field>
-        <Field>
-          <Label htmlFor="dashboard_amends_record_id">{copy.doctor.grant.amendsRecord}</Label>
-          <Select id="dashboard_amends_record_id" name="amends_record_id" defaultValue="">
-            <option value="">{copy.doctor.grant.notAmendment}</option>
-            {state.scope1Records.map((record) => (
-              <option key={record.recordId} value={record.recordId}>
-                {record.title}
-              </option>
-            ))}
-          </Select>
-        </Field>
+        <div className="h-28 rounded-[10px] bg-[var(--color-stone-surface)]" />
+        <div className="h-28 rounded-[10px] bg-[var(--color-stone-surface)]" />
       </div>
-      <Field>
-        <Label htmlFor="dashboard_title">{copy.doctor.grant.titleLabel}</Label>
-        <Input id="dashboard_title" name="title" maxLength={160} required />
-      </Field>
-      <Field>
-        <Label htmlFor="dashboard_description">{copy.doctor.grant.descriptionLabel}</Label>
-        <Textarea id="dashboard_description" name="description" maxLength={4000} />
-      </Field>
-      <Field>
-        <Label htmlFor="dashboard_attachment">{copy.doctor.grant.attachmentLabel}</Label>
-        <Input id="dashboard_attachment" name="attachment" type="file" accept="application/pdf,image/jpeg,image/png" />
-      </Field>
-      {error ? <ErrorState message={error} /> : null}
-      {status ? <StatusBadge tone="pending">{status}</StatusBadge> : null}
-      <Button type="submit" className="w-fit rounded-[10px]" disabled={isSaving}>
-        <Send size={16} />
-        {isSaving ? copy.doctor.rag.processing : copy.doctor.grant.createRecord}
-      </Button>
-    </form>
-  );
-}
-
-function Scope1RecordList({
-  state,
-  locale,
-  copy,
-}: {
-  state: DoctorGrantPageState;
-  locale: Locale;
-  copy: Dictionary;
-}) {
-  return (
-    <section className="grid gap-3">
-      <h3 className="font-semibold text-[var(--color-midnight)]">{copy.doctor.grant.scope1Title}</h3>
-      {state.scope1Records.length > 0 ? (
-        state.scope1Records.map((record) => (
-          <div
-            key={record.recordId}
-            className="grid gap-3 rounded-[10px] border border-[var(--color-fog)] bg-[var(--color-card)] p-4"
-          >
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <p className="text-xs uppercase text-[var(--color-ash)]">{recordTypeLabel(copy, record.recordType)}</p>
-                <h4 className="font-semibold text-[var(--color-midnight)]">{record.title}</h4>
-              </div>
-              <StatusBadge tone={proofTone(record.blockchainStatus)}>
-                {copy.common.proofPrefix} {proofLabel(copy, record.blockchainStatus)}
-              </StatusBadge>
-            </div>
-            {record.description ? (
-              <p className="text-sm leading-6 text-[var(--color-charcoal-primary)]">{record.description}</p>
-            ) : null}
-            <p className="text-xs text-[var(--color-ash)]">
-              {formatDateTime(record.createdAt, locale)}
-              {record.amendsRecordId ? ` - ${copy.doctor.grant.amendmentFor} ${record.amendsRecordId}` : ""}
-            </p>
-            <ProofStatus
-              proofType="scope1_record"
-              id={record.recordId}
-              blockchainStatus={record.blockchainStatus}
-              txHash={record.blockchainTxHash}
-              lastError={record.blockchainLastError}
-              messages={proofStatusMessages(copy)}
-            />
-            {record.attachmentFileId ? (
-              <div className="flex flex-wrap gap-2">
-                <Button asChild variant="ghost" className="rounded-[10px]">
-                  <Link
-                    href={`/doctor/grants/${state.grant.grantId}/attachments/${record.attachmentFileId}/preview`}
-                    target="_blank"
-                  >
-                    <Eye size={16} />
-                    {copy.doctor.grant.previewAttachment.replace(
-                      "{name}",
-                      record.attachmentFilename ?? copy.doctor.grant.attachmentFallback,
-                    )}
-                  </Link>
-                </Button>
-                {record.attachmentCanDownload ? (
-                  <Button asChild variant="secondary" className="rounded-[10px]">
-                    <Link href={`/doctor/grants/${state.grant.grantId}/attachments/${record.attachmentFileId}/download`}>
-                      <Download size={16} />
-                      {copy.doctor.grant.downloadAttachment.replace(
-                        "{name}",
-                        record.attachmentFilename ?? copy.doctor.grant.attachmentFallback,
-                      )}
-                    </Link>
-                  </Button>
-                ) : (
-                  <StatusBadge tone="neutral">{copy.doctor.dashboard.downloadUnavailable}</StatusBadge>
-                )}
-              </div>
-            ) : null}
-          </div>
-        ))
-      ) : (
-        <EmptyState message={copy.doctor.grant.noScope1} />
-      )}
-    </section>
-  );
-}
-
-function AuthorizedScope2Preview({ state, copy }: { state: DoctorGrantPageState; copy: Dictionary }) {
-  return (
-    <div className="grid gap-3">
-      {state.grant.canViewScope2Mental ? (
-        <Scope2Section
-          title={copy.doctor.grant.scope2MentalTitle}
-          empty={copy.doctor.grant.noMental}
-          rows={state.mentalRows.map((row) => ({
-            id: row.logId,
-            title: `${copy.common.scopeLabels.scope2Mental} - ${row.logDate}`,
-            emergencyFlagged: row.emergencyFlagged,
-            rawQuote: row.rawQuote,
-            details: [
-              [copy.doctor.grant.mood, row.moodScore],
-              [copy.doctor.grant.anxiety, row.anxietyLevel],
-              [copy.doctor.grant.sleep, row.sleepHours],
-              [copy.doctor.grant.trigger, row.triggerNotes],
-              [copy.doctor.grant.extractionConfidence, row.extractionConfidence],
-              [copy.doctor.grant.model, row.aiModel],
-              [copy.doctor.grant.session, row.sessionId],
-            ],
-          }))}
-          warningLabel={copy.doctor.grant.dangerFlag}
-        />
-      ) : null}
-      {state.grant.canViewScope2Physical ? (
-        <Scope2Section
-          title={copy.doctor.grant.scope2PhysicalTitle}
-          empty={copy.doctor.grant.noPhysical}
-          rows={state.physicalRows.map((row) => ({
-            id: row.logId,
-            title: `${copy.common.scopeLabels.scope2Physical} - ${row.logDate}`,
-            emergencyFlagged: row.emergencyFlagged,
-            rawQuote: row.rawQuote,
-            details: [
-              [copy.doctor.grant.symptom, row.symptomType],
-              [copy.doctor.grant.severity, row.severity],
-              [copy.doctor.grant.location, row.bodyLocation],
-              [copy.doctor.grant.duration, row.durationNote],
-              [copy.doctor.grant.extractionConfidence, row.extractionConfidence],
-              [copy.doctor.grant.model, row.aiModel],
-              [copy.doctor.grant.session, row.sessionId],
-            ],
-          }))}
-          warningLabel={copy.doctor.grant.dangerFlag}
-        />
-      ) : null}
+      <div className="h-32 rounded-[10px] bg-[var(--color-stone-surface)]" />
     </div>
-  );
-}
-
-function Scope2Section({
-  title,
-  empty,
-  rows,
-  warningLabel,
-}: {
-  title: string;
-  empty: string;
-  rows: Array<{
-    id: string;
-    title: string;
-    emergencyFlagged: boolean;
-    rawQuote: string;
-    details: Array<[string, string | null]>;
-  }>;
-  warningLabel: string;
-}) {
-  return (
-    <section className="grid gap-3">
-      <h3 className="font-semibold text-[var(--color-midnight)]">{title}</h3>
-      {rows.length > 0 ? (
-        rows.map((row) => (
-          <div key={row.id} className="grid gap-3 rounded-[10px] border border-[var(--color-fog)] p-4">
-            <div className="flex flex-wrap items-center gap-2">
-              <h4 className="font-semibold text-[var(--color-midnight)]">{row.title}</h4>
-              {row.emergencyFlagged ? (
-                <StatusBadge tone="failed">
-                  <span className="inline-flex items-center gap-1">
-                    <AlertTriangle size={13} />
-                    {warningLabel}
-                  </span>
-                </StatusBadge>
-              ) : null}
-            </div>
-            <p className="rounded-[10px] bg-[var(--color-parchment-card)] p-3 text-sm leading-6 text-[var(--color-charcoal-primary)]">
-              &quot;{row.rawQuote}&quot;
-            </p>
-            <dl className="grid gap-2 text-sm sm:grid-cols-2">
-              {row.details
-                .filter(([, value]) => value)
-                .map(([label, value]) => (
-                  <div key={label}>
-                    <dt className="text-[var(--color-ash)]">{label}</dt>
-                    <dd className="font-medium text-[var(--color-charcoal-primary)]">{value}</dd>
-                  </div>
-                ))}
-            </dl>
-          </div>
-        ))
-      ) : (
-        <EmptyState message={empty} />
-      )}
-    </section>
   );
 }
 
@@ -839,18 +589,4 @@ function modalTitle(copy: Dictionary, kind: ModalKind) {
   if (kind === "chat") return copy.doctor.dashboard.chatAi;
   if (kind === "create") return copy.doctor.dashboard.createMedicalRecord;
   return copy.doctor.dashboard.viewMedicalRecords;
-}
-
-function describeGrantFlags(copy: Dictionary, grant: {
-  canViewScope1: boolean;
-  canViewScope2Mental: boolean;
-  canViewScope2Physical: boolean;
-  canDownloadAttachments: boolean;
-}) {
-  const labels: string[] = [];
-  if (grant.canViewScope1) labels.push(copy.common.scopeLabels.scope1);
-  if (grant.canViewScope2Mental) labels.push(copy.common.scopeLabels.scope2Mental);
-  if (grant.canViewScope2Physical) labels.push(copy.common.scopeLabels.scope2Physical);
-  if (grant.canDownloadAttachments) labels.push(copy.common.scopeLabels.attachmentDownload);
-  return labels;
 }

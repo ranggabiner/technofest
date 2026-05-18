@@ -371,14 +371,16 @@ describe("patient chat Stitch redesign contract", () => {
     const activeComposer = source.slice(activeComposerIndex, source.indexOf("</form>", activeComposerIndex));
 
     expect(activeComposerIndex).toBeGreaterThan(-1);
-    expect(source).toContain("Ban");
+    expect(source).toContain("LoadingActionButton");
     expect(activeComposer).toContain('id="ai-message"');
     expect(activeComposer).not.toContain("disabled={isStreaming}");
     expect(activeComposer).toContain("if (!canSend) return");
     expect(activeComposer).toContain("if (canSend) void sendMessage()");
     expect(activeComposer).toContain("disabled={!canSend}");
+    expect(activeComposer).toContain("isLoading={isStreaming}");
+    expect(activeComposer).toContain("loadingLabel={copy.sendDisabledTitle}");
     expect(activeComposer).toContain("isStreaming ? copy.sendDisabledTitle : copy.sendTitle");
-    expect(activeComposer).toContain("isStreaming ? <Ban size={20} aria-hidden=\"true\" /> : <ArrowUp size={20} aria-hidden=\"true\" />");
+    expect(activeComposer).toContain("<ArrowUp size={20} aria-hidden=\"true\" />");
   });
 
   it("moves chat search from the history sidebar into a centered overlay", () => {
@@ -449,7 +451,9 @@ describe("patient chat Stitch redesign contract", () => {
     expect(canvas).toContain('className="shrink-0 px-3 pt-3 sm:px-5 md:px-10 md:pt-8"');
     expect(canvas).toContain('className="flex w-full justify-start"');
     expect(canvas).not.toContain('className="mx-auto flex w-full max-w-[760px] justify-start"');
-    expect(canvas).toContain("disabled={isStreaming || isFinishing}");
+    expect(canvas).toContain("disabled={isStreaming}");
+    expect(canvas).toContain("isLoading={isFinishing}");
+    expect(canvas).toContain("loadingLabel={copy.finish}");
     expect(canvas).toContain("border-[var(--color-error-red)]");
     expect(canvas).toContain("text-[var(--color-error-red)]");
     expect(canvas).toContain("hover:bg-[var(--color-error-surface)]");
@@ -466,7 +470,9 @@ describe("patient chat Stitch redesign contract", () => {
   it("renders Markdown only for assistant chat bubbles", () => {
     const source = clientSource();
 
-    expect(source).toContain('import { AssistantMarkdown } from "./assistant-markdown"');
+    expect(source).toContain('import dynamic from "next/dynamic"');
+    expect(source).toContain('import("./assistant-markdown")');
+    expect(source).toContain("AssistantMarkdownFallback");
     expect(source).toContain("<AssistantMarkdown content={message.content || copy.writing} />");
     expect(source).toContain("{message.content || copy.writing}");
     expect(source).toContain('"max-w-[92%] px-3.5 py-3 text-sm leading-6 sm:max-w-[82%] sm:px-4"');

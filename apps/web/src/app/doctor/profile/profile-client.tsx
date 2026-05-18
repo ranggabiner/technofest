@@ -8,6 +8,7 @@ import {
   ProfilePhotoPicker,
   openProfileConfirmation,
 } from "@/app/_components/profile-shell";
+import { PendingSubmitButton } from "@/components/ui/async-action-button";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Label, Select } from "@/components/ui/form";
 import type { Dictionary } from "@/lib/i18n/dictionary";
@@ -44,11 +45,11 @@ export function DoctorProfileClient({
   return (
     <div className="space-y-6">
       <ProfileConfirmationHost />
-      <h1 className="text-[36px] font-semibold leading-tight text-[var(--color-midnight)]">
+      <h1 className="text-3xl font-semibold leading-tight text-[var(--color-midnight)] sm:text-4xl">
         {copy.doctor.title}
       </h1>
 
-      <section className="rounded-xl border border-[var(--color-stone-surface)] bg-[var(--color-card)] p-6 shadow-[var(--shadow-subtle)]">
+      <section className="rounded-xl border border-[var(--color-stone-surface)] bg-[var(--color-card)] p-5 shadow-[var(--shadow-subtle)] sm:p-6">
         <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
           <ProfilePhotoPicker src={avatarUrl} name={doctor.full_name} changeLabel={copy.photo.changePhoto} />
           <div className="min-w-0 flex-1">
@@ -65,14 +66,14 @@ export function DoctorProfileClient({
       <form
         ref={profileFormRef}
         action={updateDoctorProfileAction}
-        className="rounded-xl border border-[var(--color-stone-surface)] bg-[var(--color-card)] p-6 shadow-[var(--shadow-subtle)]"
+        className="rounded-xl border border-[var(--color-stone-surface)] bg-[var(--color-card)] p-5 shadow-[var(--shadow-subtle)] sm:p-6"
       >
-        <div className="mb-6 flex items-center justify-between gap-4">
+        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <h2 className="text-lg font-semibold text-[var(--color-midnight)]">{copy.doctor.profileCardTitle}</h2>
           <Button
             type="button"
             variant="secondary"
-            className="rounded-[10px]"
+            className="w-full rounded-[10px] sm:w-auto"
             onClick={() =>
               openProfileConfirmation({
                 title: copy.confirm.doctorApprovalTitle,
@@ -128,7 +129,7 @@ export function DoctorProfileClient({
       <form
         ref={lettersFormRef}
         action={updateDoctorLettersAction}
-        className="rounded-xl border border-[var(--color-stone-surface)] bg-[var(--color-card)] p-6 shadow-[var(--shadow-subtle)]"
+        className="rounded-xl border border-[var(--color-stone-surface)] bg-[var(--color-card)] p-5 shadow-[var(--shadow-subtle)] sm:p-6"
       >
         <h2 className="mb-6 text-lg font-semibold text-[var(--color-midnight)]">{copy.doctor.lettersTitle}</h2>
         <div className="grid gap-4">
@@ -138,26 +139,26 @@ export function DoctorProfileClient({
               className="grid gap-3 rounded-[10px] border border-[var(--color-stone-surface)] bg-[var(--color-parchment-card)] p-4 md:grid-cols-[1fr_auto]"
             >
               <div className="min-w-0">
-                <div className="flex items-center gap-2">
+                <div className="flex min-w-0 items-center gap-2">
                   <FileText size={18} className="text-[var(--color-teal-deep)]" aria-hidden="true" />
-                  <h3 className="font-semibold text-[var(--color-midnight)]">
+                  <h3 className="break-words font-semibold text-[var(--color-midnight)]">
                     {copy.doctor.documentTitles[document.documentType]}
                   </h3>
                 </div>
-                <p className="mt-1 text-sm text-[var(--color-ash)]">
+                <p className="mt-1 break-words text-sm text-[var(--color-ash)]">
                   {document.filename ?? copy.doctor.noDocument} - {getFileTypeLabel(document.mimeType, document.filename)} - {formatFileSize(document.fileSizeBytes)}
                 </p>
                 <Input className="mt-3" type="file" name={document.documentType} accept="application/pdf,image/jpeg,image/png" />
               </div>
               {document.documentId ? (
-                <div className="flex items-start gap-2">
-                  <Button asChild variant="ghost" className="rounded-[10px]">
+                <div className="grid gap-2 sm:flex sm:items-start">
+                  <Button asChild variant="ghost" className="w-full rounded-[10px] sm:w-auto">
                     <a href={`/doctor/profile/documents/${document.documentId}`}>
                       <Eye size={16} />
                       {copy.doctor.view}
                     </a>
                   </Button>
-                  <Button asChild variant="ghost" className="rounded-[10px]">
+                  <Button asChild variant="ghost" className="w-full rounded-[10px] sm:w-auto">
                     <a href={`/doctor/profile/documents/${document.documentId}/download`}>
                       <Download size={16} />
                       {copy.doctor.download}
@@ -194,11 +195,11 @@ function ProfileFormControls({
   onCancel: () => void;
 }) {
   return (
-    <div className="mt-6 flex justify-end gap-3">
+    <div className="mt-6 grid gap-2 sm:flex sm:justify-end sm:gap-3">
       <Button
         type="button"
         variant="ghost"
-        className="rounded-[10px]"
+        className="w-full rounded-[10px] sm:w-auto"
         onClick={() =>
           openProfileConfirmation({
             title: copy.confirm.cancelTitle,
@@ -211,9 +212,11 @@ function ProfileFormControls({
       >
         {cancelLabel}
       </Button>
-      <Button
+      <PendingSubmitButton
         type="button"
-        className="rounded-[10px]"
+        className="w-full rounded-[10px] sm:w-auto"
+        loadingLabel={saveLabel}
+        slotClassName="w-full sm:w-auto"
         onClick={() =>
           openProfileConfirmation({
             title: copy.confirm.saveTitle,
@@ -225,7 +228,7 @@ function ProfileFormControls({
         }
       >
         {saveLabel}
-      </Button>
+      </PendingSubmitButton>
     </div>
   );
 }

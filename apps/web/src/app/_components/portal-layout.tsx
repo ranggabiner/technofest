@@ -9,6 +9,7 @@ import { signOutAction } from "@/app/auth/actions";
 import { SharedHeader } from "@/components/shared-header";
 import { SiteFooter, SiteFooterContent } from "@/components/site-footer";
 import { ForbiddenState } from "@/components/state-panel";
+import { PendingSubmitButton } from "@/components/ui/async-action-button";
 import type { ResolvedRole } from "@/lib/auth/roles";
 import type { Dictionary } from "@/lib/i18n/dictionary";
 import { cn } from "@/lib/utils";
@@ -65,7 +66,7 @@ export function PortalLayout({
         />
       )}
       <PortalNavigationTransitionProvider targets={navigationTargets}>
-        <main className="mx-auto grid min-h-screen max-w-[1400px] grid-cols-1 gap-6 px-6 pb-[120px] pt-[100px] md:grid-cols-12">
+        <main className="mx-auto grid min-h-screen max-w-[1400px] grid-cols-1 gap-5 px-4 pb-16 pt-20 sm:px-6 sm:pb-24 sm:pt-[100px] md:grid-cols-12 lg:gap-8">
           <aside className="hidden md:col-span-3 md:block">
             <div className="sticky top-[100px] flex flex-col gap-6">
               <PortalProfileCard
@@ -94,7 +95,7 @@ export function PortalLayout({
             </div>
           </aside>
 
-          <div className="col-span-1 flex flex-col gap-8 md:col-span-9">
+          <div className="col-span-1 flex flex-col gap-5 md:col-span-9 md:gap-8">
             <h1 className="sr-only">{title}</h1>
             <PortalProfileCard
               profileHref={profileHref}
@@ -148,11 +149,11 @@ export function PortalProfileCard({
       className={cn(isMobile ? "p-4 md:hidden" : "p-8", className)}
       {...props}
     >
-      <div className={cn("flex gap-4", isMobile ? "items-center" : "flex-col items-center")}>
+      <div className={cn("flex gap-4", isMobile ? "items-start sm:items-center" : "flex-col items-center")}>
         <div
           className={cn(
             "grid place-items-center overflow-hidden rounded-full border border-[var(--color-stone-surface)] bg-[var(--color-stone-surface)] font-semibold text-[var(--color-midnight)]",
-            isMobile ? "size-14 shrink-0 text-[18px]" : "size-20 text-[23px]",
+            isMobile ? "size-14 shrink-0 text-lg" : "size-20 text-xl",
           )}
         >
           {getInitials(userName, role === "admin" ? "A" : role === "doctor" ? "D" : "P")}
@@ -161,7 +162,7 @@ export function PortalProfileCard({
           <h2
             className={cn(
               "font-semibold leading-tight text-[var(--color-midnight)]",
-              isMobile ? "text-[16px]" : "text-[19px]",
+              isMobile ? "text-base" : "text-lg",
             )}
           >
             {userName}
@@ -172,18 +173,20 @@ export function PortalProfileCard({
           <div className={cn("mt-4 grid gap-2", isMobile ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1")}>
             <Link
               href={profileHref}
-              className="inline-flex min-h-9 w-full cursor-pointer items-center justify-center rounded-full border border-[var(--color-stone-surface)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.08em] text-[var(--color-midnight)] transition hover:bg-[var(--color-stone-surface)] hover:text-[var(--color-teal-deep)]"
+              className="inline-flex min-h-11 w-full cursor-pointer items-center justify-center rounded-full border border-[var(--color-stone-surface)] px-4 py-2 text-center text-xs font-semibold uppercase tracking-widest text-[var(--color-midnight)] transition hover:bg-[var(--color-stone-surface)] hover:text-[var(--color-teal-deep)]"
             >
               {profileLabel}
             </Link>
             <form action={signOutAction}>
-              <button
+              <PendingSubmitButton
                 type="submit"
-                className="inline-flex min-h-9 w-full cursor-pointer items-center justify-center gap-2 rounded-full border border-[color-mix(in_srgb,var(--color-error-red)_55%,white)] px-4 py-2 text-xs font-medium text-[var(--color-ash)] transition hover:bg-[var(--color-stone-surface)] hover:text-[var(--color-midnight)]"
+                className="inline-flex min-h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-full border border-[color-mix(in_srgb,var(--color-error-red)_55%,white)] bg-[color-mix(in_srgb,var(--color-error-red)_8%,transparent)] px-4 py-2 text-center text-xs font-medium text-[var(--color-error-red)] transition hover:bg-[color-mix(in_srgb,var(--color-error-red)_14%,transparent)] hover:text-[var(--color-error-red)]"
+                loadingLabel={logoutLabel}
+                slotClassName="w-full"
               >
                 <span>{logoutLabel}</span>
                 <LogOut size={15} aria-hidden="true" />
-              </button>
+              </PendingSubmitButton>
             </form>
           </div>
         </div>
@@ -209,7 +212,7 @@ export async function PortalForbiddenLayout({
         position="fixed"
         className="shadow-none"
       />
-      <main className="mx-auto min-h-screen max-w-[860px] px-6 pb-[120px] pt-[100px]">
+      <main className="mx-auto min-h-screen max-w-[860px] px-4 pb-16 pt-20 sm:px-6 sm:pb-24 sm:pt-[100px]">
         <ForbiddenState role={role} />
       </main>
       <SiteFooter />

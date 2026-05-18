@@ -1,5 +1,6 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 
@@ -9,17 +10,28 @@ import {
   PortalNavigationContent,
   usePortalNavigationTransition,
 } from "@/app/_components/portal-navigation";
-import {
-  AdminAddAdminSkeleton,
-  AdminApprovalSkeleton,
-  AdminDashboardSkeleton,
-  AdminDoctorDetailSkeleton,
-} from "@/components/loading-skeletons";
 import type { AdminLevel } from "@/lib/auth/roles";
 import type { Dictionary } from "@/lib/i18n/dictionary";
 
 import { adminNavItems } from "./admin-nav-model";
 import { adminPendingSkeletonKey } from "./admin-navigation-transition-model";
+
+const AdminAddAdminSkeleton = dynamic(
+  () => import("@/components/loading-skeletons").then((module) => module.AdminAddAdminSkeleton),
+  { loading: () => <PendingSkeletonFallback /> },
+);
+const AdminApprovalSkeleton = dynamic(
+  () => import("@/components/loading-skeletons").then((module) => module.AdminApprovalSkeleton),
+  { loading: () => <PendingSkeletonFallback /> },
+);
+const AdminDashboardSkeleton = dynamic(
+  () => import("@/components/loading-skeletons").then((module) => module.AdminDashboardSkeleton),
+  { loading: () => <PendingSkeletonFallback /> },
+);
+const AdminDoctorDetailSkeleton = dynamic(
+  () => import("@/components/loading-skeletons").then((module) => module.AdminDoctorDetailSkeleton),
+  { loading: () => <PendingSkeletonFallback /> },
+);
 
 export function AdminDesktopNavigation({ adminLevel, copy }: { adminLevel: AdminLevel; copy: Dictionary }) {
   const pathname = usePathname() ?? "/admin/dashboard";
@@ -68,4 +80,17 @@ function renderPendingSkeleton(path: string) {
   if (key === "add-admin") return <AdminAddAdminSkeleton />;
   if (key === "doctor-detail") return <AdminDoctorDetailSkeleton />;
   return null;
+}
+
+function PendingSkeletonFallback() {
+  return (
+    <div className="grid min-h-[360px] animate-pulse gap-4">
+      <div className="h-28 rounded-[10px] bg-[var(--color-stone-surface)]" />
+      <div className="grid gap-3 md:grid-cols-2">
+        <div className="h-40 rounded-[10px] bg-[var(--color-stone-surface)]" />
+        <div className="h-40 rounded-[10px] bg-[var(--color-stone-surface)]" />
+      </div>
+      <div className="h-32 rounded-[10px] bg-[var(--color-stone-surface)]" />
+    </div>
+  );
 }

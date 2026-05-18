@@ -75,6 +75,8 @@ export function KycDocumentCompactPreviewContent({
             key={previewUrl}
             src={previewUrl}
             alt={title}
+            loading="lazy"
+            decoding="async"
             className="h-full w-full object-contain"
           />
         ) : null}
@@ -95,17 +97,17 @@ export function KycDocumentCompactPreviewContent({
       </div>
       <div className="flex min-w-0 flex-col justify-between gap-2 p-3">
         <div className="min-w-0 space-y-1">
-          <p className="truncate text-[13px] font-medium leading-[1.35] tracking-[-0.16px] text-[var(--color-charcoal-primary)]">
+          <p className="truncate text-sm font-medium leading-snug tracking-normal text-[var(--color-charcoal-primary)]">
             {document.filename ?? title}
           </p>
-          <p className="truncate text-[11px] leading-[1.45] text-[var(--color-ash)]">
+          <p className="truncate text-xs leading-6 text-[var(--color-ash)]">
             {getFileTypeLabel(document.mimeType, document.filename)}
             {" · "}
             {formatFileSize(document.fileSizeBytes)}
           </p>
           <p
             className={cn(
-              "inline-flex max-w-full items-center gap-1.5 truncate text-[11px] font-semibold leading-[1.45]",
+              "inline-flex max-w-full items-center gap-1.5 truncate text-xs font-semibold leading-6",
               error ? "text-[var(--color-error-red)]" : "text-[var(--color-valid-green)]",
             )}
           >
@@ -118,7 +120,7 @@ export function KycDocumentCompactPreviewContent({
           </p>
         </div>
         {actionLabel ? (
-          <span className="inline-flex min-h-8 max-w-full items-center gap-2 rounded-full border border-[var(--color-stone-surface)] bg-[var(--color-card)] px-3 text-[11px] font-medium leading-[1.45] tracking-[-0.12px] text-[var(--color-midnight)] transition group-hover:bg-[var(--color-parchment-card)]">
+          <span className="inline-flex min-h-8 max-w-full items-center gap-2 rounded-full border border-[var(--color-stone-surface)] bg-[var(--color-card)] px-3 text-xs font-medium leading-6 tracking-normal text-[var(--color-midnight)] transition group-hover:bg-[var(--color-parchment-card)]">
             <RotateCcw size={13} className="shrink-0" aria-hidden="true" />
             <span className="truncate">{actionLabel}</span>
           </span>
@@ -159,6 +161,8 @@ export function KycDocumentPreview({
             key={previewUrl}
             src={previewUrl}
             alt={title}
+            loading="lazy"
+            decoding="async"
             className="max-h-[420px] w-full object-contain"
           />
         ) : null}
@@ -175,18 +179,18 @@ export function KycDocumentPreview({
         {previewKind === "fallback" ? (
           <div className="flex min-h-[240px] flex-col items-center justify-center gap-3 px-6 text-center text-[var(--color-ash)]">
             <FileWarning size={32} aria-hidden="true" />
-            <p className="max-w-md text-[15px] leading-[1.47] tracking-[-0.2px]">
+            <p className="max-w-md text-sm leading-6 tracking-normal">
               {labels.previewUnavailable}
             </p>
           </div>
         ) : null}
       </div>
-      <dl className="grid gap-3 border-t border-[var(--color-stone-surface)] p-4 text-[12px] leading-[1.58] tracking-[-0.14px] text-[var(--color-graphite)] md:grid-cols-2">
+      <dl className="grid gap-3 border-t border-[var(--color-stone-surface)] p-4 text-xs leading-6 tracking-normal text-[var(--color-graphite)] md:grid-cols-2">
         <MetadataItem label={labels.fileName} value={document.filename ?? "-"} />
         <MetadataItem label={labels.fileType} value={getFileTypeLabel(document.mimeType, document.filename)} />
         <MetadataItem label={labels.fileSize} value={formatFileSize(document.fileSizeBytes)} />
         <div className="flex items-center justify-between gap-3">
-          <dt className="font-semibold uppercase tracking-[0.5px] text-[var(--color-ash)]">
+          <dt className="font-semibold uppercase tracking-widest text-[var(--color-ash)]">
             {labels.uploadStatus}
           </dt>
           <dd className="inline-flex items-center gap-1.5 font-semibold text-[var(--color-valid-green)]">
@@ -202,7 +206,7 @@ export function KycDocumentPreview({
 function MetadataItem({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between gap-3">
-      <dt className="font-semibold uppercase tracking-[0.5px] text-[var(--color-ash)]">
+      <dt className="font-semibold uppercase tracking-widest text-[var(--color-ash)]">
         {label}
       </dt>
       <dd className="min-w-0 truncate text-right font-medium text-[var(--color-charcoal-primary)]">

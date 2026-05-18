@@ -2,6 +2,7 @@ import "server-only";
 
 import type { ModelMessage } from "ai";
 import { after } from "next/server";
+import { cache } from "react";
 
 import { writeAuditLog } from "@/lib/audit/audit";
 import type { ResolvedRole } from "@/lib/auth/roles";
@@ -87,6 +88,11 @@ export type PatientJournalState = {
   latestSummaryStatus: SummaryGenerationStatus;
 };
 
+export type PatientJournalDashboardState = Pick<
+  PatientJournalState,
+  "consentAccepted" | "consentBlockchainStatus" | "profilingComplete" | "recentSummaries"
+>;
+
 export async function loadPatientJournalState(role: ResolvedRole): Promise<PatientJournalState> {
   const patientId = requirePatientId(role);
   const admin = createAdminClient();
@@ -134,18 +140,7 @@ export async function loadPatientJournalState(role: ResolvedRole): Promise<Patie
   if (sessionResult.error) throw sessionResult.error;
   if (summaryResult.error) throw summaryResult.error;
 
-  const recentSummaries = (summaryResult.data ?? []).flatMap((row) => {
-    const summary = parseJournalSessionSummary(decryptFromColumns(row, "summary_text"));
-    const summaryText = sessionSummaryPreview(summary);
-    if (!summaryText || !row.summary_generated_at) return [];
-
-    return [{
-      id: row.session_id,
-      title: decryptFromColumns(row, "session_title"),
-      summary: summaryText,
-      summaryGeneratedAt: row.summary_generated_at,
-    }];
-  });
+  const recentSummaries = buildRecentSummaries(summaryResult.data ?? []);
   const chatHistory = await loadPatientChatHistory(role);
   const activeSession = sessionResult.data;
   const selectedSession =
@@ -178,6 +173,54 @@ export async function loadPatientJournalState(role: ResolvedRole): Promise<Patie
     recentSummaries,
     chatHistory,
     latestSummaryStatus: selectedSummaryStatus,
+  };
+}
+
+export async function loadPatientJournalDashboardState(
+  role: ResolvedRole,
+): Promise<PatientJournalDashboardState> {
+  const patientId = requirePatientId(role);
+  const admin = createAdminClient();
+  await closeInactiveSessions(patientId);
+
+  const [patientResult, consentResult, summaryResult] = await Promise.all([
+    admin
+      .from("patients")
+      .select(
+        "patient_id,profiling_data_ciphertext,profiling_data_iv,profiling_data_tag,key_version",
+      )
+      .eq("patient_id", patientId)
+      .single(),
+    admin
+      .from("audit_logs")
+      .select("blockchain_status")
+      .eq("actor_auth_user_id", role.authUserId)
+      .eq("patient_id", patientId)
+      .eq("action", "ai_processing_consent_accepted")
+      .eq("access_status", "accepted")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    admin
+      .from("ai_sessions")
+      .select(
+        "session_id,session_title_ciphertext,session_title_iv,session_title_tag,summary_text_ciphertext,summary_text_iv,summary_text_tag,key_version,summary_generated_at,summary_generation_status",
+      )
+      .eq("patient_id", patientId)
+      .not("summary_generated_at", "is", null)
+      .order("summary_generated_at", { ascending: false })
+      .limit(PATIENT_DASHBOARD_ITEM_LIMIT),
+  ]);
+
+  if (patientResult.error) throw patientResult.error;
+  if (consentResult.error) throw consentResult.error;
+  if (summaryResult.error) throw summaryResult.error;
+
+  return {
+    consentAccepted: Boolean(consentResult.data),
+    consentBlockchainStatus: consentResult.data?.blockchain_status ?? null,
+    profilingComplete: hasEncryptedProfile(patientResult.data),
+    recentSummaries: buildRecentSummaries(summaryResult.data ?? []),
   };
 }
 
@@ -884,7 +927,9 @@ async function loadProfilingContext(patientId: string) {
   return decryptPatientProfile(data);
 }
 
-async function closeInactiveSessions(patientId: string) {
+const closeInactiveSessions = cache(closeInactiveSessionsUncached);
+
+async function closeInactiveSessionsUncached(patientId: string) {
   const admin = createAdminClient();
   const cutoff = new Date(Date.now() - 30 * 60 * 1000).toISOString();
   const { data, error } = await admin
@@ -966,6 +1011,24 @@ function buildPreview(value: string) {
   const preview = value.replace(/\s+/g, " ").trim();
   if (preview.length <= 96) return preview;
   return `${preview.slice(0, 93).trim()}...`;
+}
+
+function buildRecentSummaries(rows: readonly Record<string, unknown>[]): JournalSummaryView[] {
+  return rows.flatMap((row) => {
+    const sessionId = typeof row.session_id === "string" ? row.session_id : null;
+    const summaryGeneratedAt =
+      typeof row.summary_generated_at === "string" ? row.summary_generated_at : null;
+    const summary = parseJournalSessionSummary(decryptFromColumns(row, "summary_text"));
+    const summaryText = sessionSummaryPreview(summary);
+    if (!sessionId || !summaryText || !summaryGeneratedAt) return [];
+
+    return [{
+      id: sessionId,
+      title: decryptFromColumns(row, "session_title"),
+      summary: summaryText,
+      summaryGeneratedAt,
+    }];
+  });
 }
 
 function parseJournalSessionSummary(value: string | null): JournalSessionSummaryView | null {

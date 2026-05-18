@@ -2,11 +2,12 @@ import Link from "next/link";
 import { AlertTriangle, Download, Eye, PlusCircle } from "lucide-react";
 
 import { DashboardCard } from "@/app/_components/portal-layout";
-import { DoctorRagClient } from "@/app/doctor/_components/doctor-rag-client";
+import { DoctorRagLazyPanel } from "@/app/doctor/_components/doctor-rag-lazy-panel";
 import { requireApprovedDoctorPortalRole } from "@/app/doctor/_components/doctor-portal-role";
 import { ProofStatus } from "@/components/proof-status";
 import { StatePanel } from "@/components/state-panel";
 import { StatusBadge } from "@/components/status-badge";
+import { PendingSubmitButton } from "@/components/ui/async-action-button";
 import { Button } from "@/components/ui/button";
 import { CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, Input, Label, Select, Textarea } from "@/components/ui/form";
@@ -60,10 +61,10 @@ export default async function DoctorGrantPage({
   return (
     <section className="grid gap-8" data-doctor-grant-page="main">
       <header className="border-b border-[var(--color-stone-surface)] pb-5">
-        <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-ash)]">
+        <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-[var(--color-ash)]">
           {copy.doctor.grant.accessTitle}
         </p>
-        <h1 className="text-[36px] font-semibold leading-[1.1] text-[var(--color-midnight)] md:text-[44px]">
+        <h1 className="text-3xl font-semibold leading-tight text-[var(--color-midnight)] sm:text-4xl md:text-5xl">
           {copy.doctor.grant.title}
         </h1>
         <p className="mt-3 max-w-2xl text-base leading-7 text-[var(--color-ash)]">
@@ -87,7 +88,7 @@ export default async function DoctorGrantPage({
           </CardHeader>
           <div className="grid gap-2 rounded-[10px] bg-[var(--color-parchment-card)] p-4 text-sm text-[var(--color-charcoal-primary)]">
             <p>{fillTemplate(copy.doctor.grant.activeScopes, { scopes: describeGrantFlags(copy, state.grant).join(", ") })}</p>
-            <p>{copy.doctor.grant.grantId}: <span className="font-mono">{state.grant.grantId}</span></p>
+            <p>{copy.doctor.grant.grantId}: <span className="break-all font-mono">{state.grant.grantId}</span></p>
           </div>
           <div className="mt-3">
             <ProofStatus
@@ -121,16 +122,16 @@ export default async function DoctorGrantPage({
                     className="grid gap-3 rounded-[10px] border border-[var(--color-fog)] bg-[var(--color-card)] p-4"
                   >
                     <div className="flex flex-wrap items-center justify-between gap-3">
-                      <div>
+                      <div className="min-w-0">
                         <p className="text-xs uppercase text-[var(--color-ash)]">{recordTypeLabel(copy, record.recordType)}</p>
-                        <h3 className="font-semibold text-[var(--color-midnight)]">{record.title}</h3>
+                        <h3 className="break-words font-semibold text-[var(--color-midnight)]">{record.title}</h3>
                       </div>
                       <StatusBadge tone={proofTone(record.blockchainStatus)}>
                         {copy.common.proofPrefix} {proofLabel(copy, record.blockchainStatus)}
                       </StatusBadge>
                     </div>
                     {record.description ? (
-                      <p className="text-sm leading-6 text-[var(--color-charcoal-primary)]">{record.description}</p>
+                      <p className="break-words text-sm leading-6 text-[var(--color-charcoal-primary)] [overflow-wrap:anywhere]">{record.description}</p>
                     ) : null}
                     <p className="text-xs text-[var(--color-ash)]">
                       {formatDateTime(record.createdAt, locale)}
@@ -145,8 +146,8 @@ export default async function DoctorGrantPage({
                       messages={proofStatusMessages(copy)}
                     />
                     {record.attachmentFileId ? (
-                      <div className="flex flex-wrap gap-2">
-                        <Button asChild variant="ghost" className="rounded-[10px]">
+                      <div className="grid gap-2 sm:flex sm:flex-wrap">
+                        <Button asChild variant="ghost" className="w-full rounded-[10px] sm:w-auto">
                           <Link
                             href={`/doctor/grants/${grantId}/attachments/${record.attachmentFileId}/preview`}
                             target="_blank"
@@ -156,7 +157,7 @@ export default async function DoctorGrantPage({
                           </Link>
                         </Button>
                         {record.attachmentCanDownload ? (
-                          <Button asChild variant="secondary" className="rounded-[10px]">
+                          <Button asChild variant="secondary" className="w-full rounded-[10px] sm:w-auto">
                             <Link href={`/doctor/grants/${grantId}/attachments/${record.attachmentFileId}/download`}>
                               <Download size={16} />
                               {copy.doctor.grant.downloadAttachment.replace("{name}", record.attachmentFilename ?? copy.doctor.grant.attachmentFallback)}
@@ -246,7 +247,7 @@ export default async function DoctorGrantPage({
               <CardTitle>{copy.doctor.grant.ragTitle}</CardTitle>
               <CardDescription>{copy.doctor.grant.ragDescription}</CardDescription>
             </CardHeader>
-            <DoctorRagClient grantId={grantId} copy={copy.doctor.rag} />
+            <DoctorRagLazyPanel grantId={grantId} copy={copy.doctor.rag} />
           </DashboardCard>
         ) : (
           <DashboardCard className="p-6 md:p-8">
@@ -310,10 +311,15 @@ function Scope1Form({
         <Label htmlFor="attachment">{copy.doctor.grant.attachmentLabel}</Label>
         <Input id="attachment" name="attachment" type="file" accept="application/pdf,image/jpeg,image/png" />
       </Field>
-      <Button type="submit" className="w-fit rounded-[10px]">
+      <PendingSubmitButton
+        type="submit"
+        className="w-full rounded-[10px] sm:w-fit"
+        loadingLabel={copy.doctor.rag.processing}
+        slotClassName="w-full sm:w-fit"
+      >
         <PlusCircle size={16} />
         {copy.doctor.grant.createRecord}
-      </Button>
+      </PendingSubmitButton>
     </form>
   );
 }
@@ -334,7 +340,7 @@ function Scope2Item({
   return (
     <div className="grid gap-3 rounded-[10px] border border-[var(--color-fog)] bg-[var(--color-card)] p-4">
       <div className="flex flex-wrap items-center gap-2">
-        <h3 className="font-semibold text-[var(--color-midnight)]">{title}</h3>
+        <h3 className="break-words font-semibold text-[var(--color-midnight)]">{title}</h3>
         {emergencyFlagged ? (
           <StatusBadge tone="failed">
             <span className="inline-flex items-center gap-1">
@@ -344,7 +350,7 @@ function Scope2Item({
           </StatusBadge>
         ) : null}
       </div>
-      <p className="rounded-[10px] bg-[var(--color-parchment-card)] p-3 text-sm leading-6 text-[var(--color-charcoal-primary)]">
+      <p className="break-words rounded-[10px] bg-[var(--color-parchment-card)] p-3 text-sm leading-6 text-[var(--color-charcoal-primary)] [overflow-wrap:anywhere]">
         &quot;{rawQuote}&quot;
       </p>
       <dl className="grid gap-2 text-sm sm:grid-cols-2">
@@ -353,7 +359,7 @@ function Scope2Item({
           .map(([label, value]) => (
             <div key={label}>
               <dt className="text-[var(--color-ash)]">{label}</dt>
-              <dd className="font-medium text-[var(--color-charcoal-primary)]">{value}</dd>
+              <dd className="break-words font-medium text-[var(--color-charcoal-primary)]">{value}</dd>
             </div>
           ))}
       </dl>

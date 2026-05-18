@@ -5,7 +5,7 @@ import { requireEnv } from "@/lib/config/env";
 import type { Database } from "@/lib/supabase/database.types";
 
 export async function createClient() {
-  const env = requireEnv(["core"]);
+  const env = requireEnv(["supabase"]);
   const cookieStore = await cookies();
 
   return createServerClient<Database>(

@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { ArrowRight } from "lucide-react";
 
 import { OnboardingShell } from "@/components/onboarding-shell";
-import { Button } from "@/components/ui/button";
+import { PendingSubmitButton } from "@/components/ui/async-action-button";
 import { Field, Input, Label, Select } from "@/components/ui/form";
 import { roleEntryPath } from "@/lib/auth/roles";
 import { requireRole } from "@/lib/auth/session";
@@ -37,12 +37,12 @@ export default async function DoctorOnboardingStep1Page() {
       activeStep={1}
       themeLabels={copy.common.theme}
     >
-      <section className="mx-auto w-full max-w-2xl rounded-xl bg-[var(--color-card)] p-8 shadow-[var(--shadow-subtle)]">
-        <div className="mb-12">
-          <h1 className="text-[23px] font-semibold leading-[1.2] tracking-[-0.44px] text-[var(--color-charcoal-primary)]">
+      <section className="mx-auto w-full max-w-2xl rounded-xl bg-[var(--color-card)] p-5 shadow-[var(--shadow-subtle)] sm:p-8">
+        <div className="mb-8 sm:mb-12">
+          <h1 className="text-xl font-semibold leading-tight tracking-normal text-[var(--color-charcoal-primary)]">
             {copy.doctor.onboarding.step1.cardTitle}
           </h1>
-          <p className="mt-2 text-[15px] leading-[1.47] tracking-[-0.2px] text-[var(--color-ash)]">
+          <p className="mt-2 text-sm leading-6 tracking-normal text-[var(--color-ash)]">
             {copy.doctor.onboarding.step1.cardDescription}
           </p>
         </div>
@@ -130,7 +130,7 @@ export default async function DoctorOnboardingStep1Page() {
               {copy.doctor.onboarding.phone}
             </Label>
             <div className="flex gap-2">
-              <span className="flex min-h-10 items-center rounded-[10px] border border-[var(--color-stone-surface)] bg-[var(--color-warm-canvas)] px-4 text-[15px] leading-[1.47] tracking-[-0.2px] text-[var(--color-ash)]">
+              <span className="flex min-h-11 items-center rounded-[10px] border border-[var(--color-stone-surface)] bg-[var(--color-warm-canvas)] px-4 text-sm leading-6 tracking-normal text-[var(--color-ash)]">
                 +62
               </span>
               <Input
@@ -144,14 +144,16 @@ export default async function DoctorOnboardingStep1Page() {
             </div>
           </Field>
 
-          <div className="mt-12 flex justify-end border-t border-[var(--color-stone-surface)] pt-6">
-            <Button
+          <div className="mt-10 flex border-t border-[var(--color-stone-surface)] pt-6 sm:mt-12 sm:justify-end">
+            <PendingSubmitButton
               type="submit"
-              className="h-10 min-h-10 rounded-full bg-[var(--color-midnight)] px-4 py-0 text-[12px] font-semibold uppercase leading-[1.58] tracking-[0.5px] text-[var(--color-inverted)] hover:bg-[var(--color-charcoal-primary)] hover:text-[var(--color-warm-canvas)]"
+              className="min-h-11 w-full rounded-full bg-[var(--color-midnight)] px-4 py-0 text-xs font-semibold uppercase leading-6 tracking-widest text-[var(--color-inverted)] hover:bg-[var(--color-charcoal-primary)] hover:text-[var(--color-warm-canvas)] sm:w-auto"
+              loadingLabel={copy.marketing.role.submitting}
+              slotClassName="w-full sm:w-auto"
             >
               {copy.doctor.onboarding.next}
               <ArrowRight size={18} aria-hidden="true" />
-            </Button>
+            </PendingSubmitButton>
           </div>
         </form>
       </section>
@@ -160,7 +162,7 @@ export default async function DoctorOnboardingStep1Page() {
 }
 
 const doctorOnboardingLabelClass =
-  "mb-2 block text-[12px] font-semibold uppercase leading-[1.58] tracking-[0.5px] text-[var(--color-charcoal-primary)]";
+  "mb-2 block text-xs font-semibold uppercase leading-6 tracking-widest text-[var(--color-charcoal-primary)]";
 
 const doctorOnboardingControlClass =
-  "min-h-10 border-[var(--color-stone-surface)] bg-[var(--color-warm-canvas)] px-4 py-2 text-[15px] leading-[1.47] tracking-[-0.2px] placeholder:text-[var(--color-ash)] focus:border-[var(--color-stone-surface)] focus:shadow-[inset_0_1px_3px_rgba(0,0,0,0.05)]";
+  "min-h-11 border-[var(--color-stone-surface)] bg-[var(--color-warm-canvas)] px-4 py-2 text-sm leading-6 tracking-normal placeholder:text-[var(--color-ash)] focus:border-[var(--color-stone-surface)] focus:shadow-[inset_0_1px_3px_rgba(0,0,0,0.05)]";

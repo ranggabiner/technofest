@@ -61,14 +61,14 @@ export function LoadingList({ rows = 3, className }: { rows?: number; className?
         <div
           key={index}
           data-skeleton-row
-          className="grid gap-3 rounded-[10px] border border-[var(--color-fog)] bg-[var(--color-card)] p-4 sm:grid-cols-[1fr_auto]"
+          className="grid gap-3 rounded-[10px] border border-[var(--color-fog)] bg-[var(--color-card)] p-4 sm:grid-cols-[1fr_auto] sm:items-center"
         >
           <div className="space-y-2">
             <Skeleton className="h-5 w-44" />
             <Skeleton className="h-4 w-64 max-w-full" />
             <Skeleton className="h-4 w-52 max-w-full" />
           </div>
-          <Skeleton className="h-10 w-28" />
+          <Skeleton className="h-11 w-full rounded-[10px] sm:h-10 sm:w-28" />
         </div>
       ))}
     </div>
@@ -77,30 +77,57 @@ export function LoadingList({ rows = 3, className }: { rows?: number; className?
 
 export function LoadingTable({ rows = 5 }: { rows?: number }) {
   return (
-    <div className="divide-y divide-[var(--color-stone-surface)]">
-      {Array.from({ length: rows }).map((_, index) => (
-        <div key={index} className="grid gap-2 py-4 sm:grid-cols-[1fr_auto] sm:items-center">
-          <div className="space-y-2">
-            <Skeleton className="h-5 w-48" />
-            <Skeleton className="h-4 w-72 max-w-full" />
+    <>
+      <div data-skeleton-mobile-cards className="grid gap-3 md:hidden">
+        {Array.from({ length: rows }).map((_, index) => (
+          <div
+            key={index}
+            className="grid gap-4 rounded-[10px] border border-[var(--color-stone-surface)] bg-[var(--color-card)] p-4 shadow-[var(--shadow-subtle)]"
+          >
+            <div className="space-y-2">
+              <Skeleton className="h-5 w-44 max-w-full" />
+              <Skeleton className="h-4 w-32" />
+            </div>
+            <div className="grid gap-2">
+              <Skeleton className="h-3 w-28" />
+              <Skeleton className="h-4 w-48 max-w-full" />
+            </div>
+            <Skeleton className="h-11 w-full rounded-[10px]" />
           </div>
-          <Skeleton className="h-7 w-24" />
+        ))}
+      </div>
+      <div data-skeleton-desktop-table className="hidden overflow-x-auto md:block">
+        <div className="min-w-[680px] divide-y divide-[var(--color-stone-surface)]">
+          <div className="grid grid-cols-[1.2fr_1fr_1fr_auto] gap-4 px-3 pb-3">
+            <Skeleton className="h-3 w-24" />
+            <Skeleton className="h-3 w-20" />
+            <Skeleton className="h-3 w-28" />
+            <Skeleton className="h-3 w-16" />
+          </div>
+          {Array.from({ length: rows }).map((_, index) => (
+            <div key={index} className="grid grid-cols-[1.2fr_1fr_1fr_auto] items-center gap-4 px-3 py-4">
+              <Skeleton className="h-5 w-48" />
+              <Skeleton className="h-4 w-36" />
+              <Skeleton className="h-4 w-40" />
+              <Skeleton className="h-9 w-24 rounded-[10px]" />
+            </div>
+          ))}
         </div>
-      ))}
-    </div>
+      </div>
+    </>
   );
 }
 
-export function LoadingForm({ fields = 4 }: { fields?: number }) {
+export function LoadingForm({ fields = 4, className }: { fields?: number; className?: string }) {
   return (
-    <div className="grid gap-4 rounded-[10px] bg-[var(--color-stone-surface)] p-4">
+    <div className={cn("grid gap-4 rounded-[10px] bg-[var(--color-stone-surface)] p-4", className)}>
       {Array.from({ length: fields }).map((_, index) => (
         <div key={index} className="grid gap-2">
           <Skeleton className="h-4 w-28" />
           <Skeleton className="h-10 w-full" />
         </div>
       ))}
-      <Skeleton className="h-10 w-36" />
+      <Skeleton className="h-11 w-full rounded-full sm:w-36" />
     </div>
   );
 }
@@ -109,8 +136,9 @@ export function AuthPageSkeleton() {
   return (
     <div className="flex min-h-screen flex-col bg-[var(--color-warm-canvas)]">
       <HeaderSkeleton position="fixed" />
-      <main className="flex flex-1 items-center justify-center px-6 pt-16">
-        <div className="grid w-full max-w-[1100px] gap-12 md:grid-cols-2 md:items-center">
+      <main className="flex min-h-screen flex-1 flex-col">
+        <section className="hidden flex-1 items-center justify-center px-6 pt-16 md:flex">
+          <div className="mx-auto grid w-full max-w-[1100px] grid-cols-2 items-center gap-[120px]">
           <div className="hidden flex-col gap-12 md:flex">
             {Array.from({ length: 3 }).map((_, index) => (
               <div key={index} className="flex items-start gap-6">
@@ -123,13 +151,29 @@ export function AuthPageSkeleton() {
               </div>
             ))}
           </div>
-          <Card className="mx-auto grid w-full max-w-md gap-6 p-8">
+            <Card className="mx-auto grid w-full max-w-md gap-5 p-5 sm:p-8">
             <Skeleton className="mx-auto h-12 w-56" />
             <Skeleton className="mx-auto h-4 w-72 max-w-full" />
-            <Skeleton className="h-12 w-full rounded-full" />
-            <Skeleton className="mx-auto h-4 w-64 max-w-full" />
+              <Skeleton className="min-h-[144px] w-full rounded-xl sm:min-h-[168px]" />
+              <Skeleton className="min-h-[144px] w-full rounded-xl sm:min-h-[168px]" />
+              <Skeleton className="mx-auto h-4 w-64 max-w-full" />
           </Card>
         </div>
+        </section>
+        <section className="flex flex-1 flex-col items-center justify-center px-4 pb-10 pt-24 sm:px-6 sm:pt-32 md:hidden">
+          <div className="mx-auto w-full max-w-[420px] text-center">
+            <Skeleton className="mx-auto mb-4 h-12 w-full max-w-[320px]" />
+            <div className="mx-auto mb-8 grid max-w-[340px] gap-3">
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="mx-auto h-4 w-5/6" />
+            </div>
+            <div className="space-y-5 text-left">
+              <Skeleton className="min-h-[144px] w-full rounded-xl sm:min-h-[168px]" />
+              <Skeleton className="min-h-[144px] w-full rounded-xl sm:min-h-[168px]" />
+            </div>
+            <Skeleton className="mx-auto mt-6 h-4 w-full max-w-[320px]" />
+          </div>
+        </section>
       </main>
     </div>
   );
@@ -139,43 +183,96 @@ export function RoleSelectionSkeleton() {
   return (
     <div className="flex min-h-screen flex-col bg-[var(--color-warm-canvas)]">
       <HeaderSkeleton />
-      <main className="flex flex-1 items-center justify-center px-6 pb-24 pt-32">
-        <Card className="w-full max-w-[640px] p-8 md:p-20">
-          <div className="mx-auto mb-16 max-w-[480px] space-y-4">
-            <Skeleton className="mx-auto h-12 w-80 max-w-full" />
+      <main className="flex min-h-screen flex-1 items-center justify-center px-4 pb-16 pt-24 sm:px-6 sm:pb-24 sm:pt-32">
+        <Card className="relative w-full max-w-[640px] overflow-hidden p-5 sm:p-8 md:p-20">
+          <div className="mx-auto mb-10 max-w-[480px] space-y-4 sm:mb-16">
+            <Skeleton className="mx-auto h-10 w-72 max-w-full sm:h-12 sm:w-80" />
             <Skeleton className="mx-auto h-4 w-full" />
             <Skeleton className="mx-auto h-4 w-5/6" />
           </div>
-          <div className="grid gap-6 md:grid-cols-2">
-            <Skeleton className="min-h-[180px] rounded-xl" />
-            <Skeleton className="min-h-[180px] rounded-xl" />
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+            <Skeleton className="min-h-[160px] rounded-xl sm:min-h-[180px]" />
+            <Skeleton className="min-h-[160px] rounded-xl sm:min-h-[180px]" />
           </div>
-          <Skeleton className="ml-auto mt-12 h-10 w-40 rounded-full" />
+          <div className="mt-10 flex sm:mt-12 sm:justify-end">
+            <Skeleton className="h-11 w-full min-w-40 rounded-full sm:w-40" />
+          </div>
         </Card>
       </main>
     </div>
   );
 }
 
-export function OnboardingPageSkeleton({ variant = "form" }: { variant?: "intro" | "form" | "documents" | "review" }) {
+export function OnboardingPageSkeleton({
+  role = "patient",
+  variant = "form",
+}: {
+  role?: "patient" | "doctor";
+  variant?: "intro" | "form" | "documents" | "review";
+}) {
+  if (role === "doctor") return <DoctorOnboardingSkeleton variant={variant} />;
+  return <PatientOnboardingSkeleton variant={variant} />;
+}
+
+function PatientOnboardingSkeleton({ variant }: { variant: "intro" | "form" | "documents" | "review" }) {
+  if (variant === "intro") {
+    return (
+      <div
+        className="flex min-h-screen flex-col bg-[var(--color-warm-canvas)]"
+        data-onboarding-skeleton="patient-intro"
+      >
+        <HeaderSkeleton />
+        <main className="flex min-h-screen flex-1 items-center justify-center px-4 py-16 sm:px-6 sm:py-20">
+          <Card className="w-full max-w-2xl p-5 sm:p-8 md:p-12">
+            <PatientProgressSkeleton variant="compact" />
+            <OnboardingHeadingSkeleton />
+            <LoadingForm fields={3} className="mt-10 sm:mt-20" />
+          </Card>
+        </main>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex min-h-screen flex-col bg-[var(--color-warm-canvas)]">
+    <div
+      className="flex min-h-screen flex-col bg-[var(--color-warm-canvas)]"
+      data-onboarding-skeleton={`patient-${variant}`}
+    >
       <HeaderSkeleton />
-      <main className="mx-auto w-full max-w-[1100px] flex-1 px-6 py-20">
-        <div className="mx-auto mb-20 flex w-full max-w-2xl items-start justify-center gap-3">
-          {Array.from({ length: 3 }).map((_, index) => (
-            <Skeleton key={index} className="h-12 w-24" />
-          ))}
+      <main className="flex min-h-screen flex-1 items-center justify-center px-4 py-16 sm:px-6 sm:py-20 md:py-24">
+        <div className="mx-auto w-full max-w-[720px]">
+          <header className="mb-10 text-center sm:mb-20">
+            <PatientProgressSkeleton variant="bar" />
+            <OnboardingHeadingSkeleton />
+          </header>
+          <Card className="relative grid gap-6 overflow-hidden p-5 sm:p-6 md:p-12">
+            <div className="absolute left-0 top-0 h-1 w-full bg-[var(--color-stone-surface)]" />
+            <LoadingForm fields={variant === "review" ? 3 : 5} />
+          </Card>
         </div>
-        <div className="mx-auto w-full max-w-2xl">
-          {variant !== "intro" ? (
-            <header className="mb-12 space-y-4 text-center">
-              <Skeleton className="mx-auto h-12 w-80 max-w-full" />
+      </main>
+    </div>
+  );
+}
+
+function DoctorOnboardingSkeleton({ variant }: { variant: "intro" | "form" | "documents" | "review" }) {
+  return (
+    <div
+      className="flex min-h-screen flex-col bg-[var(--color-warm-canvas)]"
+      data-onboarding-skeleton={`doctor-${variant}`}
+    >
+      <HeaderSkeleton />
+      <main className="mx-auto flex min-h-screen w-full max-w-[1100px] flex-1 flex-col px-4 py-16 sm:px-6 sm:py-20">
+        <DoctorProgressSkeleton />
+        <div className={cn("mx-auto w-full", variant === "review" ? "max-w-3xl" : "max-w-2xl")}>
+          {variant !== "form" ? (
+            <header className="mb-8 space-y-4 text-center sm:mb-12">
+              <Skeleton className="mx-auto h-10 w-full max-w-[420px] sm:h-12" />
               <Skeleton className="mx-auto h-4 w-full max-w-lg" />
               <Skeleton className="mx-auto h-4 w-4/5 max-w-md" />
             </header>
           ) : null}
-          <Card className="grid gap-6 p-8 md:p-12">
+          <Card className={cn("grid gap-6 p-5 sm:p-8", variant === "review" && "md:p-12")}>
             {variant === "documents" ? (
               <>
                 <DocumentUploadSkeleton />
@@ -188,7 +285,7 @@ export function OnboardingPageSkeleton({ variant = "form" }: { variant?: "intro"
                 <LoadingList rows={3} />
               </>
             ) : (
-              <LoadingForm fields={variant === "intro" ? 3 : 5} />
+              <LoadingForm fields={5} />
             )}
           </Card>
         </div>
@@ -197,22 +294,81 @@ export function OnboardingPageSkeleton({ variant = "form" }: { variant?: "intro"
   );
 }
 
+function PatientProgressSkeleton({ variant }: { variant: "compact" | "bar" }) {
+  if (variant === "bar") {
+    return (
+      <div className="relative mb-8 flex items-start justify-between before:absolute before:left-0 before:top-4 before:z-0 before:h-px before:w-full before:bg-[var(--color-stone-surface)] sm:mb-12">
+        {Array.from({ length: 3 }).map((_, index) => (
+          <div key={index} className="relative z-10 flex min-w-16 flex-col items-center gap-2">
+            <Skeleton className="size-8 rounded-full" />
+            <Skeleton className="h-3 w-12" />
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className="mb-10 flex items-start justify-center gap-2 px-1 sm:mb-20 sm:gap-4 sm:px-4">
+      {Array.from({ length: 3 }).map((_, index) => (
+        <div key={index} className="contents">
+          <div className="flex min-w-0 flex-1 flex-col items-center gap-2 sm:min-w-14">
+            <Skeleton className="size-8 rounded-full" />
+            <Skeleton className="h-3 w-12" />
+          </div>
+          {index < 2 ? <Skeleton className="mt-4 h-px w-8 shrink sm:w-12" /> : null}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function DoctorProgressSkeleton() {
+  return (
+    <div className="mx-auto mb-12 flex w-full max-w-2xl items-start justify-center sm:mb-28">
+      {Array.from({ length: 3 }).map((_, index) => (
+        <div key={index} className="contents">
+          <div className="relative z-10 flex min-w-0 flex-1 flex-col items-center gap-2 bg-[var(--color-warm-canvas)] px-1 sm:min-w-16 sm:px-2">
+            <Skeleton className="size-9 rounded-full sm:size-10" />
+            <Skeleton className="h-3 w-14" />
+          </div>
+          {index < 2 ? <Skeleton className="mt-5 h-0.5 min-w-6 flex-1 sm:min-w-12" /> : null}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function OnboardingHeadingSkeleton() {
+  return (
+    <div className="text-center">
+      <Skeleton className="mx-auto h-10 w-full max-w-[420px] sm:h-12" />
+      <div className="mx-auto mt-4 grid max-w-[560px] gap-3">
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="mx-auto h-4 w-4/5" />
+      </div>
+    </div>
+  );
+}
+
 export function PatientDashboardSkeleton() {
   return (
     <div className="grid gap-8" data-loading-pattern="patient-dashboard">
-      <section className="border-b border-[var(--color-stone-surface)] pb-4">
+      <section className="flex flex-col gap-8 border-b border-[var(--color-stone-surface)] pb-4 sm:gap-12">
         <Skeleton className="mb-4 h-5 w-28" />
         <Skeleton className="h-12 w-full max-w-[620px]" />
         <Skeleton className="mt-3 h-5 w-full max-w-md" />
-        <Skeleton className="mt-6 h-12 w-40 rounded-full" />
+        <Skeleton className="mt-6 h-12 w-full rounded-full sm:w-40" />
       </section>
-      <section className="grid gap-6 lg:grid-cols-2">
-        <LoadingCard lines={5} />
-        <LoadingCard lines={4} />
+      <section className="grid gap-6 lg:grid-cols-[minmax(0,620px)]">
+        <LoadingCard lines={3} />
       </section>
-      <section className="grid gap-6 lg:grid-cols-2">
-        <TimelineSkeleton />
-        <LoadingCard className="min-h-[400px]" lines={6} />
+      <section className="space-y-4">
+        <Skeleton className="h-9 w-64 max-w-full" />
+        <div className="grid gap-6 lg:grid-cols-2">
+          <TimelineSkeleton />
+          <LoadingCard className="flex flex-col md:min-h-[400px]" lines={4} />
+        </div>
       </section>
     </div>
   );
@@ -308,44 +464,57 @@ export function PatientAccessSkeleton() {
 
 export function PatientHealthHistorySkeleton() {
   return (
-    <div className="grid gap-8" data-loading-pattern="patient-health-history">
-      <section className="border-b border-[var(--color-stone-surface)] pb-5">
-        <Skeleton className="mb-3 h-4 w-32" />
-        <Skeleton className="h-12 w-full max-w-[520px]" />
-        <Skeleton className="mt-4 h-5 w-full max-w-2xl" />
+    <div className="grid gap-8 sm:gap-12" data-loading-pattern="patient-health-history-overview">
+      <section>
+        <Skeleton className="h-12 w-full max-w-[520px] sm:h-14 md:h-16" />
+        <Skeleton className="mt-5 h-5 w-full max-w-2xl" />
       </section>
-      <section className="grid gap-5 lg:grid-cols-2">
-        <LoadingCard lines={3} />
-        <LoadingCard lines={3} />
-      </section>
-      <section className="grid gap-5 sm:grid-cols-3">
-        <Skeleton className="h-28 rounded-xl" />
-        <Skeleton className="h-28 rounded-xl" />
-        <Skeleton className="h-28 rounded-xl" />
-      </section>
-      <section className="grid gap-6 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
-        <TimelineSkeleton />
-        <LoadingCard className="min-h-[420px]" lines={7} />
+      <section className="grid gap-8 lg:grid-cols-2">
+        <HealthHistoryOverviewCardSkeleton />
+        <HealthHistoryOverviewCardSkeleton />
       </section>
     </div>
   );
 }
 
-export function PatientHealthJournalSkeleton() {
+export function PatientHealthHistoryRecordsSkeleton() {
   return (
-    <div className="grid gap-8" data-loading-pattern="patient-health-journal">
-      <section className="border-b border-[var(--color-stone-surface)] pb-6">
-        <Skeleton className="mb-5 h-4 w-52" />
-        <Skeleton className="mb-3 h-6 w-36 rounded-full" />
-        <Skeleton className="h-12 w-full max-w-[520px] md:h-14" />
-        <Skeleton className="mt-4 h-5 w-full max-w-2xl" />
-        <Skeleton className="mt-6 h-12 w-40 rounded-full" />
-      </section>
-      <nav className="flex flex-wrap gap-3">
-        <Skeleton className="h-10 w-24 rounded-full" />
-        <Skeleton className="h-10 w-32 rounded-full" />
-        <Skeleton className="h-10 w-36 rounded-full" />
-      </nav>
+    <div className="grid gap-8" data-loading-pattern="patient-health-history-records">
+      <HealthHistoryDetailHeaderSkeleton />
+      <FilterPillsSkeleton count={7} />
+      <div
+        data-skeleton-record-timeline
+        className="relative grid gap-6 pl-5 before:absolute before:bottom-0 before:left-[7px] before:top-2 before:border-l-2 before:border-[var(--color-stone-surface)] sm:gap-8 sm:pl-7 sm:before:left-[9px]"
+      >
+        {Array.from({ length: 3 }).map((_, index) => (
+          <article key={index} className="relative">
+            <Skeleton className="absolute -left-[20px] top-1 size-5 rounded-full sm:-left-[27px]" />
+            <Skeleton className="mb-4 h-5 w-36" />
+            <Card className="grid gap-5 rounded-[14px] p-4 sm:p-6 md:p-7">
+              <div className="flex flex-wrap items-center gap-2">
+                <Skeleton className="h-7 w-24 rounded-full" />
+                <Skeleton className="h-7 w-32 rounded-full" />
+                <Skeleton className="h-4 w-24" />
+              </div>
+              <div className="space-y-2">
+                <Skeleton className="h-7 w-full max-w-[420px]" />
+                <Skeleton className="h-4 w-full max-w-[300px]" />
+              </div>
+              <Skeleton className="h-20 w-full rounded-[10px]" />
+              <BlockchainRetrySkeleton />
+            </Card>
+          </article>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export function PatientHealthHistoryJournalSkeleton() {
+  return (
+    <div className="grid gap-8" data-loading-pattern="patient-health-history-journal">
+      <HealthHistoryDetailHeaderSkeleton action />
+      <FilterPillsSkeleton count={3} />
       <section className="grid gap-5">
         <div className="space-y-2">
           <Skeleton className="h-8 w-56" />
@@ -357,6 +526,65 @@ export function PatientHealthJournalSkeleton() {
   );
 }
 
+export const PatientHealthJournalSkeleton = PatientHealthHistoryJournalSkeleton;
+
+function HealthHistoryOverviewCardSkeleton() {
+  return (
+    <Card className="grid content-between gap-8 rounded-[16px] p-5 sm:p-8 md:min-h-[375px] md:p-9">
+      <div>
+        <Skeleton className="mb-8 size-14 rounded-[10px] sm:mb-10 sm:size-16" />
+        <Skeleton className="h-8 w-56 max-w-full" />
+        <div className="mt-6 grid max-w-xl gap-3">
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-5/6" />
+          <Skeleton className="h-4 w-2/3" />
+        </div>
+      </div>
+      <Skeleton className="h-14 w-full rounded-full sm:w-48" />
+    </Card>
+  );
+}
+
+function HealthHistoryDetailHeaderSkeleton({ action = false }: { action?: boolean }) {
+  return (
+    <header className="border-b border-[var(--color-stone-surface)] pb-6">
+      <div className="mb-5 flex flex-wrap items-center gap-2">
+        <Skeleton className="h-5 w-24" />
+        <Skeleton className="h-5 w-3" />
+        <Skeleton className="h-5 w-32" />
+        <Skeleton className="h-5 w-3" />
+        <Skeleton className="h-5 w-28" />
+      </div>
+      <div className={cn("grid gap-5", action && "lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end")}>
+        <div>
+          {action ? (
+            <div className="mb-3 flex flex-wrap items-center gap-2">
+              <Skeleton className="h-6 w-36 rounded-full" />
+              <Skeleton className="h-6 w-24 rounded-full" />
+            </div>
+          ) : null}
+          <Skeleton className="h-11 w-full max-w-[520px] sm:h-12 md:h-14" />
+          <Skeleton className="mt-4 h-5 w-full max-w-2xl" />
+        </div>
+        {action ? <Skeleton className="h-12 w-full rounded-full sm:w-40" /> : null}
+      </div>
+    </header>
+  );
+}
+
+function FilterPillsSkeleton({ count }: { count: number }) {
+  return (
+    <nav className="flex flex-wrap gap-3">
+      {Array.from({ length: count }).map((_, index) => (
+        <Skeleton
+          key={index}
+          className={cn("h-11 rounded-full", index % 3 === 0 ? "w-24" : index % 3 === 1 ? "w-32" : "w-36")}
+        />
+      ))}
+    </nav>
+  );
+}
+
 export function DoctorDashboardSkeleton() {
   return (
     <div className="grid gap-8" data-loading-pattern="doctor-dashboard">
@@ -365,14 +593,47 @@ export function DoctorDashboardSkeleton() {
         <Skeleton className="h-12 w-full max-w-[520px]" />
         <Skeleton className="mt-4 h-5 w-full max-w-2xl" />
       </section>
-      <div className="grid gap-5 sm:grid-cols-[260px_1fr]">
-        <LoadingCard lines={1} />
-        <LoadingCard lines={2} />
-      </div>
-      <div className="grid gap-5">
-        <LoadingCard lines={1} />
-        <LoadingList rows={3} />
-      </div>
+      <Card className="p-6 md:p-8" data-doctor-profile-skeleton>
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="grid min-w-0 gap-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <Skeleton className="h-6 w-28 rounded-full" />
+              <Skeleton className="h-6 w-32 rounded-full" />
+            </div>
+            <Skeleton className="h-8 w-56 max-w-full" />
+            <Skeleton className="h-4 w-full max-w-md" />
+          </div>
+          <Skeleton className="size-24 rounded-[10px]" />
+        </div>
+        <div className="mt-5 grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
+          <div className="rounded-[10px] bg-[var(--color-parchment-card)] p-4">
+            <Skeleton className="h-4 w-28" />
+            <Skeleton className="mt-2 h-9 w-36" />
+          </div>
+          <Skeleton className="h-11 w-full rounded-[10px] sm:w-36" />
+        </div>
+      </Card>
+      <section>
+        <div className="mb-4 grid gap-2">
+          <Skeleton className="h-8 w-52" />
+          <Skeleton className="h-4 w-full max-w-md" />
+        </div>
+        <Card className="p-6 md:p-8">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <div className="grid gap-2">
+              <Skeleton className="h-7 w-52" />
+              <Skeleton className="h-4 w-full max-w-md" />
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Skeleton className="h-10 w-10 rounded-[10px]" />
+              <Skeleton className="h-10 w-20 rounded-[10px]" />
+              <Skeleton className="h-10 w-24 rounded-[10px]" />
+              <Skeleton className="h-10 w-28 rounded-[10px]" />
+            </div>
+          </div>
+          <DoctorSessionListSkeleton rows={3} />
+        </Card>
+      </section>
     </div>
   );
 }
@@ -391,6 +652,61 @@ export function DoctorGrantPageSkeleton() {
       <LoadingCard lines={4} />
       <LoadingCard lines={4} />
     </div>
+  );
+}
+
+function DoctorSessionListSkeleton({ rows }: { rows: number }) {
+  return (
+    <>
+      <div data-doctor-session-skeleton-cards className="grid gap-3 md:hidden">
+        {Array.from({ length: rows }).map((_, index) => (
+          <div
+            key={index}
+            className="grid gap-3 rounded-[10px] border border-[var(--color-fog)] bg-[var(--color-card)] p-4 shadow-[var(--shadow-subtle)]"
+          >
+            <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start">
+              <div className="space-y-2">
+                <Skeleton className="h-5 w-44 max-w-full" />
+                <Skeleton className="h-4 w-56 max-w-full" />
+              </div>
+              <Skeleton className="h-7 w-28 rounded-full" />
+            </div>
+            <div className="grid gap-2 sm:grid-cols-3">
+              <Skeleton className="h-11 w-full rounded-[10px]" />
+              <Skeleton className="h-11 w-full rounded-[10px]" />
+              <Skeleton className="h-11 w-full rounded-[10px]" />
+            </div>
+          </div>
+        ))}
+      </div>
+      <div data-doctor-session-skeleton-table className="hidden overflow-x-auto md:block">
+        <div className="min-w-[760px] border-separate border-spacing-y-2 text-left text-sm">
+          <div className="grid grid-cols-[1fr_1.15fr_1fr_0.8fr_0.8fr_0.8fr] gap-3 px-3 py-2">
+            {Array.from({ length: 6 }).map((_, index) => (
+              <Skeleton key={index} className="h-3 w-24" />
+            ))}
+          </div>
+          <div className="grid gap-2">
+            {Array.from({ length: rows }).map((_, index) => (
+              <div
+                key={index}
+                className="grid grid-cols-[1fr_1.15fr_1fr_0.8fr_0.8fr_0.8fr] items-center gap-3 rounded-[10px] border border-[var(--color-fog)] bg-[var(--color-card)] px-3 py-3 shadow-[var(--shadow-subtle)]"
+              >
+                <Skeleton className="h-4 w-32" />
+                <div className="grid gap-2">
+                  <Skeleton className="h-5 w-36" />
+                  <Skeleton className="h-3 w-48" />
+                </div>
+                <Skeleton className="h-7 w-28 rounded-full" />
+                <Skeleton className="h-9 w-20 rounded-[10px]" />
+                <Skeleton className="h-9 w-20 rounded-[10px]" />
+                <Skeleton className="h-9 w-20 rounded-[10px]" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </>
   );
 }
 
@@ -427,9 +743,34 @@ export function AdminDoctorDetailSkeleton() {
         <Skeleton className="mt-4 h-5 w-full max-w-2xl" />
       </section>
       <LoadingCard lines={3} />
-      <LoadingCard lines={3} />
-      <LoadingCard lines={4} />
-      <LoadingCard lines={5} />
+      <Card className="p-6 md:p-8">
+        <div className="mb-5 space-y-2">
+          <Skeleton className="h-7 w-48" />
+          <Skeleton className="h-4 w-full max-w-md" />
+        </div>
+        <div className="grid gap-3 sm:grid-cols-3">
+          <Skeleton className="h-14 rounded-[10px]" />
+          <Skeleton className="h-14 rounded-[10px]" />
+          <Skeleton className="h-14 rounded-[10px]" />
+        </div>
+      </Card>
+      <Card className="p-6 md:p-8">
+        <div className="mb-5 space-y-2">
+          <Skeleton className="h-7 w-48" />
+          <Skeleton className="h-4 w-full max-w-md" />
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Skeleton className="h-11 w-full rounded-full" />
+          <LoadingForm fields={1} />
+        </div>
+      </Card>
+      <Card className="p-6 md:p-8">
+        <div className="mb-5 space-y-2">
+          <Skeleton className="h-7 w-48" />
+          <Skeleton className="h-4 w-full max-w-md" />
+        </div>
+        <LoadingList rows={3} />
+      </Card>
     </div>
   );
 }
@@ -448,8 +789,21 @@ export function AdminDashboardSkeleton() {
         <LoadingCard lines={1} />
       </section>
       <section className="grid gap-5 lg:grid-cols-[minmax(0,1.45fr)_minmax(280px,0.85fr)]">
-        <LoadingCard lines={5} />
-        <LoadingCard lines={5} />
+        <Card className="p-6 md:p-8">
+          <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <Skeleton className="h-7 w-48" />
+            <Skeleton className="h-11 w-full rounded-[10px] sm:w-28" />
+          </div>
+          <LoadingTable rows={3} />
+        </Card>
+        <Card className="p-6 md:min-h-[420px] md:p-8">
+          <Skeleton className="mb-5 h-7 w-40" />
+          <BlockchainRetrySkeleton />
+          <div className="mt-4 grid gap-3">
+            <Skeleton className="h-20 rounded-[10px]" />
+            <Skeleton className="h-20 rounded-[10px]" />
+          </div>
+        </Card>
       </section>
     </div>
   );
@@ -463,8 +817,27 @@ export function AdminApprovalSkeleton() {
         <Skeleton className="h-12 w-full max-w-[520px]" />
         <Skeleton className="mt-4 h-5 w-full max-w-2xl" />
       </section>
-      <LoadingCard lines={2} />
-      <LoadingTable rows={6} />
+      <Card className="p-6 md:p-8">
+        <div className="mb-5 flex flex-wrap gap-2">
+          <Skeleton className="h-11 w-24 rounded-[10px]" />
+          <Skeleton className="h-11 w-28 rounded-[10px]" />
+          <Skeleton className="h-11 w-28 rounded-[10px]" />
+        </div>
+        <LoadingTable rows={6} />
+        <div className="mt-5 grid gap-4 lg:flex lg:flex-wrap lg:items-center lg:justify-between">
+          <div className="grid gap-2 sm:flex sm:items-center">
+            <Skeleton className="h-4 w-28" />
+            <Skeleton className="h-11 w-24 rounded-[10px]" />
+            <Skeleton className="h-11 w-full rounded-[10px] sm:w-24" />
+          </div>
+          <div className="flex flex-wrap items-center gap-2 lg:justify-end">
+            <Skeleton className="h-4 w-32" />
+            <Skeleton className="h-11 w-14 rounded-[10px]" />
+            <Skeleton className="h-11 w-11 rounded-[10px]" />
+            <Skeleton className="h-11 w-16 rounded-[10px]" />
+          </div>
+        </div>
+      </Card>
     </div>
   );
 }
@@ -733,7 +1106,7 @@ export function ChatWindowSkeleton() {
 
 export function AssistantBubbleSkeleton() {
   return (
-    <div className="mr-auto grid w-[78%] max-w-[78%] gap-2 rounded-[10px] bg-[var(--color-card)] px-4 py-3 shadow-[var(--shadow-subtle)]">
+    <div className="mr-auto grid w-[92%] max-w-[92%] gap-2 rounded-[22px] rounded-bl-lg border border-[var(--color-stone-surface)] bg-[var(--color-card)] px-3.5 py-3 shadow-[var(--shadow-subtle)] sm:w-[82%] sm:max-w-[82%] sm:px-4">
       <Skeleton className="h-4 w-full" />
       <Skeleton className="h-4 w-11/12" />
       <Skeleton className="h-4 w-2/3" />
