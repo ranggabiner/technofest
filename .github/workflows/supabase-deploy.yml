@@ -3,7 +3,7 @@ name: Supabase Deploy
 on:
   push:
     branches:
-      - development
+      - develop
       - main
     paths:
       - apps/supabase/supabase/config.toml
@@ -33,7 +33,7 @@ jobs:
   staging:
     name: Deploy Supabase migrations to staging
     runs-on: ubuntu-latest
-    if: (github.event_name == 'push' && github.ref_name == 'development') || (github.event_name == 'workflow_dispatch' && inputs.target_environment == 'staging')
+    if: (github.event_name == 'push' && github.ref_name == 'develop') || (github.event_name == 'workflow_dispatch' && inputs.target_environment == 'staging')
     environment: staging
     env:
       TARGET_ENVIRONMENT: staging
@@ -47,8 +47,8 @@ jobs:
       - name: Validate target branch and secrets
         shell: bash
         run: |
-          if [ "$TARGET_ENVIRONMENT" != "staging" ] || [ "$GITHUB_REF_NAME" != "development" ]; then
-            echo "Staging Supabase deploys must run from the development branch."
+          if [ "$TARGET_ENVIRONMENT" != "staging" ] || [ "$GITHUB_REF_NAME" != "develop" ]; then
+            echo "Staging Supabase deploys must run from the develop branch."
             exit 1
           fi
 

@@ -3,7 +3,7 @@ name: Vercel Env Sync
 on:
   push:
     branches:
-      - development
+      - develop
       - main
     paths:
       - apps/web/scripts/vercel-env-sync.mjs
@@ -29,9 +29,9 @@ concurrency:
 
 jobs:
   staging:
-    name: Sync Vercel preview env for development
+    name: Sync Vercel preview env for develop
     runs-on: ubuntu-latest
-    if: (github.event_name == 'push' && github.ref_name == 'development') || (github.event_name == 'workflow_dispatch' && inputs.target_environment == 'staging')
+    if: (github.event_name == 'push' && github.ref_name == 'develop') || (github.event_name == 'workflow_dispatch' && inputs.target_environment == 'staging')
     environment: staging
     env:
       VERCEL_ENV_SYNC_TARGET: staging
@@ -67,8 +67,8 @@ jobs:
       - name: Validate target branch
         shell: bash
         run: |
-          if [ "$GITHUB_REF_NAME" != "development" ]; then
-            echo "Staging Vercel env sync must run from the development branch."
+          if [ "$GITHUB_REF_NAME" != "develop" ]; then
+            echo "Staging Vercel env sync must run from the develop branch."
             exit 1
           fi
 
