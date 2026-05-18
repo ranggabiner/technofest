@@ -29,6 +29,18 @@ describe("env parsing", () => {
     }
   });
 
+  it("allows public Supabase session checks without unrelated server secrets", () => {
+    const parsed = parseEnv(
+      {
+        NEXT_PUBLIC_SUPABASE_URL: "http://127.0.0.1:54321",
+        NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "sb_publishable_local",
+      },
+      ["supabase"],
+    );
+
+    expect(parsed.ok).toBe(true);
+  });
+
   it("requires feature-scoped env groups only when requested", () => {
     const base = {
       NEXT_PUBLIC_SUPABASE_URL: "http://127.0.0.1:54321",
