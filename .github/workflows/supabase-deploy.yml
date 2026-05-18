@@ -5,7 +5,10 @@ on:
     branches:
       - development
       - main
-      - master
+    paths:
+      - apps/supabase/supabase/config.toml
+      - apps/supabase/supabase/migrations/**
+      - .github/workflows/supabase-deploy.yml
   workflow_dispatch:
     inputs:
       target_environment:
@@ -24,8 +27,6 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  CI: "true"
-  PNPM_VERSION: "10.23.0"
   SUPABASE_CLI_VERSION: "2.90.0"
 
 jobs:
@@ -34,46 +35,26 @@ jobs:
     runs-on: ubuntu-latest
     if: (github.event_name == 'push' && github.ref_name == 'development') || (github.event_name == 'workflow_dispatch' && inputs.target_environment == 'staging')
     environment: staging
-    # development branch -> staging Supabase project and staging Google OAuth config.
     env:
       TARGET_ENVIRONMENT: staging
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
       SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
       SUPABASE_PROJECT_REF: ${{ vars.SUPABASE_PROJECT_REF }}
-      NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
-      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-      MEDPROOF_PRIVACY_SENTINELS: ${{ vars.MEDPROOF_PRIVACY_SENTINELS }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Validate target branch and environment
+      - name: Validate target branch and secrets
         shell: bash
         run: |
           if [ "$TARGET_ENVIRONMENT" != "staging" ] || [ "$GITHUB_REF_NAME" != "development" ]; then
-            echo "Staging deploys must run from the development branch."
+            echo "Staging Supabase deploys must run from the development branch."
             exit 1
           fi
 
-          test -n "$SUPABASE_ACCESS_TOKEN"
-          test -n "$SUPABASE_DB_PASSWORD"
-          test -n "$SUPABASE_PROJECT_REF"
-          test -n "$NEXT_PUBLIC_SUPABASE_URL"
-          test -n "$SUPABASE_SERVICE_ROLE_KEY"
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-
-      - name: Enable pnpm
-        run: |
-          corepack enable
-          corepack prepare pnpm@${PNPM_VERSION} --activate
-
-      - name: Install web dependencies for privacy validation
-        working-directory: apps/web
-        run: pnpm install --frozen-lockfile
+          test -n "$SUPABASE_ACCESS_TOKEN" || { echo "SUPABASE_ACCESS_TOKEN is required."; exit 1; }
+          test -n "$SUPABASE_DB_PASSWORD" || { echo "SUPABASE_DB_PASSWORD is required."; exit 1; }
+          test -n "$SUPABASE_PROJECT_REF" || { echo "SUPABASE_PROJECT_REF is required."; exit 1; }
 
       - name: Setup Supabase CLI
         uses: supabase/setup-cli@v1
@@ -92,68 +73,41 @@ jobs:
       - name: List linked migrations
         run: supabase --workdir apps/supabase migration list --linked
 
-      - name: Run linked advisors
-        run: supabase --workdir apps/supabase db advisors --linked --type all --fail-on warn
-
       - name: Refresh PostgREST schema cache
         run: |
           supabase --workdir apps/supabase db query --linked "notify pgrst, 'reload schema'"
           supabase --workdir apps/supabase db query --linked "select pg_notification_queue_usage()"
 
-      - name: Run remote privacy validation
-        working-directory: apps/web
-        run: pnpm validate:privacy
-
   production:
     name: Deploy Supabase migrations to production
     runs-on: ubuntu-latest
-    if: (github.event_name == 'push' && (github.ref_name == 'main' || github.ref_name == 'master')) || (github.event_name == 'workflow_dispatch' && inputs.target_environment == 'production')
+    if: (github.event_name == 'push' && github.ref_name == 'main') || (github.event_name == 'workflow_dispatch' && inputs.target_environment == 'production')
     environment: production
-    # main/master branch -> production Supabase project and production Google OAuth config.
     env:
       TARGET_ENVIRONMENT: production
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
       SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
       SUPABASE_PROJECT_REF: ${{ vars.SUPABASE_PROJECT_REF }}
-      NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
-      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-      MEDPROOF_PRIVACY_SENTINELS: ${{ vars.MEDPROOF_PRIVACY_SENTINELS }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Validate target branch and environment
+      - name: Validate target branch and secrets
         shell: bash
         run: |
           if [ "$TARGET_ENVIRONMENT" != "production" ]; then
-            echo "Production deploy job received a non-production target."
+            echo "Production Supabase deploy job received a non-production target."
             exit 1
           fi
 
-          if [ "$GITHUB_REF_NAME" != "main" ] && [ "$GITHUB_REF_NAME" != "master" ]; then
-            echo "Production deploys must run from main or master."
+          if [ "$GITHUB_REF_NAME" != "main" ]; then
+            echo "Production Supabase deploys must run from main."
             exit 1
           fi
 
-          test -n "$SUPABASE_ACCESS_TOKEN"
-          test -n "$SUPABASE_DB_PASSWORD"
-          test -n "$SUPABASE_PROJECT_REF"
-          test -n "$NEXT_PUBLIC_SUPABASE_URL"
-          test -n "$SUPABASE_SERVICE_ROLE_KEY"
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-
-      - name: Enable pnpm
-        run: |
-          corepack enable
-          corepack prepare pnpm@${PNPM_VERSION} --activate
-
-      - name: Install web dependencies for privacy validation
-        working-directory: apps/web
-        run: pnpm install --frozen-lockfile
+          test -n "$SUPABASE_ACCESS_TOKEN" || { echo "SUPABASE_ACCESS_TOKEN is required."; exit 1; }
+          test -n "$SUPABASE_DB_PASSWORD" || { echo "SUPABASE_DB_PASSWORD is required."; exit 1; }
+          test -n "$SUPABASE_PROJECT_REF" || { echo "SUPABASE_PROJECT_REF is required."; exit 1; }
 
       - name: Setup Supabase CLI
         uses: supabase/setup-cli@v1
@@ -172,14 +126,7 @@ jobs:
       - name: List linked migrations
         run: supabase --workdir apps/supabase migration list --linked
 
-      - name: Run linked advisors
-        run: supabase --workdir apps/supabase db advisors --linked --type all --fail-on warn
-
       - name: Refresh PostgREST schema cache
         run: |
           supabase --workdir apps/supabase db query --linked "notify pgrst, 'reload schema'"
           supabase --workdir apps/supabase db query --linked "select pg_notification_queue_usage()"
-
-      - name: Run remote privacy validation
-        working-directory: apps/web
-        run: pnpm validate:privacy

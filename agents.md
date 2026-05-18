@@ -123,7 +123,13 @@ Before editing implementation code, read:
 - Build application screens directly, not a marketing landing page.
 - Use restrained dashboard/product UI, not decorative landing-page styling.
 - Use existing shadcn/ui and Tailwind patterns once scaffold exists.
+- All future UI changes must follow the existing typography hierarchy, font sizing, spacing, and component styling standards. New components should reuse existing shared styles, design tokens, and shared components instead of creating inconsistent custom styles. Any new typography or visual style that intentionally differs from the standard must be justified and documented near the relevant implementation or active plan.
+- The current typography standard is an all-sans, product-style hierarchy inspired by Family.co: Inter-backed headings and body text, tight heading tracking, restrained weights, and no serif/display font usage unless an intentional exception is documented.
 - Use skeleton loading for loading states, shaped to match the final content layout instead of generic spinners where practical.
+- When creating or modifying any UI component, page, layout, loading state, empty state, or interaction, always consider both desktop and mobile screen sizes.
+- Responsive design is mandatory, not optional.
+- Every UI implementation must be checked against mobile size behavior, including skeleton loading, cards, forms, tables/lists, dialogs, sheets, navigation, and action buttons.
+- Do not design only for desktop first and ignore mobile behavior.
 - Every clickable UI element must visually use the pointer cursor. Buttons, links, clickable cards, icon controls, tabs, dropdown triggers, menu items, and custom interactive elements must show `cursor: pointer`; disabled or inactive controls must keep an appropriate disabled cursor/state instead.
 - Required states include loading, empty, unauthorized, expired access, revoked access, pending doctor approval, rejected doctor account, upload failure, AI failure, blockchain pending, blockchain failed, and integrity mismatch.
 - Do not redesign unrelated screens or add future-scope screens.
@@ -159,7 +165,7 @@ Before editing implementation code, read:
 - Store all health data off-chain in Supabase PostgreSQL or encrypted Supabase Storage objects.
 - Store only privacy-preserving hashes on Polygon Amoy.
 - Use AES-256-GCM for health fields and file bytes.
-- Store the master encryption key only in server environment variables.
+- Store the main encryption key only in server environment variables.
 - Include `key_version` for encrypted rows.
 - Use HMAC with server-held pepper for pseudonymous on-chain IDs.
 - Do not implement deletion or retention automation in Sprint 1; revoke access only.

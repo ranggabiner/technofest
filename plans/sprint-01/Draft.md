@@ -192,7 +192,7 @@ key_version TEXT NOT NULL DEFAULT 'v1'
 Implementation rules:
 
 1. Use AES-256-GCM.
-2. Store master key only in Vercel environment variables, never in the database.
+2. Store main key only in Vercel environment variables, never in the database.
 3. Store `key_version` for future manual rotation.
 4. Validate AI outputs before encryption because DB `CHECK` constraints cannot inspect encrypted values.
 5. Never log plaintext health fields, decrypted payloads, raw AI prompts, or decrypted files.
@@ -1113,7 +1113,7 @@ Use exact commands once scripts exist. Until then, implementation must add equiv
 | RAG | Explicit SQL retrieval, no vector DB/LlamaIndex |
 | Encryption | AES-256-GCM for all health fields and files |
 | Plaintext boundary | Operational metadata only |
-| Key management | Vercel env master key plus `key_version` |
+| Key management | Vercel env main key plus `key_version` |
 | File storage | Encrypted bytes in private Supabase buckets |
 | Access scopes | Boolean flags |
 | Grant duplicates | Replace prior active grant |

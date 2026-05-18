@@ -26,7 +26,7 @@ Exact table fields, constraints, allowed values, contract ABI, and source-flow d
   - Google OAuth configuration.
   - DeepSeek API configuration.
   - Resend API configuration.
-  - AES-256-GCM master key.
+  - AES-256-GCM main key.
   - `HASH_PEPPER`.
   - Amoy RPC URL.
   - relayer wallet private key.
