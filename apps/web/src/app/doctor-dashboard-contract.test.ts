@@ -76,6 +76,13 @@ describe("doctor dashboard contract", () => {
     expect(client).toContain('dataFilter="finished"');
   });
 
+  it("does not render a profile edit shortcut inside the doctor dashboard client", () => {
+    const client = route("doctor/_components/doctor-dashboard-client.tsx");
+
+    expect(client).not.toContain('href="/doctor/profile"');
+    expect(client).not.toContain("copy.doctor.dashboard.editProfile");
+  });
+
   it("uses mobile session cards and viewport-safe dashboard modals", () => {
     const client = route("doctor/_components/doctor-dashboard-client.tsx");
     const modalContent = route("doctor/_components/doctor-grant-modal-content.tsx");

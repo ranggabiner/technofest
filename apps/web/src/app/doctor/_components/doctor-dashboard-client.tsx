@@ -1,14 +1,12 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import dynamic from "next/dynamic";
 import { useState } from "react";
 import {
   Bot,
   Eye,
   FilePlus2,
-  FileText,
   Filter,
   X,
 } from "lucide-react";
@@ -140,12 +138,6 @@ export function DoctorDashboardClient({
               {state.doctor.doctor_access_code}
             </p>
           </div>
-          <Button asChild variant="secondary" className="rounded-[10px]">
-            <Link href="/doctor/profile">
-              <FileText size={16} />
-              {copy.doctor.dashboard.editProfile}
-            </Link>
-          </Button>
         </div>
       </DashboardCard>
 
