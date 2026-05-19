@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { SharedHeader } from "@/components/shared-header";
 import { SiteFooter } from "@/components/site-footer";
 import { PendingSubmitButton } from "@/components/ui/async-action-button";
+import { postLoginHandoffPath } from "@/lib/auth/post-login";
 import { roleEntryPath } from "@/lib/auth/roles";
 import { getCurrentUser, resolveRoleForUser } from "@/lib/auth/session";
 import { getLocale } from "@/lib/i18n/server";
@@ -25,7 +26,7 @@ export default async function RoleSelectionPage({
   if (!user) redirect("/login");
 
   const role = await resolveRoleForUser(user);
-  if (role) redirect(roleEntryPath(role));
+  if (role) redirect(postLoginHandoffPath(roleEntryPath(role)));
 
   const locale = await getLocale();
   const copy = dictionary[locale];

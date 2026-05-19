@@ -10,6 +10,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 import { roleIntentCookie } from "./intent";
+import { postLoginHandoffPath } from "./post-login";
 import {
   resolveRoleFromRows,
   publicRouteRedirectPath,
@@ -53,7 +54,7 @@ export async function redirectAuthenticatedUserFromPublicRoute() {
   if (!user) return;
 
   const role = await resolveRoleForUser(user);
-  redirect(publicRouteRedirectPath(role) ?? "/login/role");
+  redirect(postLoginHandoffPath(publicRouteRedirectPath(role) ?? "/login/role"));
 }
 
 export async function getCurrentRole(): Promise<ResolvedRole | null> {
@@ -265,7 +266,7 @@ export async function completeRoleForUser(
 
 export async function redirectToRoleHome() {
   const role = await requireRole();
-  redirect(roleEntryPath(role));
+  redirect(postLoginHandoffPath(roleEntryPath(role)));
 }
 
 async function loadRoleRows(

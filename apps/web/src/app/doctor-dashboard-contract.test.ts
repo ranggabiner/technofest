@@ -6,6 +6,7 @@ import {
   doctorPendingSkeletonKey,
   resolveDoctorNavigationPath,
 } from "./doctor/_components/doctor-navigation-transition-model";
+import { doctorStatusNavItems } from "./doctor/_components/doctor-nav-model";
 
 const route = (path: string) => readFileSync(new URL(`./${path}`, import.meta.url), "utf8");
 const lib = (path: string) =>
@@ -74,6 +75,85 @@ describe("doctor dashboard contract", () => {
     expect(modalContent).toContain("createScope1RecordFromDashboardAction");
     expect(client).toContain('dataFilter="active"');
     expect(client).toContain('dataFilter="finished"');
+  });
+
+  it("renders doctor status in the portal shell without approved dashboard links", () => {
+    const page = route("doctor/status/page.tsx");
+    const doctorNavigation = route("doctor/_components/doctor-navigation.tsx");
+    const skeleton = route("../components/loading-skeletons.tsx");
+    const statusNavItems = doctorStatusNavItems("/doctor/status", dictionary.en);
+
+    expect(page).toContain("PortalLayout");
+    expect(page).toContain("DoctorStatusDesktopNavigation");
+    expect(page).toContain("DoctorStatusMobileNavigation");
+    expect(page).toContain("loadDoctorProfileState");
+    expect(page).toContain("showProfileAction={false}");
+    expect(page).toContain("data-doctor-status-profile");
+    expect(page).toContain("copy.doctor.status.pendingTitle");
+    expect(page).not.toContain('href="/doctor/medical-record-library"');
+    expect(page).not.toContain("DoctorDashboardClient");
+    expect(doctorNavigation).toContain("DoctorStatusDesktopNavigation");
+    expect(doctorNavigation).toContain("doctorStatusNavItems");
+    expect(statusNavItems).toHaveLength(1);
+    expect(statusNavItems[0]?.href).toBe("/doctor/status");
+    expect(statusNavItems[0]?.label).toBe(dictionary.en.doctor.status.title);
+    expect(skeleton).toContain('data-loading-pattern="doctor-status"');
+    expect(skeleton).toContain("md:grid-cols-12");
+    expect(skeleton).toContain("md:col-span-3");
+  });
+
+  it("renders the medical record library as downloadable authorized files only", () => {
+    const page = route("doctor/(portal)/medical-record-library/page.tsx");
+
+    expect(page).toContain("requireApprovedDoctorPortalRole");
+    expect(page).toContain("loadDoctorMedicalRecordLibraryState");
+    expect(page).toContain("data-doctor-library-file");
+    expect(page).toContain("/doctor/grants/${grantId}/attachments/${record.attachmentFileId}/download");
+    expect(page).not.toContain("/doctor/grants/${grantId}/attachments/${record.attachmentFileId}/preview");
+    expect(page).not.toContain("copy.doctor.dashboard.downloadUnavailable");
+    expect(page).not.toContain("Placeholder Sprint 1");
+    expect(page).not.toContain("copy.doctor.library.emptyTitle");
+  });
+
+  it("exposes a dedicated service loader for the doctor medical record library", () => {
+    const service = lib("doctor-records/service.ts");
+
+    expect(service).toContain("export type DoctorMedicalRecordLibraryState");
+    expect(service).toContain("export async function loadDoctorMedicalRecordLibraryState");
+    expect(service).toContain("loadScope1Records(grant)");
+    expect(service).toContain(".filter((record) => record.attachmentFileId && record.attachmentCanDownload)");
+    expect(service).toContain(".filter((grant) => grant.canViewScope1)");
+  });
+
+  it("closes and resets the dashboard create-record modal only after a successful save refresh", () => {
+    const client = route("doctor/_components/doctor-dashboard-client.tsx");
+    const modalContent = route("doctor/_components/doctor-grant-modal-content.tsx");
+
+    expect(client).toContain("async function handleRecordSaved(grantId: string)");
+    expect(client).toContain("onSaved={handleRecordSaved}");
+    expect(client).toContain("onClose={closeGrantModal}");
+    expect(modalContent).toContain("formRef.current?.reset()");
+    expect(modalContent).toContain("onClose()");
+    expect(modalContent).toContain("const refreshResult = await onSaved(state.grant.grantId)");
+    expect(modalContent).toContain("setError(result.error)");
+    expect(modalContent).toContain("setError(refreshResult.error)");
+  });
+
+  it("shows a spinner with the existing loading text while dashboard modals load", () => {
+    const client = route("doctor/_components/doctor-dashboard-client.tsx");
+
+    expect(client).toContain("Loader2");
+    expect(client).toContain("<ModalLoadingState message={copy.doctor.dashboard.loadingModal} />");
+    expect(client).toContain('role="status"');
+    expect(client).toContain('aria-live="polite"');
+    expect(client).toContain("animate-spin");
+  });
+
+  it("does not render a profile edit shortcut inside the doctor dashboard client", () => {
+    const client = route("doctor/_components/doctor-dashboard-client.tsx");
+
+    expect(client).not.toContain('href="/doctor/profile"');
+    expect(client).not.toContain("copy.doctor.dashboard.editProfile");
   });
 
   it("uses mobile session cards and viewport-safe dashboard modals", () => {

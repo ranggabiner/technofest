@@ -5,6 +5,8 @@ import { fileURLToPath } from "node:url";
 
 import { createClient } from "@supabase/supabase-js";
 
+import { samplePdfBytes } from "./seed-sample-pdf.mjs";
+
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const appRoot = path.resolve(scriptDir, "..");
 const supabaseRoot = path.resolve(appRoot, "../supabase");
@@ -338,8 +340,7 @@ function buildRichDemoData() {
       const fileId = uuidFromNumber(970000 + Number(doctor.id.slice(-4)) * 10 + documentTypeIndex(documentType));
       const authUserId = authUserIds.get(doctor.email);
       const objectPath = `${authUserId}/kyc/${doctor.id}/${documentType}.json`;
-      const fileText = `Dokumen ${documentType.toUpperCase()} demo untuk ${doctor.fullName}. Kota praktik: ${doctor.city}.`;
-      const storagePayload = encryptedStoragePayload(fileText);
+      const storagePayload = encryptedStoragePayload(samplePdfBytes());
       storageObjects.push({
         bucketName: "encrypted-kyc-documents",
         objectPath,
@@ -369,7 +370,7 @@ function buildRichDemoData() {
   }
 
   for (const attachment of medicalAttachmentFixtures) {
-    const storagePayload = encryptedStoragePayload(attachment.content);
+    const storagePayload = encryptedStoragePayload(seedFileBytes(attachment));
     storageObjects.push({
       bucketName: "encrypted-medical-attachments",
       objectPath: `${primaryDoctorAuthId}/medical/${patientId}/${attachment.fileId}.json`,
@@ -581,6 +582,11 @@ function buildRichDemoData() {
       grant_id: "00000000-0000-0000-0000-000000009701",
       record_id: "00000000-0000-0000-0000-000000009802",
       created_at: daysAgoIso(5, 8),
+    },
+    {
+      grant_id: "00000000-0000-0000-0000-000000009701",
+      record_id: "00000000-0000-0000-0000-000000009811",
+      created_at: daysAgoIso(4, 8),
     },
   ];
 
@@ -836,10 +842,14 @@ async function assertOk(operation) {
 }
 
 function encryptString(plaintext, keyVersion = "v1") {
+  return encryptBytes(Buffer.from(String(plaintext), "utf8"), keyVersion);
+}
+
+function encryptBytes(bytes, keyVersion = "v1") {
   const key = Buffer.from(encryptionMasterKey, "base64");
   const iv = randomBytes(12);
   const cipher = createCipheriv("aes-256-gcm", key, iv);
-  const ciphertext = Buffer.concat([cipher.update(String(plaintext), "utf8"), cipher.final()]);
+  const ciphertext = Buffer.concat([cipher.update(bytes), cipher.final()]);
   const tag = cipher.getAuthTag();
   return {
     ciphertext: ciphertext.toString("base64"),
@@ -869,10 +879,16 @@ function nullableEncryptedColumns(prefix, value) {
   return encryptedColumns(prefix, value);
 }
 
-function encryptedStoragePayload(text) {
-  const encrypted = encryptString(text);
+function encryptedStoragePayload(value) {
+  const plaintextBytes = Buffer.isBuffer(value) ? value : Buffer.from(String(value), "utf8");
+  const encrypted = encryptBytes(plaintextBytes);
   const bytes = Buffer.from(JSON.stringify(encrypted), "utf8");
   return { bytes };
+}
+
+function seedFileBytes(file) {
+  if (file.mimeType === "application/pdf") return samplePdfBytes();
+  return Buffer.from(String(file.content ?? ""), "utf8");
 }
 
 function sha256Hex(value) {
@@ -1037,8 +1053,9 @@ const supportJournalScenarios = [
 ];
 
 const medicalAttachmentFixtures = [
-  { fileId: "00000000-0000-0000-0000-000000009901", filename: "hasil-lab-hematologi-demo.pdf", mimeType: "application/pdf", content: "Lampiran demo hasil hematologi terenkripsi.", daysAgo: 13 },
-  { fileId: "00000000-0000-0000-0000-000000009902", filename: "ekg-demo.pdf", mimeType: "application/pdf", content: "Lampiran demo EKG terenkripsi.", daysAgo: 5 },
+  { fileId: "00000000-0000-0000-0000-000000009901", filename: "hasil-lab-hematologi-demo.pdf", mimeType: "application/pdf", daysAgo: 13 },
+  { fileId: "00000000-0000-0000-0000-000000009902", filename: "ekg-demo.pdf", mimeType: "application/pdf", daysAgo: 5 },
+  { fileId: "00000000-0000-0000-0000-000000009903", filename: "ringkasan-konsultasi-demo.pdf", mimeType: "application/pdf", daysAgo: 4 },
 ];
 
 const scope1Fixtures = [
@@ -1046,6 +1063,7 @@ const scope1Fixtures = [
   { id: "00000000-0000-0000-0000-000000009802", doctorId: "00000000-0000-0000-0000-000000009511", recordType: "action", title: "Evaluasi nyeri dada saat aktivitas", description: "Disarankan observasi pola gejala dan kontrol jika keluhan berulang.", attachmentFileId: "00000000-0000-0000-0000-000000009902", blockchainStatus: "pending", daysAgo: 5 },
   { id: "00000000-0000-0000-0000-000000009803", doctorId: "00000000-0000-0000-0000-000000009501", recordType: "prescription", title: "Catatan resep lambung demo", description: "Obat demo untuk keluhan lambung sesuai evaluasi dokter.", blockchainStatus: "confirmed", daysAgo: 11 },
   { id: "00000000-0000-0000-0000-000000009804", doctorId: "00000000-0000-0000-0000-000000009501", amendsRecordId: "00000000-0000-0000-0000-000000009803", recordType: "note", title: "Amendemen catatan lambung", description: "Koreksi jadwal minum obat demo setelah pasien melaporkan perubahan jam makan.", blockchainStatus: "failed", daysAgo: 7 },
+  { id: "00000000-0000-0000-0000-000000009811", doctorId: "00000000-0000-0000-0000-000000009501", recordType: "note", title: "Ringkasan konsultasi kontrol demo", description: "Ringkasan demo hasil konsultasi kontrol dengan instruksi pemantauan keluhan dada dan jadwal kontrol ulang.", attachmentFileId: "00000000-0000-0000-0000-000000009903", blockchainStatus: "confirmed", daysAgo: 4 },
   { id: "00000000-0000-0000-0000-000000009805", doctorId: "00000000-0000-0000-0000-000000009512", recordType: "diagnosis", title: "Evaluasi migrain episodik", description: "Catatan demo riwayat sakit kepala berdenyut terkait kurang tidur.", blockchainStatus: "confirmed", daysAgo: 16 },
   { id: "00000000-0000-0000-0000-000000009806", doctorId: "00000000-0000-0000-0000-000000009517", recordType: "note", title: "Follow-up pola tidur dan stres", description: "Pasien diminta mencatat jam tidur dan pemicu kecemasan selama dua minggu.", blockchainStatus: "pending", daysAgo: 3 },
   { id: "00000000-0000-0000-0000-000000009807", doctorId: "00000000-0000-0000-0000-000000009521", recordType: "note", title: "Catatan konseling singkat", description: "Diskusi strategi relaksasi sebelum presentasi kerja.", blockchainStatus: "confirmed", daysAgo: 2 },

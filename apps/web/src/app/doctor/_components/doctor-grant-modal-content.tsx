@@ -23,26 +23,31 @@ import {
 } from "@/lib/i18n/labels";
 
 export type DoctorDashboardModalKind = "chat" | "records" | "create";
+export type DoctorGrantModalSaveResult =
+  | { ok: true }
+  | { ok: false; error: string };
 
 export function GrantModalContent({
   kind,
   state,
   locale,
   copy,
-  onRefresh,
+  onSaved,
+  onClose,
 }: {
   kind: DoctorDashboardModalKind;
   state: DoctorGrantPageState;
   locale: Locale;
   copy: Dictionary;
-  onRefresh: (grantId: string) => Promise<void>;
+  onSaved: (grantId: string) => Promise<DoctorGrantModalSaveResult>;
+  onClose: () => void;
 }) {
   if (kind === "chat") {
     return <ChatModal state={state} copy={copy} />;
   }
 
   if (kind === "create") {
-    return <CreateRecordModal state={state} copy={copy} onRefresh={onRefresh} />;
+    return <CreateRecordModal state={state} copy={copy} onSaved={onSaved} onClose={onClose} />;
   }
 
   return <RecordsModal state={state} locale={locale} copy={copy} />;
@@ -107,15 +112,17 @@ function RecordsModal({
 function CreateRecordModal({
   state,
   copy,
-  onRefresh,
+  onSaved,
+  onClose,
 }: {
   state: DoctorGrantPageState;
   copy: Dictionary;
-  onRefresh: (grantId: string) => Promise<void>;
+  onSaved: (grantId: string) => Promise<DoctorGrantModalSaveResult>;
+  onClose: () => void;
 }) {
   const [error, setError] = useState<string | null>(null);
-  const [status, setStatus] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
   const savingRef = useRef(false);
 
   if (!state.grant.canViewScope1) {
@@ -125,15 +132,20 @@ function CreateRecordModal({
   async function submit(formData: FormData) {
     if (savingRef.current) return;
 
+    let shouldClose = false;
     savingRef.current = true;
     setIsSaving(true);
     setError(null);
-    setStatus(null);
     try {
       const result = await createScope1RecordFromDashboardAction(formData);
       if (result.ok) {
-        setStatus(copy.doctor.dashboard.recordSaved);
-        await onRefresh(state.grant.grantId);
+        const refreshResult = await onSaved(state.grant.grantId);
+        if (refreshResult.ok) {
+          formRef.current?.reset();
+          shouldClose = true;
+        } else {
+          setError(refreshResult.error);
+        }
       } else {
         setError(result.error);
       }
@@ -141,10 +153,11 @@ function CreateRecordModal({
       savingRef.current = false;
       setIsSaving(false);
     }
+    if (shouldClose) onClose();
   }
 
   return (
-    <form action={(formData) => void submit(formData)} className="grid gap-4">
+    <form ref={formRef} action={(formData) => void submit(formData)} className="grid gap-4">
       <input type="hidden" name="grant_id" value={state.grant.grantId} />
       <div className="grid gap-3 sm:grid-cols-2">
         <Field>
@@ -184,7 +197,6 @@ function CreateRecordModal({
         <Input id="dashboard_attachment" name="attachment" type="file" accept="application/pdf,image/jpeg,image/png" />
       </Field>
       {error ? <ErrorState message={error} /> : null}
-      {status ? <StatusBadge tone="pending">{status}</StatusBadge> : null}
       <LoadingActionButton
         type="submit"
         className="w-full rounded-[10px] sm:w-fit"
