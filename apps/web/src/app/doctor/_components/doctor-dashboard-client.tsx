@@ -8,6 +8,7 @@ import {
   Eye,
   FilePlus2,
   Filter,
+  Loader2,
   X,
 } from "lucide-react";
 
@@ -28,7 +29,10 @@ import { fillTemplate, formatDateTime } from "@/lib/i18n/format";
 import type { Locale } from "@/lib/i18n/locales";
 import { localizedScopeList } from "@/lib/i18n/labels";
 import { cn } from "@/lib/utils";
-import type { DoctorDashboardModalKind } from "./doctor-grant-modal-content";
+import type {
+  DoctorDashboardModalKind,
+  DoctorGrantModalSaveResult,
+} from "./doctor-grant-modal-content";
 
 type ModalKind = DoctorDashboardModalKind;
 
@@ -91,14 +95,14 @@ export function DoctorDashboardClient({
     setIsModalLoading(false);
   }
 
-  async function refreshGrantState(grantId: string) {
+  async function handleRecordSaved(grantId: string): Promise<DoctorGrantModalSaveResult> {
     const result = await loadDoctorGrantModalStateAction(grantId);
     if (result.ok) {
       setModalState(result.state);
       setModalError(null);
-    } else {
-      setModalError(result.error);
+      return { ok: true };
     }
+    return { ok: false, error: result.error };
   }
 
   return (
@@ -264,7 +268,7 @@ export function DoctorDashboardClient({
           wide
         >
           {isModalLoading ? (
-            <EmptyState message={copy.doctor.dashboard.loadingModal} />
+            <ModalLoadingState message={copy.doctor.dashboard.loadingModal} />
           ) : modalError ? (
             <ErrorState message={modalError} />
           ) : modalState ? (
@@ -273,7 +277,8 @@ export function DoctorDashboardClient({
               state={modalState}
               locale={locale}
               copy={copy}
-              onRefresh={refreshGrantState}
+              onSaved={handleRecordSaved}
+              onClose={closeGrantModal}
             />
           ) : null}
         </DashboardDialog>
@@ -557,6 +562,19 @@ function GrantModalContentFallback() {
         <div className="h-28 rounded-[10px] bg-[var(--color-stone-surface)]" />
       </div>
       <div className="h-32 rounded-[10px] bg-[var(--color-stone-surface)]" />
+    </div>
+  );
+}
+
+function ModalLoadingState({ message }: { message: string }) {
+  return (
+    <div
+      aria-live="polite"
+      className="flex items-center gap-3 rounded-[10px] bg-[var(--color-stone-surface)] p-4 text-sm text-[var(--color-ash)]"
+      role="status"
+    >
+      <Loader2 size={18} className="shrink-0 animate-spin text-[var(--color-midnight)]" aria-hidden="true" />
+      <span>{message}</span>
     </div>
   );
 }

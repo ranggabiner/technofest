@@ -504,6 +504,13 @@ with demo_doctors (doctor_id, auth_user_id) as (
 doc_types (document_type, offset_value) as (
   values ('str'::text, 1), ('sip'::text, 2), ('ktp'::text, 3)
 ),
+seed_sample_pdf_metadata (visible_text, file_size_bytes, file_sha256) as (
+  values (
+    'SAMPLE PDF',
+    585::bigint,
+    'b7d387f5f50b1c6bb4e2f09f00c3f4802b3cae63ccce79aae696757366dafd88'
+  )
+),
 seed_files as (
   select
     ('00000000-0000-0000-0000-' || lpad((970000 + right(d.doctor_id::text, 4)::integer * 10 + t.offset_value)::text, 12, '0'))::uuid as file_id,
@@ -511,9 +518,11 @@ seed_files as (
     d.auth_user_id,
     t.document_type,
     t.offset_value,
-    (md5(d.doctor_id::text || ':' || t.document_type) || md5(t.document_type || ':' || d.doctor_id::text)) as file_hash
+    p.file_size_bytes,
+    p.file_sha256
   from demo_doctors d
   cross join doc_types t
+  cross join seed_sample_pdf_metadata p
 )
 insert into public.secure_files (
   file_id,
@@ -540,8 +549,8 @@ select
   'ZGVtb19pdl9zZWVk',
   'ZGVtb190YWdfc2VlZA==',
   'application/pdf',
-  2560 + offset_value,
-  file_hash,
+  file_size_bytes,
+  file_sha256,
   'v1',
   now() - interval '20 days'
 from seed_files
