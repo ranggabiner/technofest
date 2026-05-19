@@ -2,6 +2,6 @@ import { RoleProfilePage } from "@/app/_components/role-profile-page";
 
 export const dynamic = "force-dynamic";
 
-export default function DoctorProfilePage() {
-  return <RoleProfilePage routeRole="doctor" />;
+export default function SuperAdminProfilePage() {
+  return <RoleProfilePage routeRole="superadmin" />;
 }

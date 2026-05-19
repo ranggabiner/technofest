@@ -10,6 +10,8 @@ import { samplePdfBytes } from "./seed-sample-pdf.mjs";
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const appRoot = path.resolve(scriptDir, "..");
 const supabaseRoot = path.resolve(appRoot, "../supabase");
+const inheritedEnvKeys = new Set(Object.keys(process.env));
+const cli = consumeCliArgs(process.argv.slice(2));
 
 for (const envPath of [
   path.join(appRoot, ".env"),
@@ -18,6 +20,10 @@ for (const envPath of [
   path.join(supabaseRoot, ".env.local"),
 ]) {
   loadEnvFile(envPath);
+}
+
+for (const envPath of cli.envFiles) {
+  loadEnvFile(resolveEnvPath(envPath), { override: true, required: true });
 }
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -925,14 +931,58 @@ function dateDaysAgo(days) {
   return daysAgoIso(days).slice(0, 10);
 }
 
-function loadEnvFile(envPath) {
-  if (!existsSync(envPath)) return;
+function consumeCliArgs(args) {
+  const envFiles = [];
+
+  for (let index = 0; index < args.length; index += 1) {
+    const arg = args[index];
+
+    if (arg === "--env-file") {
+      const envPath = args[index + 1];
+      if (!envPath) {
+        console.error("--env-file requires a path.");
+        process.exit(1);
+      }
+      envFiles.push(envPath);
+      index += 1;
+      continue;
+    }
+
+    if (arg.startsWith("--env-file=")) {
+      envFiles.push(arg.slice("--env-file=".length));
+      continue;
+    }
+
+    if (arg === "--help" || arg === "-h") {
+      console.log("Usage: node scripts/seed-demo-auth-users.mjs [--env-file <path>]");
+      process.exit(0);
+    }
+
+    console.error(`Unknown argument: ${arg}`);
+    process.exit(1);
+  }
+
+  return { envFiles };
+}
+
+function resolveEnvPath(envPath) {
+  return path.isAbsolute(envPath) ? envPath : path.resolve(appRoot, envPath);
+}
+
+function loadEnvFile(envPath, options = {}) {
+  if (!existsSync(envPath)) {
+    if (options.required) {
+      console.error(`Env file not found: ${envPath}`);
+      process.exit(1);
+    }
+    return;
+  }
 
   for (const line of readFileSync(envPath, "utf8").split("\n")) {
     const match = /^\s*(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)=(.*)\s*$/.exec(line);
     if (!match) continue;
     const [, key, rawValue] = match;
-    if (process.env[key]) continue;
+    if (options.override ? inheritedEnvKeys.has(key) : process.env[key]) continue;
     process.env[key] = normalizeValue(rawValue);
   }
 }

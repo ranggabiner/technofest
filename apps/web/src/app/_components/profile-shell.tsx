@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState, type ButtonHTMLAttributes, type ReactNode } from "react";
-import { FileText, LogOut, Settings, UserRound } from "lucide-react";
+import { useEffect, useRef, useState, type ReactNode, type RefObject } from "react";
+import { ArrowLeft, FileText, Settings, UserRound } from "lucide-react";
 
-import { signOutAction } from "@/app/auth/actions";
 import { PendingSubmitButton } from "@/components/ui/async-action-button";
+import { Button } from "@/components/ui/button";
 import type { Dictionary } from "@/lib/i18n/dictionary";
 import { cn } from "@/lib/utils";
+import { SaveStatusToast } from "./save-status-toast";
 
 export type ProfileShellRole = "patient" | "doctor" | "admin";
 export type ProfileConfirmCopy = Dictionary["profile"]["confirm"];
@@ -17,23 +18,27 @@ export function ProfileShell({
   role,
   copy,
   active,
+  backHref,
+  profileHref,
   children,
 }: {
   role: ProfileShellRole;
   copy: Dictionary["profile"];
   active: "profile" | "profiling";
+  backHref: string;
+  profileHref: string;
   children: ReactNode;
 }) {
   const pathname = usePathname() ?? "";
   const navItems =
     role === "patient"
       ? [
-          { href: "/patient/profile", label: copy.shell.profileSettings, icon: Settings, key: "profile" },
+          { href: profileHref, label: copy.shell.profileSettings, icon: Settings, key: "profile" },
           { href: "/patient/profile/profiling", label: copy.shell.profiling, icon: FileText, key: "profiling" },
         ]
       : [
           {
-            href: role === "doctor" ? "/doctor/profile" : "/admin/profile",
+            href: profileHref,
             label: copy.shell.profile,
             icon: UserRound,
             key: "profile",
@@ -46,6 +51,13 @@ export function ProfileShell({
       data-profile-shell="role-profile"
     >
       <aside className="border-b border-[var(--color-stone-surface)] bg-[var(--color-card)] p-5 md:min-h-screen md:border-b-0 md:border-r">
+        <Link
+          href={backHref}
+          aria-label={copy.shell.back}
+          className="mb-4 inline-flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-full border border-[var(--color-stone-surface)] text-[var(--color-midnight)] transition hover:bg-[var(--color-stone-surface)] hover:text-[var(--color-teal-deep)]"
+        >
+          <ArrowLeft size={18} aria-hidden="true" />
+        </Link>
         <nav className="flex gap-2 overflow-x-auto md:flex-col md:overflow-visible" aria-label={copy.shell.navLabel}>
           {navItems.map((item) => {
             const Icon = item.icon;
@@ -66,72 +78,63 @@ export function ProfileShell({
               </Link>
             );
           })}
-          <form action={signOutAction} className="md:mt-4">
-            <ConfirmSubmitButton
-              title={copy.confirm.logoutTitle}
-              description={copy.confirm.logoutDescription}
-              confirmLabel={copy.confirm.yes}
-              cancelLabel={copy.confirm.no}
-              loadingLabel={copy.shell.logout}
-              className={cn(
-                "inline-flex min-h-11 w-full cursor-pointer items-center gap-3 rounded-lg border px-3 py-2 text-sm font-semibold transition",
-                "border-[color-mix(in_srgb,var(--color-error-red)_55%,white)] bg-[color-mix(in_srgb,var(--color-error-red)_8%,transparent)] text-[var(--color-error-red)] hover:bg-[color-mix(in_srgb,var(--color-error-red)_14%,transparent)] hover:text-[var(--color-error-red)]",
-              )}
-              data-profile-tone="soft-red"
-            >
-              <LogOut size={18} aria-hidden="true" />
-              {copy.shell.logout}
-            </ConfirmSubmitButton>
-          </form>
         </nav>
       </aside>
       <main className="mx-auto w-full max-w-[980px] px-5 py-8 md:px-8">{children}</main>
+      <SaveStatusToast message={copy.toast.saved} />
     </div>
   );
 }
 
-export function ConfirmSubmitButton({
-  title,
-  description,
-  confirmLabel,
+export function ProfileFormControls({
+  copy,
+  saveLabel,
   cancelLabel,
-  children,
-  className,
-  loadingLabel,
-  ...props
+  formRef,
+  onCancel,
 }: {
-  title: string;
-  description: string;
-  confirmLabel: string;
+  copy: Dictionary["profile"];
+  saveLabel: string;
   cancelLabel: string;
-  children: ReactNode;
-  className?: string;
-  loadingLabel?: string;
-} & ButtonHTMLAttributes<HTMLButtonElement>) {
+  formRef: RefObject<HTMLFormElement | null>;
+  onCancel: () => void;
+}) {
   return (
-    <PendingSubmitButton
-      type="button"
-      className={className}
-      loadingLabel={loadingLabel ?? confirmLabel}
-      slotClassName="w-full"
-      onClick={(event) => {
-        const form = event.currentTarget.form;
-        window.dispatchEvent(
-          new CustomEvent("profile-confirm", {
-            detail: {
-              title,
-              description,
-              confirmLabel,
-              cancelLabel,
-              onConfirm: () => form?.requestSubmit(),
-            },
-          }),
-        );
-      }}
-      {...props}
-    >
-      {children}
-    </PendingSubmitButton>
+    <div className="mt-6 grid gap-2 sm:flex sm:justify-end sm:gap-3">
+      <Button
+        type="button"
+        variant="ghost"
+        className="w-full rounded-[10px] sm:w-auto"
+        onClick={() =>
+          openProfileConfirmation({
+            title: copy.confirm.cancelTitle,
+            description: copy.confirm.cancelDescription,
+            confirmLabel: copy.confirm.yes,
+            cancelLabel: copy.confirm.no,
+            onConfirm: onCancel,
+          })
+        }
+      >
+        {cancelLabel}
+      </Button>
+      <PendingSubmitButton
+        type="button"
+        className="w-full rounded-[10px] sm:w-auto"
+        loadingLabel={saveLabel}
+        slotClassName="w-full sm:w-auto"
+        onClick={() =>
+          openProfileConfirmation({
+            title: copy.confirm.saveTitle,
+            description: copy.confirm.saveDescription,
+            confirmLabel: copy.confirm.yes,
+            cancelLabel: copy.confirm.no,
+            onConfirm: () => formRef.current?.requestSubmit(),
+          })
+        }
+      >
+        {saveLabel}
+      </PendingSubmitButton>
+    </div>
   );
 }
 

@@ -39,6 +39,8 @@ describe("patient layout shell", () => {
     expect(patientLayoutSource).toContain("PortalForbiddenLayout");
     expect(sharedLayoutSource).toContain("data-portal-layout");
     expect(sharedLayoutSource).toContain("data-portal-sidebar");
+    expect(patientLayoutSource).toContain("profileLabel={copy.profile.shell.profile}");
+    expect(patientLayoutSource).not.toContain("copy.patient.dashboard.editProfile");
   });
 
   it.each(patientRouteFiles)("%s keeps route UI content-only", (relativePath) => {

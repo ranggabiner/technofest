@@ -35,7 +35,7 @@ export function DoctorLayout({
       mobileNavigation={<DoctorMobileNavigation copy={copy} />}
       navigationTargets={doctorNavigationTargets}
       profileHref="/doctor/profile"
-      profileLabel={copy.doctor.dashboard.editProfile}
+      profileLabel={copy.profile.shell.profile}
       role="doctor"
       sectionLabel={copy.doctor.dashboard.sidebarSection}
       title={copy.doctor.dashboard.title}

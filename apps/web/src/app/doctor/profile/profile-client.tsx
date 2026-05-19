@@ -1,14 +1,13 @@
 "use client";
 
-import { useRef, useState, type RefObject } from "react";
+import { useRef } from "react";
 import { Download, Eye, FileText } from "lucide-react";
 
 import {
   ProfileConfirmationHost,
+  ProfileFormControls,
   ProfilePhotoPicker,
-  openProfileConfirmation,
 } from "@/app/_components/profile-shell";
-import { PendingSubmitButton } from "@/components/ui/async-action-button";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Label, Select } from "@/components/ui/form";
 import type { Dictionary } from "@/lib/i18n/dictionary";
@@ -36,7 +35,6 @@ export function DoctorProfileClient({
   documents: KycDocumentSummary[];
   avatarUrl: string | null;
 }) {
-  const [isProfileEditing, setIsProfileEditing] = useState(false);
   const profileFormRef = useRef<HTMLFormElement>(null);
   const lettersFormRef = useRef<HTMLFormElement>(null);
   const verified = doctor.account_status === "approved";
@@ -69,28 +67,17 @@ export function DoctorProfileClient({
         className="rounded-xl border border-[var(--color-stone-surface)] bg-[var(--color-card)] p-5 shadow-[var(--shadow-subtle)] sm:p-6"
       >
         <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <h2 className="text-lg font-semibold text-[var(--color-midnight)]">{copy.doctor.profileCardTitle}</h2>
-          <Button
-            type="button"
-            variant="secondary"
-            className="w-full rounded-[10px] sm:w-auto"
-            onClick={() =>
-              openProfileConfirmation({
-                title: copy.confirm.doctorApprovalTitle,
-                description: copy.confirm.doctorApprovalDescription,
-                confirmLabel: copy.confirm.yes,
-                cancelLabel: copy.confirm.no,
-                onConfirm: () => setIsProfileEditing(true),
-              })
-            }
-          >
-            {copy.doctor.edit}
-          </Button>
+          <div>
+            <h2 className="text-lg font-semibold text-[var(--color-midnight)]">{copy.doctor.profileCardTitle}</h2>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--color-ash)]">
+              {copy.confirm.doctorApprovalDescription}
+            </p>
+          </div>
         </div>
         <div className="grid gap-5 md:grid-cols-2">
           <Field>
             <Label htmlFor="full_name">{copy.doctor.fullName}</Label>
-            <Input id="full_name" name="full_name" defaultValue={doctor.full_name} disabled={!isProfileEditing} required />
+            <Input id="full_name" name="full_name" defaultValue={doctor.full_name} required />
           </Field>
           <Field>
             <Label htmlFor="email">{copy.doctor.email}</Label>
@@ -98,7 +85,7 @@ export function DoctorProfileClient({
           </Field>
           <Field>
             <Label htmlFor="specialization">{copy.doctor.specialization}</Label>
-            <Select id="specialization" name="specialization" defaultValue={doctor.specialization ?? ""} disabled={!isProfileEditing}>
+            <Select id="specialization" name="specialization" defaultValue={doctor.specialization ?? ""}>
               <option value="">{copy.doctor.emptyValue}</option>
               {copy.doctor.specializationOptions.map((option) => (
                 <option key={option.value} value={option.label}>
@@ -109,21 +96,18 @@ export function DoctorProfileClient({
           </Field>
           <Field>
             <Label htmlFor="phone_number">{copy.doctor.phoneNumber}</Label>
-            <Input id="phone_number" name="phone_number" defaultValue={doctor.phone_number ?? ""} disabled={!isProfileEditing} />
+            <Input id="phone_number" name="phone_number" defaultValue={doctor.phone_number ?? ""} />
           </Field>
         </div>
-        {isProfileEditing ? (
-          <ProfileFormControls
-            copy={copy}
-            saveLabel={copy.doctor.save}
-            cancelLabel={copy.doctor.cancel}
-            formRef={profileFormRef}
-            onCancel={() => {
-              profileFormRef.current?.reset();
-              setIsProfileEditing(false);
-            }}
-          />
-        ) : null}
+        <ProfileFormControls
+          copy={copy}
+          saveLabel={copy.doctor.save}
+          cancelLabel={copy.doctor.cancel}
+          formRef={profileFormRef}
+          onCancel={() => {
+            profileFormRef.current?.reset();
+          }}
+        />
       </form>
 
       <form
@@ -133,41 +117,48 @@ export function DoctorProfileClient({
       >
         <h2 className="mb-6 text-lg font-semibold text-[var(--color-midnight)]">{copy.doctor.lettersTitle}</h2>
         <div className="grid gap-4">
-          {documents.map((document) => (
-            <div
-              key={document.documentType}
-              className="grid gap-3 rounded-[10px] border border-[var(--color-stone-surface)] bg-[var(--color-parchment-card)] p-4 md:grid-cols-[1fr_auto]"
-            >
-              <div className="min-w-0">
-                <div className="flex min-w-0 items-center gap-2">
-                  <FileText size={18} className="text-[var(--color-teal-deep)]" aria-hidden="true" />
-                  <h3 className="break-words font-semibold text-[var(--color-midnight)]">
-                    {copy.doctor.documentTitles[document.documentType]}
-                  </h3>
+          {documents.map((document) => {
+            const documentTitle = copy.doctor.documentTitles[document.documentType];
+            const displayFilename = document.uploaded
+              ? document.filename ?? documentTitle
+              : copy.doctor.noDocument;
+
+            return (
+              <div
+                key={document.documentType}
+                className="grid gap-3 rounded-[10px] border border-[var(--color-stone-surface)] bg-[var(--color-parchment-card)] p-4 md:grid-cols-[1fr_auto]"
+              >
+                <div className="min-w-0">
+                  <div className="flex min-w-0 items-center gap-2">
+                    <FileText size={18} className="text-[var(--color-teal-deep)]" aria-hidden="true" />
+                    <h3 className="break-words font-semibold text-[var(--color-midnight)]">
+                      {documentTitle}
+                    </h3>
+                  </div>
+                  <p className="mt-1 break-words text-sm text-[var(--color-ash)]">
+                    {displayFilename} - {getFileTypeLabel(document.mimeType, document.filename)} - {formatFileSize(document.fileSizeBytes)}
+                  </p>
+                  <Input className="mt-3" type="file" name={document.documentType} accept="application/pdf,image/jpeg,image/png" />
                 </div>
-                <p className="mt-1 break-words text-sm text-[var(--color-ash)]">
-                  {document.filename ?? copy.doctor.noDocument} - {getFileTypeLabel(document.mimeType, document.filename)} - {formatFileSize(document.fileSizeBytes)}
-                </p>
-                <Input className="mt-3" type="file" name={document.documentType} accept="application/pdf,image/jpeg,image/png" />
+                {document.documentId ? (
+                  <div className="grid gap-2 sm:flex sm:items-start">
+                    <Button asChild variant="ghost" className="w-full rounded-[10px] sm:w-auto">
+                      <a href={`/doctor/profile/documents/${document.documentId}`}>
+                        <Eye size={16} />
+                        {copy.doctor.view}
+                      </a>
+                    </Button>
+                    <Button asChild variant="ghost" className="w-full rounded-[10px] sm:w-auto">
+                      <a href={`/doctor/profile/documents/${document.documentId}/download`}>
+                        <Download size={16} />
+                        {copy.doctor.download}
+                      </a>
+                    </Button>
+                  </div>
+                ) : null}
               </div>
-              {document.documentId ? (
-                <div className="grid gap-2 sm:flex sm:items-start">
-                  <Button asChild variant="ghost" className="w-full rounded-[10px] sm:w-auto">
-                    <a href={`/doctor/profile/documents/${document.documentId}`}>
-                      <Eye size={16} />
-                      {copy.doctor.view}
-                    </a>
-                  </Button>
-                  <Button asChild variant="ghost" className="w-full rounded-[10px] sm:w-auto">
-                    <a href={`/doctor/profile/documents/${document.documentId}/download`}>
-                      <Download size={16} />
-                      {copy.doctor.download}
-                    </a>
-                  </Button>
-                </div>
-              ) : null}
-            </div>
-          ))}
+            );
+          })}
         </div>
         <ProfileFormControls
           copy={copy}
@@ -177,58 +168,6 @@ export function DoctorProfileClient({
           onCancel={() => lettersFormRef.current?.reset()}
         />
       </form>
-    </div>
-  );
-}
-
-function ProfileFormControls({
-  copy,
-  saveLabel,
-  cancelLabel,
-  formRef,
-  onCancel,
-}: {
-  copy: Dictionary["profile"];
-  saveLabel: string;
-  cancelLabel: string;
-  formRef: RefObject<HTMLFormElement | null>;
-  onCancel: () => void;
-}) {
-  return (
-    <div className="mt-6 grid gap-2 sm:flex sm:justify-end sm:gap-3">
-      <Button
-        type="button"
-        variant="ghost"
-        className="w-full rounded-[10px] sm:w-auto"
-        onClick={() =>
-          openProfileConfirmation({
-            title: copy.confirm.cancelTitle,
-            description: copy.confirm.cancelDescription,
-            confirmLabel: copy.confirm.yes,
-            cancelLabel: copy.confirm.no,
-            onConfirm: onCancel,
-          })
-        }
-      >
-        {cancelLabel}
-      </Button>
-      <PendingSubmitButton
-        type="button"
-        className="w-full rounded-[10px] sm:w-auto"
-        loadingLabel={saveLabel}
-        slotClassName="w-full sm:w-auto"
-        onClick={() =>
-          openProfileConfirmation({
-            title: copy.confirm.saveTitle,
-            description: copy.confirm.saveDescription,
-            confirmLabel: copy.confirm.yes,
-            cancelLabel: copy.confirm.no,
-            onConfirm: () => formRef.current?.requestSubmit(),
-          })
-        }
-      >
-        {saveLabel}
-      </PendingSubmitButton>
     </div>
   );
 }

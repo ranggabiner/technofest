@@ -98,6 +98,21 @@ describe("i18n locale contracts", () => {
     expect(dictionary.en.marketing.landing.footer.description).toContain("track doctor access");
   });
 
+  it("keeps landing component list data complete for every supported locale", () => {
+    for (const locale of supportedLocales) {
+      const landing = dictionary[locale].marketing.landing;
+
+      expect(landing.about.cards).toHaveLength(2);
+      expect(landing.features.items).toHaveLength(3);
+      expect(landing.workflow.steps).toHaveLength(3);
+
+      for (const item of [...landing.about.cards, ...landing.features.items, ...landing.workflow.steps]) {
+        expect(item.title.trim()).not.toBe("");
+        expect(item.description.trim()).not.toBe("");
+      }
+    }
+  });
+
   it("resolves marketing and role labels from selected locale", () => {
     expect(getMarketingHeaderLinks("id")).toEqual([
       { label: "Landing Page", href: null },

@@ -13,19 +13,64 @@ describe("role profile pages contract", () => {
       "patient/profile/profiling/page.tsx",
       "doctor/profile/page.tsx",
       "admin/profile/page.tsx",
+      "superadmin/profile/page.tsx",
     ]) {
       expect(existsSync(route(path)), path).toBe(true);
       expect(readRoute(path), path).not.toContain("SharedHeader");
     }
   });
 
-  it("uses a shared profile shell with sidebar logout and confirmations", () => {
+  it("routes every role profile page through the shared role profile page", () => {
+    const sharedPage = readRoute("_components/role-profile-page.tsx");
+
+    expect(sharedPage).toContain("export async function RoleProfilePage");
+    expect(sharedPage).toContain('routeRole: "patient" | "doctor" | "admin" | "superadmin"');
+    expect(sharedPage).toContain("loadPatientProfileState");
+    expect(sharedPage).toContain("loadDoctorProfileState");
+    expect(sharedPage).toContain("loadAdminProfileState");
+    expect(sharedPage).toContain('redirect("/superadmin/profile")');
+    expect(sharedPage).toContain('redirect("/admin/profile")');
+
+    expect(readRoute("patient/profile/page.tsx")).toContain('<RoleProfilePage routeRole="patient" />');
+    expect(readRoute("patient/profile/profiling/page.tsx")).toContain('<RoleProfilePage routeRole="patient" active="profiling" />');
+    expect(readRoute("doctor/profile/page.tsx")).toContain('<RoleProfilePage routeRole="doctor" />');
+    expect(readRoute("admin/profile/page.tsx")).toContain('<RoleProfilePage routeRole="admin" />');
+    expect(readRoute("superadmin/profile/page.tsx")).toContain('<RoleProfilePage routeRole="superadmin" />');
+  });
+
+  it("keeps profile pages confirmation-only while logout stays outside the profile page", () => {
     const shell = readRoute("_components/profile-shell.tsx");
 
     expect(shell).toContain('data-profile-shell="role-profile"');
     expect(shell).toContain('data-profile-confirmation="dialog"');
-    expect(shell).toContain("signOutAction");
-    expect(shell).toContain("soft-red");
+    expect(shell).toContain("<SaveStatusToast message={copy.toast.saved} />");
+    expect(shell).not.toContain("ProfileSavedToast");
+    expect(shell).not.toContain("PROFILE_TOAST_AUTO_DISMISS_MS");
+    expect(shell).not.toContain("removeProfileToastParams");
+    expect(shell).toContain("profileHref");
+    expect(shell).toContain("backHref");
+    expect(shell).toContain("ArrowLeft");
+    expect(shell).toContain("export function ProfileFormControls");
+    expect(shell).not.toContain("signOutAction");
+    expect(shell).not.toContain("copy.confirm.logoutTitle");
+    expect(shell).not.toContain("soft-red");
+  });
+
+  it("keeps profile fields directly editable without edit buttons", () => {
+    const patient = readRoute("patient/profile/profile-client.tsx");
+    const doctor = readRoute("doctor/profile/profile-client.tsx");
+    const admin = readRoute("admin/profile/profile-client.tsx");
+
+    for (const source of [patient, doctor, admin]) {
+      expect(source).not.toContain("isEditing");
+      expect(source).not.toContain("isProfileEditing");
+      expect(source).not.toContain("setIsEditing");
+      expect(source).not.toContain("setIsProfileEditing");
+      expect(source).not.toContain("disabled={!isEditing}");
+      expect(source).not.toContain("readOnly={!isEditing}");
+      expect(source).not.toContain("disabled={!isProfileEditing}");
+      expect(source).not.toContain("readOnly={!isProfileEditing}");
+    }
   });
 
   it("localizes every new profile page copy in Indonesian and English", () => {
@@ -36,9 +81,20 @@ describe("role profile pages contract", () => {
       expect(dictionary[locale].profile.admin.title).toBeTruthy();
       expect(dictionary[locale].profile.confirm.saveTitle).toBeTruthy();
       expect(dictionary[locale].profile.confirm.cancelTitle).toBeTruthy();
-      expect(dictionary[locale].profile.confirm.logoutTitle).toBeTruthy();
       expect(dictionary[locale].profile.confirm.doctorApprovalTitle).toBeTruthy();
+      expect(dictionary[locale].profile.toast.saved).toBeTruthy();
+      expect(dictionary[locale].common.saveSuccess).toBeTruthy();
     }
+  });
+
+  it("uses Profile wording for role profile card buttons", () => {
+    const dictionarySource = readFileSync(new URL("../lib/i18n/dictionary.ts", import.meta.url), "utf8");
+
+    expect(dictionary.id.patient.dashboard.editProfile).toBe("Profil");
+    expect(dictionary.en.patient.dashboard.editProfile).toBe("Profile");
+    expect(dictionary.id.doctor.dashboard.editProfile).toBe("Profil");
+    expect(dictionary.en.doctor.dashboard.editProfile).toBe("Profile");
+    expect(dictionarySource).not.toContain('"Edit Profile"');
   });
 
   it("adds admin phone storage and keeps grants explicit", () => {
