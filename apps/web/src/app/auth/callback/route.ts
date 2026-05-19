@@ -5,6 +5,7 @@ import {
   getAuthCallbackErrorReason,
   type AuthCallbackError,
 } from "@/lib/auth/callback";
+import { postLoginHandoffPath } from "@/lib/auth/post-login";
 import { resolveRoleForUser } from "@/lib/auth/session";
 import { roleEntryPath } from "@/lib/auth/roles";
 import { createClient } from "@/lib/supabase/server";
@@ -38,7 +39,7 @@ export async function GET(request: Request) {
     const role = await resolveRoleForUser(user, { clearIntentCookie: true });
     const redirectPath = role ? roleEntryPath(role) : "/login/role";
 
-    return NextResponse.redirect(new URL(redirectPath, request.url));
+    return NextResponse.redirect(new URL(postLoginHandoffPath(redirectPath), request.url));
   } catch {
     return redirectToLoginError(request, "oauth_callback_failed");
   }

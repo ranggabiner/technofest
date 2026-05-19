@@ -27,6 +27,7 @@ type PortalLayoutProps = {
   profileLabel: string;
   role: PortalRole;
   sectionLabel: string;
+  showProfileAction?: boolean;
   title: string;
   userEmail: string;
   userName: string;
@@ -42,6 +43,7 @@ export function PortalLayout({
   profileHref,
   profileLabel,
   role,
+  showProfileAction = true,
   title,
   userEmail,
   userName,
@@ -72,6 +74,7 @@ export function PortalLayout({
               <PortalProfileCard
                 profileHref={profileHref}
                 profileLabel={profileLabel}
+                showProfileAction={showProfileAction}
                 logoutLabel={copy.common.logout}
                 role={role}
                 userEmail={userEmail}
@@ -100,6 +103,7 @@ export function PortalLayout({
             <PortalProfileCard
               profileHref={profileHref}
               profileLabel={profileLabel}
+              showProfileAction={showProfileAction}
               logoutLabel={copy.common.logout}
               role={role}
               userEmail={userEmail}
@@ -126,6 +130,7 @@ type PortalProfileCardProps = HTMLAttributes<HTMLElement> & {
   profileHref: string;
   profileLabel: string;
   role: PortalRole;
+  showProfileAction?: boolean;
   userEmail: string;
   userName: string;
   variant: "desktop" | "mobile";
@@ -137,6 +142,7 @@ export function PortalProfileCard({
   profileHref,
   profileLabel,
   role,
+  showProfileAction = true,
   userEmail,
   userName,
   variant,
@@ -170,13 +176,15 @@ export function PortalProfileCard({
           <p className="mt-1 break-all text-xs leading-5 text-[var(--color-ash)]">
             {userEmail}
           </p>
-          <div className={cn("mt-4 grid gap-2", isMobile ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1")}>
-            <Link
-              href={profileHref}
-              className="inline-flex min-h-11 w-full cursor-pointer items-center justify-center rounded-full border border-[var(--color-stone-surface)] px-4 py-2 text-center text-xs font-semibold uppercase tracking-widest text-[var(--color-midnight)] transition hover:bg-[var(--color-stone-surface)] hover:text-[var(--color-teal-deep)]"
-            >
-              {profileLabel}
-            </Link>
+          <div className={cn("mt-4 grid gap-2", isMobile && showProfileAction ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1")}>
+            {showProfileAction ? (
+              <Link
+                href={profileHref}
+                className="inline-flex min-h-11 w-full cursor-pointer items-center justify-center rounded-full border border-[var(--color-stone-surface)] px-4 py-2 text-center text-xs font-semibold uppercase tracking-widest text-[var(--color-midnight)] transition hover:bg-[var(--color-stone-surface)] hover:text-[var(--color-teal-deep)]"
+              >
+                {profileLabel}
+              </Link>
+            ) : null}
             <form action={signOutAction}>
               <PendingSubmitButton
                 type="submit"

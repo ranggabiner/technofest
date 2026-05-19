@@ -202,6 +202,14 @@ describe("route loading skeletons", () => {
     const loadingPath = join(appDir, relativePath);
 
     expect(existsSync(loadingPath)).toBe(true);
-    expect(readFileSync(loadingPath, "utf8")).toMatch(/Skeleton|LoadingCard/);
+    expect(readFileSync(loadingPath, "utf8")).toMatch(/Skeleton|LoadingCard|root-loading-shell/);
+  });
+
+  it("keeps the root loading fallback styled without global CSS", () => {
+    const source = readFileSync(join(appDir, "loading.tsx"), "utf8");
+
+    expect(source).toContain("<style>");
+    expect(source).toContain("root-loading-shell");
+    expect(source).not.toContain("HomeSkeleton");
   });
 });

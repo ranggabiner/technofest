@@ -13,7 +13,7 @@ import {
 } from "@/app/_components/portal-navigation";
 import type { Dictionary } from "@/lib/i18n/dictionary";
 
-import { doctorNavItems } from "./doctor-nav-model";
+import { doctorNavItems, doctorStatusNavItems } from "./doctor-nav-model";
 import { doctorPendingSkeletonKey } from "./doctor-navigation-transition-model";
 
 export { PortalTransitionLink as DoctorTransitionLink };
@@ -49,6 +49,32 @@ export function DoctorMobileNavigation({ copy }: { copy: Dictionary }) {
   const pathname = usePathname() ?? "/doctor";
   const { pendingPath } = usePortalNavigationTransition();
   const navItems = doctorNavItems(pendingPath ?? pathname, copy);
+
+  return (
+    <PortalMobileNavigation
+      ariaLabel={copy.appShell.mainNavLabel}
+      items={navItems}
+      role="doctor"
+    />
+  );
+}
+
+export function DoctorStatusDesktopNavigation({ copy }: { copy: Dictionary }) {
+  const pathname = usePathname() ?? "/doctor/status";
+  const navItems = doctorStatusNavItems(pathname, copy);
+
+  return (
+    <PortalDesktopNavigation
+      ariaLabel={copy.appShell.mainNavLabel}
+      items={navItems}
+      sectionLabel={copy.doctor.dashboard.sidebarSection}
+    />
+  );
+}
+
+export function DoctorStatusMobileNavigation({ copy }: { copy: Dictionary }) {
+  const pathname = usePathname() ?? "/doctor/status";
+  const navItems = doctorStatusNavItems(pathname, copy);
 
   return (
     <PortalMobileNavigation

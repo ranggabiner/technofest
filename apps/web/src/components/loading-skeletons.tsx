@@ -712,10 +712,34 @@ function DoctorSessionListSkeleton({ rows }: { rows: number }) {
 
 export function DoctorStatusSkeleton() {
   return (
-    <div className="min-h-screen bg-[var(--color-warm-canvas)]">
+    <div className="min-h-screen bg-[var(--color-warm-canvas)]" data-loading-pattern="doctor-status">
       <HeaderSkeleton position="fixed" />
-      <main className="mx-auto min-h-screen max-w-[860px] px-6 pb-[120px] pt-[100px]">
-        <LoadingCard lines={3} />
+      <main className="mx-auto grid min-h-screen max-w-[1400px] grid-cols-1 gap-5 px-4 pb-16 pt-20 sm:px-6 sm:pb-24 sm:pt-[100px] md:grid-cols-12 lg:gap-8">
+        <aside className="hidden md:col-span-3 md:block">
+          <div className="sticky top-[100px] flex flex-col gap-6">
+            <LoadingCard className="p-8" lines={2} />
+            <LoadingCard className="p-4" lines={3} />
+          </div>
+        </aside>
+        <div className="col-span-1 flex flex-col gap-5 md:col-span-9 md:gap-8">
+          <LoadingCard className="md:hidden" lines={2} />
+          <div className="flex gap-2 overflow-hidden rounded-xl border border-[var(--color-stone-surface)] bg-[var(--color-card)] p-2 md:hidden">
+            <Skeleton className="h-11 w-28 rounded-lg" />
+            <Skeleton className="h-11 w-36 rounded-lg" />
+          </div>
+          <section className="grid gap-8">
+            <div className="border-b border-[var(--color-stone-surface)] pb-5">
+              <Skeleton className="mb-3 h-4 w-24" />
+              <Skeleton className="h-12 w-full max-w-[360px]" />
+              <Skeleton className="mt-4 h-5 w-full max-w-2xl" />
+            </div>
+            <LoadingCard lines={3} />
+            <div className="grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
+              <LoadingCard lines={4} />
+              <LoadingCard lines={5} />
+            </div>
+          </section>
+        </div>
       </main>
     </div>
   );

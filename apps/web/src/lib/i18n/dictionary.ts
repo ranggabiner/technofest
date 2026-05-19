@@ -1127,10 +1127,11 @@ export const dictionary = {
       library: {
         title: "Pustaka Rekam Medis",
         description:
-          "Placeholder Sprint 1. Pustaka lengkap belum dibuka agar cakupan dashboard dokter tetap kecil.",
+          "Lampiran rekam medis yang sedang diizinkan pasien untuk diunduh oleh akun dokter ini.",
         emptyTitle: "Belum ada pustaka khusus",
         emptyDescription:
           "Gunakan Dashboard untuk membuka sesi pasien aktif dan membuat rekam medis dari modal.",
+        noRecords: "Belum ada lampiran rekam medis yang bisa diunduh untuk akses aktif dokter ini.",
       },
       status: {
         title: "Status Dokter",
@@ -2592,10 +2593,11 @@ export const dictionary = {
       library: {
         title: "Medical Record Library",
         description:
-          "Sprint 1 placeholder. The full library is not expanded so the doctor dashboard scope stays focused.",
+          "Medical record attachments that patients currently allow this doctor account to download.",
         emptyTitle: "No dedicated library yet",
         emptyDescription:
           "Use Dashboard to open active patient sessions and create medical records from a modal.",
+        noRecords: "No downloadable medical record attachments are available for this doctor's active access grants yet.",
       },
       status: {
         title: "Doctor Status",

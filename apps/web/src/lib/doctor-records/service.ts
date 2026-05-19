@@ -188,6 +188,16 @@ export type DoctorDashboardState = {
   activeGrants: DoctorDashboardGrant[];
 };
 
+export type DoctorMedicalRecordLibraryGroup = {
+  grant: AuthorizedDoctorGrant;
+  records: Scope1RecordView[];
+};
+
+export type DoctorMedicalRecordLibraryState = {
+  doctor: DoctorRow;
+  groups: DoctorMedicalRecordLibraryGroup[];
+};
+
 export type AuthorizedDoctorGrant = {
   grantId: string;
   patientId: string;
@@ -326,6 +336,75 @@ export async function loadDoctorDashboardState(role: ResolvedRole): Promise<Doct
         };
       },
     ),
+  };
+}
+
+export async function loadDoctorMedicalRecordLibraryState(
+  role: ResolvedRole,
+): Promise<DoctorMedicalRecordLibraryState> {
+  const doctorId = requireApprovedDoctorId(role);
+  const admin = createAdminClient();
+  const now = new Date().toISOString();
+  const [doctorResult, grantsResult] = await Promise.all([
+    admin
+      .from("doctors")
+      .select("doctor_id,full_name,specialization,qr_code_token,doctor_access_code")
+      .eq("doctor_id", doctorId)
+      .single(),
+    admin
+      .from("access_grants")
+      .select(
+        "grant_id,patient_id,doctor_id,can_view_scope1,can_view_scope2_mental,can_view_scope2_physical,can_download_attachments,granted_at,expires_at,is_revoked,revoked_at,blockchain_status,blockchain_tx_hash,patients(patient_id,full_name,email)",
+      )
+      .eq("doctor_id", doctorId)
+      .eq("is_revoked", false)
+      .gt("expires_at", now)
+      .order("granted_at", { ascending: false }),
+  ]);
+
+  if (doctorResult.error) throw doctorResult.error;
+  if (grantsResult.error) throw grantsResult.error;
+
+  const grants = await Promise.all(
+    ((grantsResult.data ?? []) as Array<GrantRow & { patients?: PatientRow | PatientRow[] | null }>).map(
+      async (grant) => {
+        const patient = normalizePatientJoin(grant.patients);
+        const granularPermissions = await loadGrantGranularPermissions(grant.grant_id);
+        return {
+          grantId: grant.grant_id,
+          patientId: grant.patient_id,
+          doctorId: grant.doctor_id,
+          patientName: patient?.full_name ?? "Pasien",
+          patientEmail: patient?.email ?? "Email tidak tersedia",
+          grantedAt: grant.granted_at,
+          expiresAt: grant.expires_at,
+          blockchainStatus: grant.blockchain_status,
+          blockchainTxHash: grant.blockchain_tx_hash,
+          canViewScope1: grant.can_view_scope1,
+          canViewScope2Mental: grant.can_view_scope2_mental,
+          canViewScope2Physical: grant.can_view_scope2_physical,
+          canDownloadAttachments: grant.can_download_attachments,
+          attachmentRecordIds: granularPermissions.attachmentRecordIds,
+          scope2MentalFilter: granularPermissions.scope2MentalFilter,
+          scope2PhysicalFilter: granularPermissions.scope2PhysicalFilter,
+        } satisfies AuthorizedDoctorGrant;
+      },
+    ),
+  );
+
+  const groups = await Promise.all(
+    grants
+      .filter((grant) => grant.canViewScope1)
+      .map(async (grant) => ({
+        grant,
+        records: (await loadScope1Records(grant))
+          .filter((record) => record.attachmentFileId && record.attachmentCanDownload),
+      })),
+  );
+
+  return {
+    doctor: doctorResult.data as DoctorRow,
+    groups: groups.filter((group) => group.records.length > 0),
   };
 }
 

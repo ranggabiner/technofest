@@ -2,6 +2,8 @@ import { readFileSync } from "node:fs";
 
 import { describe, expect, it } from "vitest";
 
+import { samplePdfBytes, samplePdfSha256 } from "../../../../web/scripts/seed-sample-pdf.mjs";
+
 describe("Supabase auth seed data", () => {
   it("normalizes manually seeded OAuth users for Supabase Auth lookups", () => {
     const seedSource = readFileSync(
@@ -58,5 +60,56 @@ describe("Supabase auth seed data", () => {
     expect(scriptSource).toContain("test123");
     expect(scriptSource).toContain("superadmin@test.com");
     expect(packageSource).toContain("\"demo:seed-auth\"");
+  });
+
+  it("provides a reusable sample PDF fixture for seeded PDF files", () => {
+    const bytes = samplePdfBytes();
+    const text = bytes.toString("latin1");
+
+    expect(text.startsWith("%PDF-")).toBe(true);
+    expect(text).toContain("SAMPLE PDF");
+    expect(text).toContain("%%EOF");
+  });
+
+  it("uses the reusable sample PDF fixture for service-role PDF storage payloads", () => {
+    const scriptSource = readFileSync(
+      new URL("../../../../web/scripts/seed-demo-auth-users.mjs", import.meta.url),
+      "utf8",
+    );
+
+    expect(scriptSource).toContain("samplePdfBytes()");
+    expect(scriptSource).toContain("encryptedStoragePayload(samplePdfBytes())");
+    expect(scriptSource).not.toContain("Lampiran demo hasil hematologi terenkripsi.");
+    expect(scriptSource).not.toContain("Lampiran demo EKG terenkripsi.");
+    expect(scriptSource).not.toContain("Dokumen ${documentType.toUpperCase()} demo untuk");
+  });
+
+  it("seeds downloadable medical-library records for the primary doctor demo account", () => {
+    const scriptSource = readFileSync(
+      new URL("../../../../web/scripts/seed-demo-auth-users.mjs", import.meta.url),
+      "utf8",
+    );
+
+    expect(scriptSource).toContain('email: "dokter@test.com"');
+    expect(scriptSource).toContain('doctorId: "00000000-0000-0000-0000-000000009501"');
+    expect(scriptSource).toContain('id: "00000000-0000-0000-0000-000000009701"');
+    expect(scriptSource).toContain('downloads: true');
+    expect(scriptSource).toContain('filename: "hasil-lab-hematologi-demo.pdf"');
+    expect(scriptSource).toContain('filename: "ringkasan-konsultasi-demo.pdf"');
+    expect(scriptSource).toContain('attachmentFileId: "00000000-0000-0000-0000-000000009903"');
+    expect(scriptSource).toContain('record_id: "00000000-0000-0000-0000-000000009811"');
+  });
+
+  it("keeps SQL seed PDF metadata aligned to the sample PDF fixture", () => {
+    const seedSource = readFileSync(
+      new URL("../../../../supabase/supabase/seed.sql", import.meta.url),
+      "utf8",
+    );
+
+    expect(seedSource).toContain("seed_sample_pdf_metadata");
+    expect(seedSource).toContain("SAMPLE PDF");
+    expect(seedSource).toContain(`${samplePdfBytes().byteLength}::bigint`);
+    expect(seedSource).toContain(samplePdfSha256());
+    expect(seedSource).not.toContain("2560 + offset_value");
   });
 });
