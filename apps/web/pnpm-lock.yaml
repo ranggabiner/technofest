@@ -4,6 +4,8 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+packageExtensionsChecksum: sha256-Tb1qM6geJPaXwcmv6OoadzT8TdoaRGJNbIivqREKLVA=
+
 importers:
 
   .:
@@ -92,7 +94,7 @@ importers:
         version: 9.39.4(jiti@2.7.0)
       eslint-config-next:
         specifier: 16.2.6
-        version: 16.2.6(@typescript-eslint/parser@8.59.3(eslint@9.39.4(jiti@2.7.0))(typescript@5.9.3))(eslint@9.39.4(jiti@2.7.0))(typescript@5.9.3)
+        version: 16.2.6(@typescript-eslint/parser@8.59.3(eslint@9.39.4(jiti@2.7.0))(typescript@5.9.3))(eslint@9.39.4(jiti@2.7.0))(next@16.2.6(@babel/core@7.29.0)(@opentelemetry/api@1.9.1)(@playwright/test@1.60.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(typescript@5.9.3)
       hardhat:
         specifier: ^3.4.5
         version: 3.4.5
@@ -1747,6 +1749,7 @@ packages:
     resolution: {integrity: sha512-z2ELYSkyrrJ6cuunTU8vhsT/RpouPkjaSah06nVW6Rg2Hpg0Vs8s497/e5s8G8qtdp4ccsiovz5P1rv+5VSW2Q==}
     peerDependencies:
       eslint: '>=9.0.0'
+      next: '*'
       typescript: '>=3.3.1'
     peerDependenciesMeta:
       typescript:
@@ -4862,7 +4865,7 @@ snapshots:
 
   escape-string-regexp@5.0.0: {}
 
-  eslint-config-next@16.2.6(@typescript-eslint/parser@8.59.3(eslint@9.39.4(jiti@2.7.0))(typescript@5.9.3))(eslint@9.39.4(jiti@2.7.0))(typescript@5.9.3):
+  eslint-config-next@16.2.6(@typescript-eslint/parser@8.59.3(eslint@9.39.4(jiti@2.7.0))(typescript@5.9.3))(eslint@9.39.4(jiti@2.7.0))(next@16.2.6(@babel/core@7.29.0)(@opentelemetry/api@1.9.1)(@playwright/test@1.60.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(typescript@5.9.3):
     dependencies:
       '@next/eslint-plugin-next': 16.2.6
       eslint: 9.39.4(jiti@2.7.0)
@@ -4873,6 +4876,7 @@ snapshots:
       eslint-plugin-react: 7.37.5(eslint@9.39.4(jiti@2.7.0))
       eslint-plugin-react-hooks: 7.1.1(eslint@9.39.4(jiti@2.7.0))
       globals: 16.4.0
+      next: 16.2.6(@babel/core@7.29.0)(@opentelemetry/api@1.9.1)(@playwright/test@1.60.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       typescript-eslint: 8.59.3(eslint@9.39.4(jiti@2.7.0))(typescript@5.9.3)
     optionalDependencies:
       typescript: 5.9.3
