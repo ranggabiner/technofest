@@ -1,20 +1,25 @@
-export default function Loading() {
+import type { ReactNode } from "react";
+
+export function AuthCompleteLoadingScreen({ children }: { children?: ReactNode }) {
   return (
-    <main className="root-loading-shell" aria-busy="true">
-      <style>{rootLoadingCriticalCss}</style>
-      <section className="root-loading-card" role="status" aria-live="polite">
-        <div className="root-loading-mark" aria-hidden="true">
-          <span className="root-loading-spinner" />
+    <main className="auth-complete-shell" aria-busy="true">
+      <style>{authCompleteCriticalCss}</style>
+      <section className="auth-complete-card" role="status" aria-live="polite">
+        <div className="auth-complete-mark" aria-hidden="true">
+          <span className="auth-complete-spinner" />
         </div>
-        <p className="root-loading-eyebrow">MedProof</p>
-        <h1 className="root-loading-title">Menyiapkan halaman</h1>
-        <p className="root-loading-copy">Tampilan sedang disiapkan.</p>
+        <p className="auth-complete-eyebrow">MedProof</p>
+        <h1 className="auth-complete-title">Menyiapkan dashboard</h1>
+        <p className="auth-complete-copy">
+          Sesi sudah valid. Tampilan aman sedang disiapkan.
+        </p>
       </section>
+      {children}
     </main>
   );
 }
 
-const rootLoadingCriticalCss = `
+const authCompleteCriticalCss = `
   :root {
     color-scheme: light;
   }
@@ -28,7 +33,7 @@ const rootLoadingCriticalCss = `
     font-family: Inter, Arial, Helvetica, sans-serif;
   }
 
-  .root-loading-shell {
+  .auth-complete-shell {
     min-height: 100vh;
     min-height: 100dvh;
     display: grid;
@@ -39,8 +44,8 @@ const rootLoadingCriticalCss = `
       #fbfaf9;
   }
 
-  .root-loading-card {
-    width: min(100%, 400px);
+  .auth-complete-card {
+    width: min(100%, 420px);
     box-sizing: border-box;
     border: 1px solid #f2f0ed;
     border-radius: 14px;
@@ -50,7 +55,7 @@ const rootLoadingCriticalCss = `
     box-shadow: inset 0 0 0 1px #f2f0ed, 0 16px 48px rgba(0, 0, 0, 0.05);
   }
 
-  .root-loading-mark {
+  .auth-complete-mark {
     width: 56px;
     height: 56px;
     margin: 0 auto 20px;
@@ -58,18 +63,19 @@ const rootLoadingCriticalCss = `
     place-items: center;
     border-radius: 999px;
     background: #f0fdfa;
+    color: #0d9488;
   }
 
-  .root-loading-spinner {
+  .auth-complete-spinner {
     width: 24px;
     height: 24px;
     border: 3px solid #ccfbf1;
     border-top-color: #0d9488;
     border-radius: 999px;
-    animation: root-loading-spin 780ms linear infinite;
+    animation: auth-complete-spin 780ms linear infinite;
   }
 
-  .root-loading-eyebrow {
+  .auth-complete-eyebrow {
     margin: 0 0 10px;
     color: #0d9488;
     font-size: 12px;
@@ -78,7 +84,7 @@ const rootLoadingCriticalCss = `
     text-transform: uppercase;
   }
 
-  .root-loading-title {
+  .auth-complete-title {
     margin: 0;
     color: #121212;
     font-size: 28px;
@@ -87,8 +93,9 @@ const rootLoadingCriticalCss = `
     letter-spacing: 0;
   }
 
-  .root-loading-copy {
+  .auth-complete-copy {
     margin: 14px auto 0;
+    max-width: 320px;
     color: #848281;
     font-size: 14px;
     line-height: 1.65;
@@ -102,52 +109,53 @@ const rootLoadingCriticalCss = `
 
     html,
     body,
-    .root-loading-shell {
+    .auth-complete-shell {
       background: #171615;
       color: #ded8cf;
     }
 
-    .root-loading-shell {
+    .auth-complete-shell {
       background:
         radial-gradient(circle at 50% 0%, rgba(94, 234, 212, 0.14), transparent 34%),
         #171615;
     }
 
-    .root-loading-card {
+    .auth-complete-card {
       border-color: #282624;
       background: #1d1b1a;
       box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08), 0 16px 48px rgba(0, 0, 0, 0.35);
     }
 
-    .root-loading-mark {
+    .auth-complete-mark {
       background: #0f2f2c;
+      color: #5eead4;
     }
 
-    .root-loading-spinner {
+    .auth-complete-spinner {
       border-color: #134e4a;
       border-top-color: #5eead4;
     }
 
-    .root-loading-eyebrow {
+    .auth-complete-eyebrow {
       color: #5eead4;
     }
 
-    .root-loading-title {
+    .auth-complete-title {
       color: #fbfaf9;
     }
 
-    .root-loading-copy {
+    .auth-complete-copy {
       color: #afa79e;
     }
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .root-loading-spinner {
+    .auth-complete-spinner {
       animation: none;
     }
   }
 
-  @keyframes root-loading-spin {
+  @keyframes auth-complete-spin {
     to {
       transform: rotate(360deg);
     }

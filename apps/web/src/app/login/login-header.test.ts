@@ -5,9 +5,17 @@ describe("login header", () => {
   const source = readFileSync(new URL("./page.tsx", import.meta.url), "utf8");
   const demoSource = readOptionalSource("./demo/page.tsx");
   const realSource = readOptionalSource("./real/page.tsx");
+  const authCompleteSource = readFileSync(new URL("../auth/complete/page.tsx", import.meta.url), "utf8");
+  const authCompleteLoadingSource = readFileSync(new URL("../auth/complete/loading.tsx", import.meta.url), "utf8");
+  const authCompleteScreenSource = readFileSync(
+    new URL("../auth/complete/auth-complete-loading-screen.tsx", import.meta.url),
+    "utf8",
+  );
+  const roleSelectionSource = readFileSync(new URL("./role/page.tsx", import.meta.url), "utf8");
   const sharedSource = readOptionalSource("./_components/login-content.tsx");
   const callbackRouteSource = readFileSync(new URL("../auth/callback/route.ts", import.meta.url), "utf8");
   const actions = readFileSync(new URL("./actions.ts", import.meta.url), "utf8");
+  const sessionSource = readFileSync(new URL("../../lib/auth/session.ts", import.meta.url), "utf8");
   const loginSurface = [source, sharedSource].join("\n");
   const demoSurface = [demoSource, sharedSource].join("\n");
   const realSurface = [realSource, sharedSource].join("\n");
@@ -80,6 +88,19 @@ describe("login header", () => {
     expect(actions).toContain('redirect("/login/real?error=oauth_start_failed")');
     expect(actions).toContain('redirect("/login/demo?error=manual_invalid")');
     expect(callbackRouteSource).toContain('new URL("/login/real", request.url)');
+  });
+
+  it("routes successful auth through the styled completion handoff", () => {
+    expect(actions).toContain("postLoginHandoffPath(roleEntryPath(role))");
+    expect(callbackRouteSource).toContain("postLoginHandoffPath(redirectPath)");
+    expect(roleSelectionSource).toContain("postLoginHandoffPath(roleEntryPath(role))");
+    expect(sessionSource).toContain('postLoginHandoffPath(publicRouteRedirectPath(role) ?? "/login/role")');
+    expect(sessionSource).toContain("postLoginHandoffPath(roleEntryPath(role))");
+    expect(authCompleteSource).toContain("PostLoginRedirect");
+    expect(authCompleteSource).toContain("AuthCompleteLoadingScreen");
+    expect(authCompleteLoadingSource).toContain("AuthCompleteLoadingScreen");
+    expect(authCompleteScreenSource).toContain("<style");
+    expect(authCompleteScreenSource).toContain("auth-complete-shell");
   });
 
   it("removes the card-level copyright from login surfaces while keeping privacy copy", () => {

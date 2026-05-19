@@ -3,6 +3,7 @@
 import { headers, cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
+import { postLoginHandoffPath } from "@/lib/auth/post-login";
 import { roleEntryPath } from "@/lib/auth/roles";
 import { completeRoleForUser, requireCurrentUser, resolveRoleForUser } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
@@ -62,7 +63,7 @@ export async function startManualLoginAction(formData: FormData) {
     redirect("/login/demo?error=manual_invalid");
   }
 
-  redirect(roleEntryPath(role));
+  redirect(postLoginHandoffPath(roleEntryPath(role)));
 }
 
 export async function completeRoleSelectionAction(formData: FormData) {
@@ -74,7 +75,7 @@ export async function completeRoleSelectionAction(formData: FormData) {
   const cookieStore = await cookies();
   cookieStore.delete(roleIntentCookie);
 
-  redirect(roleEntryPath(role));
+  redirect(postLoginHandoffPath(roleEntryPath(role)));
 }
 
 async function getSiteUrl() {
