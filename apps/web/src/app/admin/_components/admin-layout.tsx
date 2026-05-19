@@ -29,7 +29,7 @@ export function AdminLayout({
       desktopNavigation={<AdminDesktopNavigation adminLevel={role.adminLevel} copy={copy} />}
       mobileNavigation={<AdminMobileNavigation adminLevel={role.adminLevel} copy={copy} />}
       navigationTargets={adminNavigationTargets}
-      profileHref="/admin/profile"
+      profileHref={role.adminLevel === "superadmin" ? "/superadmin/profile" : "/admin/profile"}
       profileLabel={copy.profile.shell.profile}
       role="admin"
       sectionLabel={copy.admin.doctors.title}

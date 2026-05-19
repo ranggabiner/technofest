@@ -137,6 +137,7 @@ export async function updatePatientProfiling(
 
 export async function loadDoctorProfileState(role: ResolvedRole) {
   const doctorId = requireDoctorId(role);
+  const fallbackStatus = role.kind === "doctor" ? role.status : "pending";
   const [doctor, documents] = await Promise.all([
     createAdminClient()
       .from("doctors")
@@ -147,9 +148,18 @@ export async function loadDoctorProfileState(role: ResolvedRole) {
   ]);
 
   if (doctor.error) throw doctor.error;
+  const doctorData = doctor.data;
 
   return {
-    doctor: doctor.data,
+    doctor: {
+      ...doctorData,
+      full_name: readString(doctorData.full_name) || role.fullName,
+      email: readString(doctorData.email) || role.email,
+      phone_number: readNullableString(doctorData.phone_number),
+      specialization: readNullableString(doctorData.specialization),
+      account_status: readString(doctorData.account_status) || fallbackStatus,
+      gender: readNullableString(doctorData.gender),
+    },
     documents,
   };
 }
@@ -344,6 +354,11 @@ function readRecord(value: unknown): Record<string, unknown> {
 function readString(value: unknown) {
   if (typeof value === "number") return String(value);
   return typeof value === "string" ? value : "";
+}
+
+function readNullableString(value: unknown) {
+  const text = readString(value).trim();
+  return text || null;
 }
 
 function normalizeDate(value: string) {

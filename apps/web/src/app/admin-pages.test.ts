@@ -85,14 +85,17 @@ describe("admin pages contract", () => {
   it("mounts superadmin dashboard separately while reusing admin portal protections", () => {
     expect(existsSync(join(appDir, "superadmin/page.tsx"))).toBe(true);
     expect(existsSync(join(appDir, "superadmin/dashboard/page.tsx"))).toBe(true);
+    expect(existsSync(join(appDir, "superadmin/profile/page.tsx"))).toBe(true);
 
     const superadminIndex = route("superadmin/page.tsx");
     const superadminDashboard = route("superadmin/dashboard/page.tsx");
+    const superadminProfile = route("superadmin/profile/page.tsx");
 
     expect(superadminIndex).toContain('redirect("/superadmin/dashboard")');
     expect(superadminDashboard).toContain("requireSuperAdminRole");
     expect(superadminDashboard).toContain("AdminLayout");
     expect(superadminDashboard).toContain("loadAdminDashboardState");
+    expect(superadminProfile).toContain('<RoleProfilePage routeRole="superadmin" />');
   });
 
   it("mounts the shared admin shell in a persistent portal layout", () => {
@@ -104,6 +107,8 @@ describe("admin pages contract", () => {
     expect(layout).toContain("children");
     expect(adminLayout).toContain("PortalLayout");
     expect(adminLayout).toContain("PortalForbiddenLayout");
+    expect(adminLayout).toContain('role.adminLevel === "superadmin" ? "/superadmin/profile" : "/admin/profile"');
+    expect(adminLayout).toContain("profileLabel={copy.profile.shell.profile}");
     expect(sharedLayout).toContain("data-portal-layout");
     expect(sharedLayout).toContain("data-portal-sidebar");
   });

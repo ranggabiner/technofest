@@ -31,7 +31,7 @@ export default async function DoctorGrantPage({
   searchParams,
 }: {
   params: Promise<{ grantId: string }>;
-  searchParams: Promise<{ scope1_error?: string; scope1_status?: string }>;
+  searchParams: Promise<{ scope1_error?: string }>;
 }) {
   const locale = await getLocale();
   const copy = await getDictionary();
@@ -101,11 +101,7 @@ export default async function DoctorGrantPage({
           </div>
         </DashboardCard>
 
-        {query.scope1_error ? (
-          <StatusMessage tone="failed" message={query.scope1_error} />
-        ) : query.scope1_status === "saved" ? (
-          <StatusMessage tone="approved" message={copy.doctor.grant.saved} />
-        ) : null}
+        {query.scope1_error ? <StatusMessage tone="failed" message={query.scope1_error} /> : null}
 
         {state.grant.canViewScope1 ? (
           <DashboardCard className="p-6 md:p-8">

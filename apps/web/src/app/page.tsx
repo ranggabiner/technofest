@@ -19,6 +19,8 @@ import { SharedHeader } from "@/components/shared-header";
 import { SiteFooter } from "@/components/site-footer";
 import { redirectAuthenticatedUserFromPublicRoute } from "@/lib/auth/session";
 import { articleAssets, getArticleDetailPath, getLandingArticlePreviews, type MarketingArticle } from "@/lib/articles";
+import { dictionary } from "@/lib/i18n/dictionary";
+import { defaultLocale } from "@/lib/i18n/locales";
 import { getDictionary } from "@/lib/i18n/server";
 
 export const dynamic = "force-dynamic";
@@ -31,9 +33,34 @@ const imagePaths = {
 const featureIcons = [SearchCheck, ShieldCheck, KeyRound] as const;
 const aboutIcons = [Eye, Target] as const;
 const workflowIcons = [MessageCircle, BarChart3, Hospital] as const;
+const defaultLanding = dictionary[defaultLocale].marketing.landing;
+
+type LandingCopy = Awaited<ReturnType<typeof getDictionary>>["marketing"]["landing"];
+type LandingListItem = {
+  description: string;
+  title: string;
+};
 
 function revealDelay(index: number): CSSProperties {
   return { "--scroll-reveal-delay": `${index * 80}ms` } as CSSProperties;
+}
+
+function resolveLandingText(value: string | null | undefined, fallback: string) {
+  return value?.trim() ? value : fallback;
+}
+
+function resolveLandingList(
+  localizedItems: readonly LandingListItem[] | null | undefined,
+  fallbackItems: readonly LandingListItem[],
+) {
+  return fallbackItems.map((fallbackItem, index) => {
+    const localizedItem = localizedItems?.[index];
+
+    return {
+      title: resolveLandingText(localizedItem?.title, fallbackItem.title),
+      description: resolveLandingText(localizedItem?.description, fallbackItem.description),
+    };
+  });
 }
 
 export default async function HomePage() {
@@ -70,7 +97,7 @@ export default async function HomePage() {
   );
 }
 
-function HeroSection({ landing }: { landing: Awaited<ReturnType<typeof getDictionary>>["marketing"]["landing"] }) {
+function HeroSection({ landing }: { landing: LandingCopy }) {
   return (
     <section data-scroll-reveal="" data-scroll-reveal-group="hero-section" className="w-full overflow-hidden bg-[linear-gradient(135deg,color-mix(in_srgb,var(--color-teal-surface)_70%,var(--color-warm-canvas))_0%,var(--color-warm-canvas)_100%)] px-4 py-14 sm:px-6 sm:py-20 lg:py-32">
       <div className="mx-auto flex w-full max-w-[1100px] flex-col items-center gap-10 lg:flex-row lg:gap-12">
@@ -111,23 +138,30 @@ function HeroSection({ landing }: { landing: Awaited<ReturnType<typeof getDictio
   );
 }
 
-function AboutSection({ landing }: { landing: Awaited<ReturnType<typeof getDictionary>>["marketing"]["landing"] }) {
+function AboutSection({ landing }: { landing: LandingCopy }) {
+  const about = landing.about ?? defaultLanding.about;
+  const aboutCards = resolveLandingList(about.cards, defaultLanding.about.cards);
+
   return (
     <section id="about" data-scroll-reveal="" data-scroll-reveal-group="about-section" className="w-full scroll-mt-24 bg-[var(--color-card)] px-4 py-14 sm:px-6 sm:py-20 lg:py-32">
-      <SectionIntro title={landing.about.title} accent={landing.about.accent} description={landing.about.description} />
+      <SectionIntro
+        title={resolveLandingText(about.title, defaultLanding.about.title)}
+        accent={resolveLandingText(about.accent, defaultLanding.about.accent)}
+        description={resolveLandingText(about.description, defaultLanding.about.description)}
+      />
       <div className="mx-auto grid w-full max-w-[1100px] items-center gap-12 lg:grid-cols-[5fr_7fr]">
         <Image
           data-scroll-reveal=""
           data-scroll-reveal-group="about-image"
           src={imagePaths.about}
-          alt={landing.about.imageAlt}
+          alt={resolveLandingText(about.imageAlt, defaultLanding.about.imageAlt)}
           width={512}
           height={512}
           sizes="(max-width: 1023px) calc(100vw - 2rem), 512px"
           className="aspect-square w-full rounded-3xl object-cover shadow-[var(--shadow-elevated)]"
         />
         <div className="flex flex-col gap-6">
-          {landing.about.cards.map((card, index) => {
+          {aboutCards.map((card, index) => {
             const Icon = aboutIcons[index] ?? Eye;
             return (
               <div
@@ -146,16 +180,19 @@ function AboutSection({ landing }: { landing: Awaited<ReturnType<typeof getDicti
   );
 }
 
-function FeatureSection({ landing }: { landing: Awaited<ReturnType<typeof getDictionary>>["marketing"]["landing"] }) {
+function FeatureSection({ landing }: { landing: LandingCopy }) {
+  const features = landing.features ?? defaultLanding.features;
+  const featureItems = resolveLandingList(features.items, defaultLanding.features.items);
+
   return (
     <section id="features" data-scroll-reveal="" data-scroll-reveal-group="features-section" className="w-full scroll-mt-24 bg-[var(--color-parchment-card)] px-4 py-14 sm:px-6 sm:py-20 lg:py-32">
       <SectionIntro
-        title={landing.features.title}
-        accent={landing.features.accent}
-        description={landing.features.description}
+        title={resolveLandingText(features.title, defaultLanding.features.title)}
+        accent={resolveLandingText(features.accent, defaultLanding.features.accent)}
+        description={resolveLandingText(features.description, defaultLanding.features.description)}
       />
       <div className="mx-auto grid w-full max-w-[1100px] gap-8 md:grid-cols-3">
-        {landing.features.items.map((item, index) => {
+        {featureItems.map((item, index) => {
           const Icon = featureIcons[index] ?? SearchCheck;
           return (
             <div
@@ -179,7 +216,7 @@ function ArticleSection({
   readMoreLabel,
 }: {
   articles: readonly MarketingArticle[];
-  landing: Awaited<ReturnType<typeof getDictionary>>["marketing"]["landing"];
+  landing: LandingCopy;
   readMoreLabel: string;
 }) {
   return (
@@ -237,18 +274,21 @@ function ArticleSection({
   );
 }
 
-function WorkflowSection({ landing }: { landing: Awaited<ReturnType<typeof getDictionary>>["marketing"]["landing"] }) {
+function WorkflowSection({ landing }: { landing: LandingCopy }) {
+  const workflow = landing.workflow ?? defaultLanding.workflow;
+  const workflowSteps = resolveLandingList(workflow.steps, defaultLanding.workflow.steps);
+
   return (
     <section id="workflow" data-scroll-reveal="" data-scroll-reveal-group="workflow-section" className="w-full scroll-mt-24 bg-[var(--color-parchment-card)] px-4 py-14 sm:px-6 sm:py-20 lg:py-32">
       <SectionIntro
-        title={landing.workflow.title}
-        accent={landing.workflow.accent}
-        description={landing.workflow.description}
+        title={resolveLandingText(workflow.title, defaultLanding.workflow.title)}
+        accent={resolveLandingText(workflow.accent, defaultLanding.workflow.accent)}
+        description={resolveLandingText(workflow.description, defaultLanding.workflow.description)}
       />
       <div className="relative mx-auto w-full max-w-4xl px-4">
         <div className="absolute left-12 right-12 top-12 z-0 hidden h-1 rounded-full bg-[var(--color-stone-surface)] md:block" />
         <div className="relative z-10 grid gap-10 md:grid-cols-3">
-          {landing.workflow.steps.map((step, index) => {
+          {workflowSteps.map((step, index) => {
             const Icon = workflowIcons[index] ?? MessageCircle;
             const active = index === 1;
             return (
