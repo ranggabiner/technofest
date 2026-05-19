@@ -35,6 +35,8 @@ describe("doctor dashboard contract", () => {
     expect(layout).toContain("children");
     expect(doctorLayout).toContain("PortalLayout");
     expect(doctorLayout).toContain("PortalForbiddenLayout");
+    expect(doctorLayout).toContain("profileLabel={copy.profile.shell.profile}");
+    expect(doctorLayout).not.toContain("copy.doctor.dashboard.editProfile");
     expect(sharedLayout).toContain('data-doctor-layout={role === "doctor" ? "portal-shell"');
     expect(sharedLayout).toContain("data-doctor-sidebar");
   });

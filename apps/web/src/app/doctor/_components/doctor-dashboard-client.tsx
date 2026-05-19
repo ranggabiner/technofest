@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 
 import { DashboardCard } from "@/app/_components/dashboard-card";
+import { SaveStatusToast } from "@/app/_components/save-status-toast";
 import { StatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
 import { CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -66,6 +67,7 @@ export function DoctorDashboardClient({
   const [modalState, setModalState] = useState<DoctorGrantPageState | null>(null);
   const [modalError, setModalError] = useState<string | null>(null);
   const [isModalLoading, setIsModalLoading] = useState(false);
+  const [saveToastKey, setSaveToastKey] = useState(0);
   const now = new Date();
   const sessions = filterDoctorDashboardSessions(state.activeGrants, filter, now);
 
@@ -100,6 +102,7 @@ export function DoctorDashboardClient({
     if (result.ok) {
       setModalState(result.state);
       setModalError(null);
+      setSaveToastKey((key) => key + 1);
       return { ok: true };
     }
     return { ok: false, error: result.error };
@@ -107,6 +110,7 @@ export function DoctorDashboardClient({
 
   return (
     <div className="grid gap-8">
+      <SaveStatusToast message={copy.common.saveSuccess} triggerKey={saveToastKey} />
       <DashboardCard className="p-6 md:p-8">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <CardHeader className="mb-0">

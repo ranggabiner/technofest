@@ -5,6 +5,7 @@ import type { HTMLAttributes, ReactNode } from "react";
 import { DashboardCard } from "@/app/_components/dashboard-card";
 import { PortalNavigationTransitionProvider } from "@/app/_components/portal-navigation";
 import type { PortalNavigationTarget } from "@/app/_components/portal-navigation-model";
+import { SaveStatusToast } from "@/app/_components/save-status-toast";
 import { signOutAction } from "@/app/auth/actions";
 import { SharedHeader } from "@/components/shared-header";
 import { SiteFooter, SiteFooterContent } from "@/components/site-footer";
@@ -120,6 +121,7 @@ export function PortalLayout({
           </div>
         </main>
       </PortalNavigationTransitionProvider>
+      <SaveStatusToast message={copy.common.saveSuccess} />
       <SiteFooterContent copy={copy} />
     </div>
   );

@@ -1,14 +1,12 @@
 "use client";
 
-import { useRef, useState, type RefObject } from "react";
+import { useRef } from "react";
 
 import {
   ProfileConfirmationHost,
+  ProfileFormControls,
   ProfilePhotoPicker,
-  openProfileConfirmation,
 } from "@/app/_components/profile-shell";
-import { PendingSubmitButton } from "@/components/ui/async-action-button";
-import { Button } from "@/components/ui/button";
 import { Field, Input, Label, Select, Textarea } from "@/components/ui/form";
 import type { Dictionary } from "@/lib/i18n/dictionary";
 import type { PatientProfileState } from "@/lib/profile/service";
@@ -24,7 +22,6 @@ export function PatientProfileSettingsClient({
   patient: PatientProfileState;
   avatarUrl: string | null;
 }) {
-  const [isEditing, setIsEditing] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
 
   return (
@@ -48,9 +45,6 @@ export function PatientProfileSettingsClient({
             <h2 className="text-2xl font-semibold text-[var(--color-midnight)]">{patient.fullName}</h2>
             <p className="mt-1 text-sm text-[var(--color-ash)]">{copy.patient.identityGreeting}</p>
           </div>
-          <Button type="button" variant="secondary" className="w-full rounded-[10px] sm:w-auto" onClick={() => setIsEditing(true)}>
-            {copy.patient.edit}
-          </Button>
         </div>
       </section>
 
@@ -65,7 +59,7 @@ export function PatientProfileSettingsClient({
         <div className="grid gap-5 md:grid-cols-2">
           <Field>
             <Label htmlFor="full_name">{copy.patient.fullName}</Label>
-            <Input id="full_name" name="full_name" defaultValue={patient.fullName} readOnly={!isEditing} required />
+            <Input id="full_name" name="full_name" defaultValue={patient.fullName} required />
           </Field>
           <Field>
             <Label htmlFor="email">{copy.patient.email}</Label>
@@ -74,12 +68,11 @@ export function PatientProfileSettingsClient({
           </Field>
           <Field>
             <Label htmlFor="date_of_birth">{copy.patient.dateOfBirth}</Label>
-            <Input id="date_of_birth" name="date_of_birth" type="date" defaultValue={patient.dateOfBirth} readOnly={!isEditing} />
+            <Input id="date_of_birth" name="date_of_birth" type="date" defaultValue={patient.dateOfBirth} />
           </Field>
           <Field>
             <Label htmlFor="gender">{copy.patient.gender}</Label>
-            {!isEditing ? <input type="hidden" name="gender" value={patient.gender} /> : null}
-            <Select id="gender" name="gender" defaultValue={patient.gender} disabled={!isEditing} required>
+            <Select id="gender" name="gender" defaultValue={patient.gender} required>
               <option value="" disabled>
                 {copy.patient.genderPlaceholder}
               </option>
@@ -93,10 +86,11 @@ export function PatientProfileSettingsClient({
         </div>
         <ProfileFormControls
           copy={copy}
+          saveLabel={copy.patient.save}
+          cancelLabel={copy.patient.cancel}
           formRef={formRef}
           onCancel={() => {
             formRef.current?.reset();
-            setIsEditing(false);
           }}
         />
       </form>
@@ -111,7 +105,6 @@ export function PatientProfilingClient({
   copy: Dictionary["profile"];
   patient: PatientProfileState;
 }) {
-  const [isEditing, setIsEditing] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
 
   return (
@@ -121,9 +114,6 @@ export function PatientProfilingClient({
         <h1 className="text-3xl font-semibold leading-tight text-[var(--color-midnight)] sm:text-4xl">
           {copy.patient.profilingTitle}
         </h1>
-        <Button type="button" variant="secondary" className="w-full rounded-[10px] sm:w-auto" onClick={() => setIsEditing(true)}>
-          {copy.patient.edit}
-        </Button>
       </div>
 
       <form ref={formRef} action={updatePatientProfilingAction} className="space-y-5">
@@ -134,8 +124,7 @@ export function PatientProfilingClient({
           <div className="grid gap-5 md:grid-cols-2">
             <Field>
               <Label htmlFor="activity_level">{copy.patient.activityLevel}</Label>
-              {!isEditing ? <input type="hidden" name="activity_level" value={patient.profiling.activityLevel} /> : null}
-              <Select id="activity_level" name="activity_level" defaultValue={patient.profiling.activityLevel} disabled={!isEditing}>
+              <Select id="activity_level" name="activity_level" defaultValue={patient.profiling.activityLevel}>
                 <option value="">{copy.patient.emptyValue}</option>
                 {copy.patient.activityOptions.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -146,12 +135,11 @@ export function PatientProfilingClient({
             </Field>
             <Field>
               <Label htmlFor="sleep_hours">{copy.patient.sleepHours}</Label>
-              <Input id="sleep_hours" name="sleep_hours" type="number" min={0} max={24} step={0.5} defaultValue={patient.profiling.sleepHours} readOnly={!isEditing} />
+              <Input id="sleep_hours" name="sleep_hours" type="number" min={0} max={24} step={0.5} defaultValue={patient.profiling.sleepHours} />
             </Field>
             <Field>
               <Label htmlFor="current_feeling">{copy.patient.currentFeeling}</Label>
-              {!isEditing ? <input type="hidden" name="current_feeling" value={patient.profiling.currentFeeling} /> : null}
-              <Select id="current_feeling" name="current_feeling" defaultValue={patient.profiling.currentFeeling} disabled={!isEditing}>
+              <Select id="current_feeling" name="current_feeling" defaultValue={patient.profiling.currentFeeling}>
                 <option value="">{copy.patient.emptyValue}</option>
                 {copy.patient.feelingOptions.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -162,7 +150,7 @@ export function PatientProfilingClient({
             </Field>
             <Field>
               <Label htmlFor="living_environment">{copy.patient.livingEnvironment}</Label>
-              <Input id="living_environment" name="living_environment" defaultValue={patient.profiling.livingEnvironment} readOnly={!isEditing} />
+              <Input id="living_environment" name="living_environment" defaultValue={patient.profiling.livingEnvironment} />
             </Field>
           </div>
         </section>
@@ -174,76 +162,29 @@ export function PatientProfilingClient({
           <div className="grid gap-5">
             <Field>
               <Label htmlFor="allergies">{copy.patient.allergies}</Label>
-              <Textarea id="allergies" name="allergies" defaultValue={patient.profiling.allergies} readOnly={!isEditing} />
+              <Textarea id="allergies" name="allergies" defaultValue={patient.profiling.allergies} />
             </Field>
             <Field>
               <Label htmlFor="known_history">{copy.patient.knownHistory}</Label>
-              <Textarea id="known_history" name="known_history" defaultValue={patient.profiling.knownHistory} readOnly={!isEditing} />
+              <Textarea id="known_history" name="known_history" defaultValue={patient.profiling.knownHistory} />
             </Field>
             <Field>
               <Label htmlFor="discovered_from">{copy.patient.discoveredFrom}</Label>
-              <Input id="discovered_from" name="discovered_from" defaultValue={patient.profiling.discoveredFrom} readOnly={!isEditing} />
+              <Input id="discovered_from" name="discovered_from" defaultValue={patient.profiling.discoveredFrom} />
             </Field>
           </div>
         </section>
 
         <ProfileFormControls
           copy={copy}
+          saveLabel={copy.patient.save}
+          cancelLabel={copy.patient.cancel}
           formRef={formRef}
           onCancel={() => {
             formRef.current?.reset();
-            setIsEditing(false);
           }}
         />
       </form>
-    </div>
-  );
-}
-
-function ProfileFormControls({
-  copy,
-  formRef,
-  onCancel,
-}: {
-  copy: Dictionary["profile"];
-  formRef: RefObject<HTMLFormElement | null>;
-  onCancel: () => void;
-}) {
-  return (
-    <div className="mt-6 grid gap-2 sm:flex sm:justify-end sm:gap-3">
-      <Button
-        type="button"
-        variant="ghost"
-        className="w-full rounded-[10px] sm:w-auto"
-        onClick={() =>
-          openProfileConfirmation({
-            title: copy.confirm.cancelTitle,
-            description: copy.confirm.cancelDescription,
-            confirmLabel: copy.confirm.yes,
-            cancelLabel: copy.confirm.no,
-            onConfirm: onCancel,
-          })
-        }
-      >
-        {copy.patient.cancel}
-      </Button>
-      <PendingSubmitButton
-        type="button"
-        className="w-full rounded-[10px] sm:w-auto"
-        loadingLabel={copy.patient.save}
-        slotClassName="w-full sm:w-auto"
-        onClick={() =>
-          openProfileConfirmation({
-            title: copy.confirm.saveTitle,
-            description: copy.confirm.saveDescription,
-            confirmLabel: copy.confirm.yes,
-            cancelLabel: copy.confirm.no,
-            onConfirm: () => formRef.current?.requestSubmit(),
-          })
-        }
-      >
-        {copy.patient.save}
-      </PendingSubmitButton>
     </div>
   );
 }

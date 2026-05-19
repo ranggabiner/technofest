@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 
 import { describe, expect, it } from "vitest";
 
-import { samplePdfBytes, samplePdfSha256 } from "../../../../web/scripts/seed-sample-pdf.mjs";
+import { samplePdfBytes } from "../../../../web/scripts/seed-sample-pdf.mjs";
 
 describe("Supabase auth seed data", () => {
   it("normalizes manually seeded OAuth users for Supabase Auth lookups", () => {
@@ -100,16 +100,35 @@ describe("Supabase auth seed data", () => {
     expect(scriptSource).toContain('record_id: "00000000-0000-0000-0000-000000009811"');
   });
 
-  it("keeps SQL seed PDF metadata aligned to the sample PDF fixture", () => {
+  it("keeps SQL seed free of env-specific encrypted KYC file rows", () => {
     const seedSource = readFileSync(
       new URL("../../../../supabase/supabase/seed.sql", import.meta.url),
       "utf8",
     );
 
-    expect(seedSource).toContain("seed_sample_pdf_metadata");
-    expect(seedSource).toContain("SAMPLE PDF");
-    expect(seedSource).toContain(`${samplePdfBytes().byteLength}::bigint`);
-    expect(seedSource).toContain(samplePdfSha256());
-    expect(seedSource).not.toContain("2560 + offset_value");
+    expect(seedSource).not.toContain("insert into public.secure_files");
+    expect(seedSource).not.toContain("insert into public.doctor_kyc_documents");
+    expect(seedSource).toContain("Run scripts/seed-demo-auth-users.mjs");
+  });
+
+  it("does not seed fake encrypted KYC filename metadata", () => {
+    const seedSource = readFileSync(
+      new URL("../../../../supabase/supabase/seed.sql", import.meta.url),
+      "utf8",
+    );
+
+    expect(seedSource).not.toContain("ZGVtb19lbmNyeXB0ZWRfZmlsZW5hbWU=");
+    expect(seedSource).not.toContain("ZGVtb19pdl9zZWVk");
+    expect(seedSource).not.toContain("ZGVtb190YWdfc2VlZA==");
+  });
+
+  it("allows hosted demo reseeds to choose the staging or production env file explicitly", () => {
+    const scriptSource = readFileSync(
+      new URL("../../../../web/scripts/seed-demo-auth-users.mjs", import.meta.url),
+      "utf8",
+    );
+
+    expect(scriptSource).toContain("--env-file");
+    expect(scriptSource).toContain("consumeCliArgs");
   });
 });

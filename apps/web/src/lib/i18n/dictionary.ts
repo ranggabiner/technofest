@@ -15,6 +15,7 @@ export const dictionary = {
         switchToEnglish: "Ganti ke Bahasa Inggris",
       },
       logout: "Keluar akun",
+      saveSuccess: "Data berhasil diperbarui dan disimpan.",
       indonesia: "ID",
       english: "EN",
       theme: {
@@ -604,7 +605,7 @@ export const dictionary = {
         title: "Dashboard Pasien",
         greeting: "Halo, {name}",
         description: "Pantau jurnal, rekam medis, akses dokter, dan status Proof untuk data demo/test.",
-        editProfile: "Edit",
+        editProfile: "Profil",
         sidebarSection: "Dashboard",
         eyebrow: "Dashboard",
         dailyPrompt: "Bagaimana keadaan kamu hari ini, {name}?",
@@ -967,6 +968,7 @@ export const dictionary = {
     profile: {
       shell: {
         navLabel: "Navigasi profil",
+        back: "Kembali",
         profileSettings: "Pengaturan Profil",
         profiling: "Profil Kesehatan",
         profile: "Profil",
@@ -985,11 +987,14 @@ export const dictionary = {
         doctorApprovalDescription:
           "Jika data dokter diubah, status akun kembali dalam verifikasi sampai admin menyetujui lagi.",
       },
+      toast: {
+        saved: "Data berhasil diperbarui dan disimpan.",
+      },
       photo: {
         changePhoto: "Ganti Foto",
       },
       patient: {
-        eyebrow: "Edit Profil",
+        eyebrow: "Profil",
         title: "Pengaturan Akun",
         identityGreeting: "Selamat datang kembali. Kelola identitas akunmu.",
         personalDataTitle: "Data Pribadi",
@@ -1091,7 +1096,7 @@ export const dictionary = {
         closeModal: "Tutup modal",
         profileVerified: "Dokter terverifikasi",
         accessCode: "Kode Akses Dokter",
-        editProfile: "Edit Profil",
+        editProfile: "Profil",
         activePatientsTitle: "Akses pasien aktif",
         activePatientsDescription:
           "Daftar ini hanya berisi pasien yang memberi akses aktif. Tidak ada pencarian pasien bebas.",
@@ -1481,6 +1486,7 @@ export const dictionary = {
         switchToEnglish: "Switch to English",
       },
       logout: "Log out",
+      saveSuccess: "Data updated and saved successfully.",
       indonesia: "ID",
       english: "EN",
       theme: {
@@ -2070,7 +2076,7 @@ export const dictionary = {
         title: "Patient Dashboard",
         greeting: "Hello, {name}",
         description: "Track journal entries, medical records, doctor access, and proof status for demo/test data.",
-        editProfile: "Edit",
+        editProfile: "Profile",
         sidebarSection: "Dashboard",
         eyebrow: "Dashboard",
         dailyPrompt: "How are you feeling today, {name}?",
@@ -2433,6 +2439,7 @@ export const dictionary = {
     profile: {
       shell: {
         navLabel: "Profile navigation",
+        back: "Back",
         profileSettings: "Profile Settings",
         profiling: "Profiling",
         profile: "Profile",
@@ -2451,11 +2458,14 @@ export const dictionary = {
         doctorApprovalDescription:
           "If doctor data changes, the account returns to Under Verification until an admin approves it again.",
       },
+      toast: {
+        saved: "Data updated and saved successfully.",
+      },
       photo: {
         changePhoto: "Change Photo",
       },
       patient: {
-        eyebrow: "Edit Profile",
+        eyebrow: "Profile",
         title: "Account Settings",
         identityGreeting: "Welcome back. Manage your account identity.",
         personalDataTitle: "Personal Data",
@@ -2557,7 +2567,7 @@ export const dictionary = {
         closeModal: "Close modal",
         profileVerified: "Verified doctor",
         accessCode: "Doctor Access Code",
-        editProfile: "Edit Profile",
+        editProfile: "Profile",
         activePatientsTitle: "Active patient access",
         activePatientsDescription:
           "This list only contains patients who granted active access. Free patient search is not available.",

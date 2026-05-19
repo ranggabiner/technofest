@@ -170,21 +170,51 @@ export async function loadKycDocumentSummaries(doctorId: string) {
         documentId: row.document_id,
         fileId: file?.file_id ?? null,
         filename: file
-          ? decryptString(
-              {
-                ciphertext: file.original_filename_ciphertext,
-                iv: file.original_filename_iv,
-                tag: file.original_filename_tag,
-                keyVersion: file.key_version,
-              },
-              env.data.ENCRYPTION_MASTER_KEY,
-            )
+          ? decryptKycFilename({
+              doctorId,
+              documentType: row.document_type as KycDocumentType,
+              file,
+              encryptionKey: env.data.ENCRYPTION_MASTER_KEY,
+            })
           : null,
         mimeType: file?.mime_type ?? null,
         fileSizeBytes: file?.file_size_bytes ?? null,
       };
     }),
   );
+}
+
+function decryptKycFilename(input: {
+  doctorId: string;
+  documentType: KycDocumentType;
+  file: {
+    file_id: string;
+    original_filename_ciphertext: string;
+    original_filename_iv: string;
+    original_filename_tag: string;
+    key_version: string;
+  };
+  encryptionKey: string;
+}) {
+  try {
+    return decryptString(
+      {
+        ciphertext: input.file.original_filename_ciphertext,
+        iv: input.file.original_filename_iv,
+        tag: input.file.original_filename_tag,
+        keyVersion: input.file.key_version,
+      },
+      input.encryptionKey,
+    );
+  } catch (error) {
+    console.warn("KYC filename metadata could not be decrypted", {
+      doctorId: input.doctorId,
+      documentType: input.documentType,
+      fileId: input.file.file_id,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return null;
+  }
 }
 
 export async function loadKycDocumentSummary(input: {

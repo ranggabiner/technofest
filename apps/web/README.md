@@ -37,7 +37,7 @@ openssl rand -base64 32
 
 Seed locations:
 
-- `../supabase/supabase/seed.sql`: loaded by `pnpm supabase:reset`; creates the four local email/password demo accounts, baseline Indonesian admin/doctor/patient rows, verification examples, KYC document metadata, access grants, and audit activity.
+- `../supabase/supabase/seed.sql`: loaded by `pnpm supabase:reset`; creates the four local email/password demo accounts, baseline Indonesian admin/doctor/patient rows, verification examples, access grants, and audit activity.
 - `scripts/seed-demo-auth-users.mjs`: run with `pnpm demo:seed-auth`; upserts the same four accounts through Supabase Auth Admin API and adds richer encrypted demo data, storage objects, AI journal sessions/messages, Scope 1 records, Scope 2 extractions, doctor access history, verification data, and platform activity logs.
 
 Run locally:
@@ -50,6 +50,14 @@ pnpm demo:seed-auth
 ```
 
 `pnpm demo:seed-auth` requires `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, and a 32-byte base64 `ENCRYPTION_MASTER_KEY`. The script is repeatable: auth users, relational rows, and storage objects use deterministic IDs, upserts, or storage overwrite semantics.
+
+Run against hosted demo environments with an explicit env file so encrypted KYC metadata and storage payloads use the target environment key:
+
+```bash
+cd apps/web
+npm run demo:seed-auth -- --env-file .env.staging
+npm run demo:seed-auth -- --env-file .env.production
+```
 
 Demo accounts, all with password `test123`:
 
@@ -71,7 +79,7 @@ Assumptions:
 
 - Extra `@medproof.test` users exist only to populate demo lists, filters, search, pagination, dashboard cards, and audit history.
 - No schema changes were added for seed richness; unsupported future integrations such as SATUSEHAT, KKI lookup, FHIR export, or production identity verification remain out of scope.
-- SQL seed keeps local reset useful even before storage objects exist. The service-role script is the canonical rich demo seed because it encrypts health content with the active environment key and uploads encrypted storage payloads.
+- SQL seed keeps local reset useful before storage objects exist, but it does not create KYC secure file rows because those require environment-specific encryption. The service-role script is the canonical rich demo seed because it encrypts health content and KYC metadata with the active environment key and uploads encrypted storage payloads.
 
 ## Google OAuth Locally
 

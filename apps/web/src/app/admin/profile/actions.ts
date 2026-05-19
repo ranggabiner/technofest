@@ -8,6 +8,7 @@ import { updateAdminProfile } from "@/lib/profile/service";
 
 export async function updateAdminProfileAction(formData: FormData) {
   const role = await requireAdminRole();
+  const profilePath = role.adminLevel === "superadmin" ? "/superadmin/profile" : "/admin/profile";
 
   await updateAdminProfile(role, {
     fullName: readText(formData, "full_name"),
@@ -15,8 +16,9 @@ export async function updateAdminProfileAction(formData: FormData) {
   });
 
   revalidatePath("/admin/profile");
+  revalidatePath("/superadmin/profile");
   revalidatePath("/admin/doctors");
-  redirect("/admin/profile?saved=1");
+  redirect(`${profilePath}?saved=1`);
 }
 
 function readText(formData: FormData, key: string) {

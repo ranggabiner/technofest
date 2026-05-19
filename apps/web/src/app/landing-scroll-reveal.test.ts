@@ -39,6 +39,20 @@ describe("landing scroll reveal animation", () => {
     expect(revealSource).not.toContain("useState");
   });
 
+  it("keeps refreshed landing content visible by observing reveal nodes added after mount", () => {
+    expect(revealSource).toContain("MutationObserver");
+    expect(revealSource).toContain("mutation.addedNodes");
+    expect(revealSource).toContain("observeRevealElements");
+  });
+
+  it("renders localized landing lists through safe fallback helpers", () => {
+    expect(pageSource).toContain("const defaultLanding =");
+    expect(pageSource).toContain("resolveLandingList");
+    expect(pageSource).toContain("aboutCards");
+    expect(pageSource).toContain("featureItems");
+    expect(pageSource).toContain("workflowSteps");
+  });
+
   it("defines subtle fade-up animation with reduced-motion support", () => {
     expect(cssSource).toContain("[data-scroll-reveal]");
     expect(cssSource).toContain('data-scroll-reveal-ready="true"');
