@@ -50,6 +50,27 @@ describe("profile form dirty detection", () => {
     expect(isProfileFormSnapshotDirty(initialSnapshot, createProfileFormSnapshot(selectedPhoto))).toBe(true);
   });
 
+  it("tracks explicit profile photo state and becomes clean when reset to saved photo", () => {
+    const initial = new FormData();
+    initial.set("full_name", "Rangga");
+    initial.set("profile_photo_state", "saved:https://cdn.medproof.test/avatar.png");
+
+    const selectedPhoto = new FormData();
+    selectedPhoto.set("full_name", "Rangga");
+    selectedPhoto.set("profile_photo_state", "selected");
+    selectedPhoto.set("profile_photo_selected", "1");
+    selectedPhoto.set("profile_photo", new File(["avatar"], "avatar.jpg", { type: "image/jpeg" }));
+
+    const resetPhoto = new FormData();
+    resetPhoto.set("full_name", "Rangga");
+    resetPhoto.set("profile_photo_state", "saved:https://cdn.medproof.test/avatar.png");
+
+    const initialSnapshot = createProfileFormSnapshot(initial);
+
+    expect(isProfileFormSnapshotDirty(initialSnapshot, createProfileFormSnapshot(selectedPhoto))).toBe(true);
+    expect(isProfileFormSnapshotDirty(initialSnapshot, createProfileFormSnapshot(resetPhoto))).toBe(false);
+  });
+
   it("marks file-only doctor letters form clean until a nonempty file is selected", () => {
     const initial = new FormData();
     initial.set("str", new File([], "", { type: "application/octet-stream" }));

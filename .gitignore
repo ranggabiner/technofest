@@ -13,6 +13,11 @@ node_modules/
 .yarn/install-state.gz
 .bun-cache/
 
+# Speed test CLI downloads
+/index.html
+/librespeed-cli.tar.gz
+/speedtest-cli
+
 # Next.js and build output
 .next/
 .turbo/

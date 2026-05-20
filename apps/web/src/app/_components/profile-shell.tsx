@@ -351,9 +351,11 @@ export function ProfilePhotoPicker({
   onBusyChange?: (isBusy: boolean) => void;
   uploadErrors: Dictionary["profile"]["photo"]["uploadErrors"];
 }) {
+  const savedPhotoState = `saved:${src ?? ""}`;
   const [compressionError, setCompressionError] = useState<string | null>(null);
   const [hasSelectedPhoto, setHasSelectedPhoto] = useState(false);
   const [isCompressing, setIsCompressing] = useState(false);
+  const [photoState, setPhotoState] = useState(savedPhotoState);
   const [previewSrc, setPreviewSrc] = useState<string | null>(src);
   const optimizationRequestRef = useRef(0);
   const previousObjectUrl = useRef<string | null>(null);
@@ -371,6 +373,10 @@ export function ProfilePhotoPicker({
   }, []);
 
   useEffect(() => {
+    onDirtyStateChange?.();
+  }, [onDirtyStateChange, photoState]);
+
+  useEffect(() => {
     const form = document.getElementById(formId);
     if (!(form instanceof HTMLFormElement)) return;
 
@@ -378,17 +384,17 @@ export function ProfilePhotoPicker({
       clearPreviewObjectUrl();
       setCompressionError(null);
       setHasSelectedPhoto(false);
+      setPhotoState(savedPhotoState);
       setPreviewSrc(src);
       if (inputRef.current) {
         inputRef.current.value = "";
         inputRef.current.removeAttribute("name");
       }
-      window.setTimeout(() => onDirtyStateChange?.(), 0);
     }
 
     form.addEventListener("reset", handleReset);
     return () => form.removeEventListener("reset", handleReset);
-  }, [formId, onDirtyStateChange, src]);
+  }, [formId, onDirtyStateChange, savedPhotoState, src]);
 
   async function handleFileChange(input: HTMLInputElement) {
     const file = input.files?.[0];
@@ -399,6 +405,7 @@ export function ProfilePhotoPicker({
     input.value = "";
     input.removeAttribute("name");
     setHasSelectedPhoto(false);
+    setPhotoState(savedPhotoState);
     clearPreviewObjectUrl();
     setCompressionError(null);
     setPreviewSrc(src);
@@ -419,6 +426,7 @@ export function ProfilePhotoPicker({
       input.name = inputName;
       input.files = dataTransfer.files;
       setHasSelectedPhoto(true);
+      setPhotoState("selected");
 
       const objectUrl = URL.createObjectURL(optimized.file);
       previousObjectUrl.current = objectUrl;
@@ -431,7 +439,6 @@ export function ProfilePhotoPicker({
       if (requestId === optimizationRequestRef.current) {
         setIsCompressing(false);
         onBusyChange?.(false);
-        window.setTimeout(() => onDirtyStateChange?.(), 0);
       }
     }
   }
@@ -465,6 +472,7 @@ export function ProfilePhotoPicker({
         disabled={isCompressing}
         onChange={(event) => void handleFileChange(event.currentTarget)}
       />
+      <input type="hidden" name={`${inputName}_state`} value={photoState} form={formId} />
       {hasSelectedPhoto ? <input type="hidden" name={`${inputName}_selected`} value="1" form={formId} /> : null}
       {compressionError ? (
         <p role="alert" className="text-xs leading-5 text-[var(--color-error-red)]">
