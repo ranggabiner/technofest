@@ -6,8 +6,11 @@ import { Download, Eye, X } from "lucide-react";
 import { approveDoctorAction, rejectDoctorAction } from "@/app/admin/doctors/actions";
 import { LoadingActionButton } from "@/components/ui/async-action-button";
 import { Button } from "@/components/ui/button";
+import { motion } from "@/components/ui/motion";
+import { ViewportModal, ViewportModalPanel } from "@/components/ui/viewport-modal";
 import type { Dictionary } from "@/lib/i18n/dictionary";
 import type { AdminDoctorReview } from "@/lib/admin/service";
+import { cn } from "@/lib/utils";
 
 type ConfirmationKind = "approve" | "reject";
 
@@ -31,8 +34,8 @@ export function AdminReviewModal({
   const previewDocument = doctor.documents.find((document) => document.documentId === previewDocumentId);
 
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-black/35 px-3 py-4 sm:px-4 sm:py-6" data-admin-review-modal>
-      <div
+    <ViewportModal className="bg-black/35 sm:py-6" data-admin-review-modal>
+      <ViewportModalPanel
         role="dialog"
         aria-modal="true"
         aria-labelledby="admin-review-title"
@@ -47,7 +50,10 @@ export function AdminReviewModal({
           </div>
           <button
             type="button"
-            className="grid size-10 cursor-pointer place-items-center rounded-full bg-[var(--color-stone-surface)] text-[var(--color-midnight)] transition hover:bg-[var(--color-parchment-card)]"
+            className={cn(
+              "grid size-10 cursor-pointer place-items-center rounded-full bg-[var(--color-stone-surface)] text-[var(--color-midnight)] hover:bg-[var(--color-parchment-card)]",
+              motion.iconButton,
+            )}
             aria-label={copy.admin.review.close}
             onClick={onClose}
           >
@@ -147,11 +153,11 @@ export function AdminReviewModal({
             {actionLabels.approve}
           </LoadingActionButton>
         </div>
-      </div>
+      </ViewportModalPanel>
 
       {previewDocument && previewDocument.documentId ? (
-        <div className="fixed inset-0 z-[60] grid place-items-center bg-black/50 px-3 py-4 sm:px-4 sm:py-6" data-document-preview-lightbox>
-          <div
+        <ViewportModal className="z-[60] bg-black/50 sm:py-6" data-document-preview-lightbox>
+          <ViewportModalPanel
             role="dialog"
             aria-modal="true"
             aria-labelledby="admin-preview-title"
@@ -163,7 +169,10 @@ export function AdminReviewModal({
               </h3>
               <button
                 type="button"
-                className="grid size-10 cursor-pointer place-items-center rounded-full bg-[var(--color-stone-surface)]"
+                className={cn(
+                  "grid size-10 cursor-pointer place-items-center rounded-full bg-[var(--color-stone-surface)] hover:bg-[var(--color-parchment-card)]",
+                  motion.iconButton,
+                )}
                 aria-label={copy.admin.review.closePreview}
                 onClick={() => setPreviewDocumentId(null)}
               >
@@ -175,8 +184,8 @@ export function AdminReviewModal({
               title={copy.admin.review.documentTitles[previewDocument.documentType]}
               className="h-full w-full border-0"
             />
-          </div>
-        </div>
+          </ViewportModalPanel>
+        </ViewportModal>
       ) : null}
 
       {confirmation ? (
@@ -197,7 +206,7 @@ export function AdminReviewModal({
           }}
         />
       ) : null}
-    </div>
+    </ViewportModal>
   );
 }
 
@@ -219,8 +228,8 @@ function ConfirmationDialog({
   onConfirm: () => void;
 }) {
   return (
-    <div className="fixed inset-0 z-[70] grid place-items-center bg-black/45 px-3 py-4 sm:px-4">
-      <div
+    <ViewportModal className="z-[70] bg-black/45">
+      <ViewportModalPanel
         role="dialog"
         aria-modal="true"
         aria-labelledby="admin-confirm-title"
@@ -238,8 +247,8 @@ function ConfirmationDialog({
             {confirm}
           </Button>
         </div>
-      </div>
-    </div>
+      </ViewportModalPanel>
+    </ViewportModal>
   );
 }
 

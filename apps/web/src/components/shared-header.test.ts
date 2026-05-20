@@ -25,6 +25,9 @@ describe("shared header state", () => {
     expect(source).toContain("text-xl font-semibold leading-none tracking-tight sm:text-2xl");
     expect(source).toContain("flex shrink-0 items-center gap-1.5 sm:gap-2");
     expect(source).toContain("w-[min(calc(100vw-2rem),18rem)] rounded-2xl");
+    expect(source).toContain("motion.menuTrigger");
+    expect(source).toContain("motion.menuPanel");
+    expect(source).toContain("motion.navLink");
   });
 
   it("uses theme tokens instead of light-only header colors", () => {
@@ -83,6 +86,12 @@ describe("shared header state", () => {
   it("allows authenticated pages to hide the header auth action without changing default behavior", () => {
     expect(source).toContain("showAuthAction = true");
     expect(source).toContain("showAuthAction && action === \"logout\"");
+  });
+
+  it("does not render a saved authenticated profile photo in the navbar", () => {
+    expect(source).not.toContain("ProfileAvatar");
+    expect(source).not.toContain("userAvatarUrl");
+    expect(source).not.toContain("userName");
   });
 
   it("renders logout through the shared async button with the original teal tone", () => {

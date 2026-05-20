@@ -503,6 +503,7 @@ export type Database = {
           email: string
           full_name: string
           phone_number: string | null
+          profile_photo_url: string | null
           revoked_at: string | null
           revoked_by: string | null
           updated_at: string | null
@@ -515,6 +516,7 @@ export type Database = {
           email: string
           full_name: string
           phone_number?: string | null
+          profile_photo_url?: string | null
           revoked_at?: string | null
           revoked_by?: string | null
           updated_at?: string | null
@@ -527,6 +529,7 @@ export type Database = {
           email?: string
           full_name?: string
           phone_number?: string | null
+          profile_photo_url?: string | null
           revoked_at?: string | null
           revoked_by?: string | null
           updated_at?: string | null
@@ -600,6 +603,7 @@ export type Database = {
           onboarding_completed_at: string | null
           onboarding_step: string
           patient_id: string
+          profile_photo_url: string | null
           profiling_data_ciphertext: string | null
           profiling_data_iv: string | null
           profiling_data_tag: string | null
@@ -615,6 +619,7 @@ export type Database = {
           onboarding_completed_at?: string | null
           onboarding_step?: string
           patient_id?: string
+          profile_photo_url?: string | null
           profiling_data_ciphertext?: string | null
           profiling_data_iv?: string | null
           profiling_data_tag?: string | null
@@ -630,6 +635,7 @@ export type Database = {
           onboarding_completed_at?: string | null
           onboarding_step?: string
           patient_id?: string
+          profile_photo_url?: string | null
           profiling_data_ciphertext?: string | null
           profiling_data_iv?: string | null
           profiling_data_tag?: string | null

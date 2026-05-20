@@ -6,9 +6,11 @@ import { ArrowLeft, ChevronRight } from "lucide-react";
 
 import { SharedHeader } from "@/components/shared-header";
 import { SiteFooter } from "@/components/site-footer";
+import { motion } from "@/components/ui/motion";
 import { articleAssets, getArticleBySlug, getArticleDetailPath, getRelatedArticles } from "@/lib/articles";
 import { dictionary } from "@/lib/i18n/dictionary";
 import { getDictionary } from "@/lib/i18n/server";
+import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -61,11 +63,11 @@ export default async function ArticleDetailPage({ params }: ArticleDetailPagePro
       />
       <main className="mx-auto w-full max-w-[1100px] px-6 pb-24 pt-28 md:pt-32">
         <nav className="mb-12 flex flex-wrap items-center gap-2 text-xs leading-5 text-[var(--color-graphite)]">
-          <Link className="cursor-pointer transition hover:text-[var(--color-midnight)]" href="/">
+          <Link className={cn("cursor-pointer hover:text-[var(--color-midnight)]", motion.navLink)} href="/">
             {articlesCopy.breadcrumbHome}
           </Link>
           <ChevronRight aria-hidden="true" className="h-4 w-4 text-[var(--color-ash)]" />
-          <Link className="cursor-pointer transition hover:text-[var(--color-midnight)]" href="/articles">
+          <Link className={cn("cursor-pointer hover:text-[var(--color-midnight)]", motion.navLink)} href="/articles">
             {articlesCopy.breadcrumbArticles}
           </Link>
           <ChevronRight aria-hidden="true" className="h-4 w-4 text-[var(--color-ash)]" />
@@ -133,7 +135,7 @@ export default async function ArticleDetailPage({ params }: ArticleDetailPagePro
             </h2>
             <Link
               href="/articles"
-              className="inline-flex cursor-pointer items-center gap-2 text-sm font-semibold text-[var(--color-teal-deep)] transition hover:text-[var(--color-midnight)]"
+              className={cn("inline-flex cursor-pointer items-center gap-2 text-sm font-semibold text-[var(--color-teal-deep)] hover:text-[var(--color-midnight)]", motion.navLink)}
             >
               <ArrowLeft aria-hidden="true" className="h-4 w-4" />
               {articlesCopy.breadcrumbArticles}
@@ -144,7 +146,10 @@ export default async function ArticleDetailPage({ params }: ArticleDetailPagePro
               <Link
                 key={related.slug}
                 href={getArticleDetailPath(related.slug)}
-                className="group flex cursor-pointer flex-col rounded-lg border border-[var(--color-stone-surface)] bg-[var(--color-card)] p-6 transition hover:bg-[var(--color-parchment-card)]"
+                className={cn(
+                  "group flex cursor-pointer flex-col rounded-lg border border-[var(--color-stone-surface)] bg-[var(--color-card)] p-6 hover:bg-[var(--color-parchment-card)]",
+                  motion.cardInteractive,
+                )}
               >
                 <Image
                   src={articleAssets[related.slug]?.list ?? "/assets/landing/article-ai-healthcare.webp"}
@@ -152,7 +157,7 @@ export default async function ArticleDetailPage({ params }: ArticleDetailPagePro
                   width={480}
                   height={320}
                   sizes="(max-width: 767px) calc(100vw - 3rem), 33vw"
-                  className="mb-4 h-40 w-full rounded-md object-cover transition duration-500 group-hover:scale-[1.02]"
+                  className="mb-4 h-40 w-full rounded-md object-cover motion-safe:transition-transform motion-safe:duration-300 motion-safe:ease-out motion-safe:group-hover:scale-[1.02] motion-reduce:transition-none"
                 />
                 <h3 className="line-clamp-2 text-lg font-medium leading-snug text-[var(--color-midnight)]">
                   {related.title}

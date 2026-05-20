@@ -57,7 +57,8 @@ describe("landing scroll reveal animation", () => {
     expect(cssSource).toContain("[data-scroll-reveal]");
     expect(cssSource).toContain('data-scroll-reveal-ready="true"');
     expect(cssSource).toContain('data-scroll-reveal-visible="true"');
-    expect(cssSource).toContain("translate3d(0, 18px, 0)");
+    expect(cssSource).toContain("translate3d(0, 12px, 0)");
+    expect(cssSource).toContain("opacity 320ms ease-out");
     expect(cssSource).toContain("prefers-reduced-motion: reduce");
   });
 });

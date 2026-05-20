@@ -76,6 +76,7 @@ export default async function PatientChatPage({
               access: copy.patient.nav.access,
               healthHistory: copy.patient.nav.healthHistory,
             }}
+            successToast={copy.common.successToast}
           />
         </section>
       </main>

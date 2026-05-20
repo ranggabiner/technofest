@@ -70,7 +70,7 @@ export async function saveDoctorProfileStepAction(formData: FormData) {
 
   revalidatePath("/doctor/onboarding");
   revalidatePath("/doctor/status");
-  redirect("/doctor/onboarding/step-2");
+  redirect("/doctor/onboarding/step-2?save_status=doctor_onboarding_step");
 }
 
 export async function saveDoctorDocumentsStepAction(formData: FormData) {
@@ -105,7 +105,7 @@ export async function saveDoctorDocumentsStepAction(formData: FormData) {
   if (update.error) throw update.error;
 
   revalidatePath("/doctor/onboarding");
-  redirect("/doctor/onboarding/step-3");
+  redirect("/doctor/onboarding/step-3?save_status=doctor_documents_review");
 }
 
 export async function uploadDoctorKycDocumentAction(

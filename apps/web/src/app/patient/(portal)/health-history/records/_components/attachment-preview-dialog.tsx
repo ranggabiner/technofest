@@ -5,7 +5,10 @@ import Image from "next/image";
 import { Download, FileText, FileWarning, ImageIcon, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { motion } from "@/components/ui/motion";
+import { ViewportModal, ViewportModalPanel } from "@/components/ui/viewport-modal";
 import type { Dictionary } from "@/lib/i18n/dictionary";
+import { cn } from "@/lib/utils";
 
 type AttachmentPreviewCopy = Dictionary["patient"]["healthHistory"]["recordsDetail"];
 
@@ -50,8 +53,8 @@ export function AttachmentPreviewDialog({
   }, [handleClose]);
 
   return (
-    <div
-      className="fixed inset-0 z-50 grid place-items-center overflow-y-auto bg-[color-mix(in_srgb,var(--color-ash)_32%,transparent)] p-3 backdrop-blur-sm sm:p-4"
+    <ViewportModal
+      className="bg-[color-mix(in_srgb,var(--color-ash)_32%,transparent)] p-3 backdrop-blur-sm sm:p-4"
       data-health-history-attachment-modal
       role="dialog"
       aria-modal="true"
@@ -61,7 +64,7 @@ export function AttachmentPreviewDialog({
         if (event.target === event.currentTarget) handleClose();
       }}
     >
-      <section className="my-4 flex max-h-[calc(100dvh-2rem)] w-full max-w-[920px] flex-col overflow-hidden rounded-[18px] border border-[var(--color-stone-surface)] bg-[var(--color-card)] shadow-[0_24px_80px_rgba(18,18,18,0.18),inset_0_0_0_1px_var(--color-stone-surface)]">
+      <ViewportModalPanel as="section" className="my-4 flex max-h-[calc(100dvh-2rem)] w-full max-w-[920px] flex-col overflow-hidden rounded-[18px] border border-[var(--color-stone-surface)] bg-[var(--color-card)] shadow-[0_24px_80px_rgba(18,18,18,0.18),inset_0_0_0_1px_var(--color-stone-surface)]">
         <header className="flex items-start justify-between gap-4 border-b border-[var(--color-stone-surface)] px-5 py-4 sm:px-6">
           <div className="min-w-0">
             <h2
@@ -85,7 +88,10 @@ export function AttachmentPreviewDialog({
           </div>
           <button
             type="button"
-            className="grid size-10 shrink-0 cursor-pointer place-items-center rounded-full text-[var(--color-ash)] transition hover:bg-[var(--color-stone-surface)] hover:text-[var(--color-midnight)]"
+            className={cn(
+              "grid size-10 shrink-0 cursor-pointer place-items-center rounded-full text-[var(--color-ash)] hover:bg-[var(--color-stone-surface)] hover:text-[var(--color-midnight)]",
+              motion.iconButton,
+            )}
             aria-label={copy.attachmentModalClose}
             onClick={handleClose}
           >
@@ -142,8 +148,8 @@ export function AttachmentPreviewDialog({
             </Button>
           )}
         </footer>
-      </section>
-    </div>
+      </ViewportModalPanel>
+    </ViewportModal>
   );
 }
 

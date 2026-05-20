@@ -35,6 +35,7 @@ describe("patient doctor access page", () => {
     expect(page).toContain("copy.patient.access.activityTitle");
     expect(page).toContain("DoctorAccessStatusLog");
     expect(page).toContain("AccessHistoryList");
+    expect(page).not.toContain('params.access_status === "granted" || params.access_status === "revoked"');
     expect(page).not.toContain("/patient/access-history");
     expect(page).not.toContain("copy.patient.access.historyCta");
     expect(page).toContain('DashboardCard className="grid content-start gap-4 p-6"');

@@ -3,6 +3,7 @@ import { LogOut } from "lucide-react";
 import type { HTMLAttributes, ReactNode } from "react";
 
 import { DashboardCard } from "@/app/_components/dashboard-card";
+import { ProfileAvatar } from "@/app/_components/profile-avatar";
 import { PortalNavigationTransitionProvider } from "@/app/_components/portal-navigation";
 import type { PortalNavigationTarget } from "@/app/_components/portal-navigation-model";
 import { SaveStatusToast } from "@/app/_components/save-status-toast";
@@ -11,6 +12,7 @@ import { SharedHeader } from "@/components/shared-header";
 import { SiteFooter, SiteFooterContent } from "@/components/site-footer";
 import { ForbiddenState } from "@/components/state-panel";
 import { PendingSubmitButton } from "@/components/ui/async-action-button";
+import { motion } from "@/components/ui/motion";
 import type { ResolvedRole } from "@/lib/auth/roles";
 import type { Dictionary } from "@/lib/i18n/dictionary";
 import { cn } from "@/lib/utils";
@@ -30,6 +32,7 @@ type PortalLayoutProps = {
   sectionLabel: string;
   showProfileAction?: boolean;
   title: string;
+  userAvatarUrl: string | null;
   userEmail: string;
   userName: string;
 };
@@ -46,6 +49,7 @@ export function PortalLayout({
   role,
   showProfileAction = true,
   title,
+  userAvatarUrl,
   userEmail,
   userName,
 }: PortalLayoutProps) {
@@ -78,6 +82,7 @@ export function PortalLayout({
                 showProfileAction={showProfileAction}
                 logoutLabel={copy.common.logout}
                 role={role}
+                userAvatarUrl={userAvatarUrl}
                 userEmail={userEmail}
                 userName={userName}
                 variant="desktop"
@@ -107,6 +112,7 @@ export function PortalLayout({
               showProfileAction={showProfileAction}
               logoutLabel={copy.common.logout}
               role={role}
+              userAvatarUrl={userAvatarUrl}
               userEmail={userEmail}
               userName={userName}
               variant="mobile"
@@ -121,7 +127,7 @@ export function PortalLayout({
           </div>
         </main>
       </PortalNavigationTransitionProvider>
-      <SaveStatusToast message={copy.common.saveSuccess} />
+      <SaveStatusToast messages={copy.common.successToast} />
       <SiteFooterContent copy={copy} />
     </div>
   );
@@ -133,6 +139,7 @@ type PortalProfileCardProps = HTMLAttributes<HTMLElement> & {
   profileLabel: string;
   role: PortalRole;
   showProfileAction?: boolean;
+  userAvatarUrl: string | null;
   userEmail: string;
   userName: string;
   variant: "desktop" | "mobile";
@@ -145,6 +152,7 @@ export function PortalProfileCard({
   profileLabel,
   role,
   showProfileAction = true,
+  userAvatarUrl,
   userEmail,
   userName,
   variant,
@@ -158,14 +166,12 @@ export function PortalProfileCard({
       {...props}
     >
       <div className={cn("flex gap-4", isMobile ? "items-start sm:items-center" : "flex-col items-center")}>
-        <div
-          className={cn(
-            "grid place-items-center overflow-hidden rounded-full border border-[var(--color-stone-surface)] bg-[var(--color-stone-surface)] font-semibold text-[var(--color-midnight)]",
-            isMobile ? "size-14 shrink-0 text-lg" : "size-20 text-xl",
-          )}
-        >
-          {getInitials(userName, role === "admin" ? "A" : role === "doctor" ? "D" : "P")}
-        </div>
+        <ProfileAvatar
+          src={userAvatarUrl}
+          name={userName}
+          fallback={role === "admin" ? "A" : role === "doctor" ? "D" : "P"}
+          className={cn(isMobile ? "size-14 text-lg" : "size-20 text-xl")}
+        />
         <div className={cn("min-w-0", isMobile ? "flex-1" : "w-full text-center")}>
           <h2
             className={cn(
@@ -182,7 +188,10 @@ export function PortalProfileCard({
             {showProfileAction ? (
               <Link
                 href={profileHref}
-                className="inline-flex min-h-11 w-full cursor-pointer items-center justify-center rounded-full border border-[var(--color-stone-surface)] px-4 py-2 text-center text-xs font-semibold uppercase tracking-widest text-[var(--color-midnight)] transition hover:bg-[var(--color-stone-surface)] hover:text-[var(--color-teal-deep)]"
+                className={cn(
+                  "inline-flex min-h-11 w-full cursor-pointer items-center justify-center rounded-full border border-[var(--color-stone-surface)] px-4 py-2 text-center text-xs font-semibold uppercase tracking-widest text-[var(--color-midnight)] hover:bg-[var(--color-stone-surface)] hover:text-[var(--color-teal-deep)]",
+                  motion.button,
+                )}
               >
                 {profileLabel}
               </Link>
@@ -190,7 +199,7 @@ export function PortalProfileCard({
             <form action={signOutAction}>
               <PendingSubmitButton
                 type="submit"
-                className="inline-flex min-h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-full border border-[color-mix(in_srgb,var(--color-error-red)_55%,white)] bg-[color-mix(in_srgb,var(--color-error-red)_8%,transparent)] px-4 py-2 text-center text-xs font-medium text-[var(--color-error-red)] transition hover:bg-[color-mix(in_srgb,var(--color-error-red)_14%,transparent)] hover:text-[var(--color-error-red)]"
+                className="inline-flex min-h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-full border border-[color-mix(in_srgb,var(--color-error-red)_55%,white)] bg-[color-mix(in_srgb,var(--color-error-red)_8%,transparent)] px-4 py-2 text-center text-xs font-medium text-[var(--color-error-red)] hover:bg-[color-mix(in_srgb,var(--color-error-red)_14%,transparent)] hover:text-[var(--color-error-red)]"
                 loadingLabel={logoutLabel}
                 slotClassName="w-full"
               >
@@ -231,13 +240,3 @@ export async function PortalForbiddenLayout({
 }
 
 export { DashboardCard };
-
-function getInitials(name: string, fallback: string) {
-  const initials = name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase())
-    .join("");
-  return initials || fallback;
-}

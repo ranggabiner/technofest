@@ -1,11 +1,13 @@
 import Link from "next/link";
-import { AlertTriangle, Ban, CircleDashed, FileSearch, ShieldAlert } from "lucide-react";
+import { AlertTriangle, Ban, FileSearch, ShieldAlert } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { roleEntryPath, type ResolvedRole } from "@/lib/auth/roles";
 import { getDictionary } from "@/lib/i18n/server";
 import { cn } from "@/lib/utils";
+
+export { EmptyState, InlineStatusMessage } from "@/components/state-messages";
 
 type StateTone = "neutral" | "warning" | "danger";
 
@@ -39,15 +41,6 @@ export function StatePanel({
       </CardHeader>
       {action ? <div>{action}</div> : null}
     </Card>
-  );
-}
-
-export function EmptyState({ message }: { message: string }) {
-  return (
-    <div className="flex items-center gap-3 rounded-[10px] bg-[var(--color-stone-surface)] p-4 text-sm text-[var(--color-ash)]">
-      <CircleDashed size={16} className="shrink-0" />
-      {message}
-    </div>
   );
 }
 

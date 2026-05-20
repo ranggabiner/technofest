@@ -3,6 +3,7 @@ import "server-only";
 import { requireEnv } from "@/lib/config/env";
 import { decryptString, encryptString } from "@/lib/crypto/server";
 import { loadKycDocumentSummaries, storeEncryptedKycFile, type KycDocumentType } from "@/lib/kyc/service";
+import { replaceProfilePhoto } from "@/lib/profile/photo";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { Database } from "@/lib/supabase/database.types";
 import type { ResolvedRole } from "@/lib/auth/roles";
@@ -13,6 +14,7 @@ type PatientRow = Pick<
   | "full_name"
   | "email"
   | "date_of_birth"
+  | "profile_photo_url"
   | "profiling_data_ciphertext"
   | "profiling_data_iv"
   | "profiling_data_tag"
@@ -44,7 +46,7 @@ export async function loadPatientProfileState(role: ResolvedRole): Promise<Patie
   const { data, error } = await createAdminClient()
     .from("patients")
     .select(
-      "patient_id,full_name,email,date_of_birth,profiling_data_ciphertext,profiling_data_iv,profiling_data_tag,key_version",
+      "patient_id,full_name,email,date_of_birth,profile_photo_url,profiling_data_ciphertext,profiling_data_iv,profiling_data_tag,key_version",
     )
     .eq("patient_id", patientId)
     .single();
@@ -78,6 +80,7 @@ export async function updatePatientAccountSettings(
     fullName: string;
     dateOfBirth: string;
     gender: string;
+    profilePhoto?: File | null;
   },
 ) {
   const patientId = requirePatientId(role);
@@ -87,19 +90,22 @@ export async function updatePatientAccountSettings(
 
   if (!fullName) throw new Error("Nama lengkap wajib diisi");
 
-  await savePatientProfilePatch(
-    patientId,
-    {
-      onboarding_basic: {
-        gender,
+  await saveWithOptionalProfilePhoto(role, input.profilePhoto, async (profilePhotoUrl) => {
+    await savePatientProfilePatch(
+      patientId,
+      {
+        onboarding_basic: {
+          gender,
+        },
       },
-    },
-    {
-      full_name: fullName,
-      date_of_birth: dateOfBirth,
-      updated_at: new Date().toISOString(),
-    },
-  );
+      {
+        full_name: fullName,
+        date_of_birth: dateOfBirth,
+        ...(profilePhotoUrl ? { profile_photo_url: profilePhotoUrl } : {}),
+        updated_at: new Date().toISOString(),
+      },
+    );
+  });
 }
 
 export async function updatePatientProfiling(
@@ -170,6 +176,7 @@ export async function updateDoctorProfile(
     fullName: string;
     specialization: string;
     phoneNumber: string;
+    profilePhoto?: File | null;
   },
 ) {
   const doctorId = requireDoctorId(role);
@@ -179,21 +186,24 @@ export async function updateDoctorProfile(
 
   if (!fullName) throw new Error("Nama dokter wajib diisi");
 
-  const { error } = await createAdminClient()
-    .from("doctors")
-    .update({
-      full_name: fullName,
-      specialization: specialization || null,
-      phone_number: phoneNumber || null,
-      account_status: "pending",
-      rejection_reason: null,
-      qr_code_token: null,
-      doctor_access_code: null,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("doctor_id", doctorId);
+  await saveWithOptionalProfilePhoto(role, input.profilePhoto, async (profilePhotoUrl) => {
+    const { error } = await createAdminClient()
+      .from("doctors")
+      .update({
+        full_name: fullName,
+        specialization: specialization || null,
+        phone_number: phoneNumber || null,
+        ...(profilePhotoUrl ? { profile_photo_url: profilePhotoUrl } : {}),
+        account_status: "pending",
+        rejection_reason: null,
+        qr_code_token: null,
+        doctor_access_code: null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("doctor_id", doctorId);
 
-  if (error) throw error;
+    if (error) throw error;
+  });
 }
 
 export async function updateDoctorLetters(
@@ -248,6 +258,7 @@ export async function updateAdminProfile(
   input: {
     fullName: string;
     phoneNumber: string;
+    profilePhoto?: File | null;
   },
 ) {
   const adminId = requireAdminId(role);
@@ -256,15 +267,41 @@ export async function updateAdminProfile(
 
   if (!fullName) throw new Error("Nama admin wajib diisi");
 
-  const { error } = await createAdminClient()
-    .from("medical_admins")
-    .update({
-      full_name: fullName,
-      phone_number: phoneNumber || null,
-    })
-    .eq("admin_id", adminId);
+  await saveWithOptionalProfilePhoto(role, input.profilePhoto, async (profilePhotoUrl) => {
+    const { error } = await createAdminClient()
+      .from("medical_admins")
+      .update({
+        full_name: fullName,
+        phone_number: phoneNumber || null,
+        ...(profilePhotoUrl ? { profile_photo_url: profilePhotoUrl } : {}),
+        updated_at: new Date().toISOString(),
+      })
+      .eq("admin_id", adminId);
 
-  if (error) throw error;
+    if (error) throw error;
+  });
+}
+
+async function saveWithOptionalProfilePhoto(
+  role: ResolvedRole,
+  file: File | null | undefined,
+  saveProfile: (profilePhotoUrl: string | null) => Promise<void>,
+) {
+  if (!isSelectedProfilePhotoFile(file)) {
+    await saveProfile(null);
+    return;
+  }
+
+  await replaceProfilePhoto({
+    authUserId: role.authUserId,
+    file,
+    previousPhotoUrl: role.avatarUrl,
+    savePhotoUrl: saveProfile,
+  });
+}
+
+function isSelectedProfilePhotoFile(file: File | null | undefined): file is File {
+  return file instanceof File && (file.size > 0 || file.name.trim() !== "");
 }
 
 async function savePatientProfilePatch(
@@ -275,7 +312,7 @@ async function savePatientProfilePatch(
   const admin = createAdminClient();
   const { data, error } = await admin
     .from("patients")
-    .select("patient_id,full_name,email,date_of_birth,profiling_data_ciphertext,profiling_data_iv,profiling_data_tag,key_version")
+    .select("patient_id,full_name,email,date_of_birth,profile_photo_url,profiling_data_ciphertext,profiling_data_iv,profiling_data_tag,key_version")
     .eq("patient_id", patientId)
     .single();
 

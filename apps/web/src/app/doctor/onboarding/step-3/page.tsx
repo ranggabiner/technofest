@@ -2,15 +2,18 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ArrowLeft, FileText, UserRound } from "lucide-react";
 
+import { SaveStatusToast } from "@/app/_components/save-status-toast";
 import { KycDocumentCompactPreview } from "@/components/kyc-document-preview";
 import { OnboardingShell } from "@/components/onboarding-shell";
 import { PendingSubmitButton } from "@/components/ui/async-action-button";
+import { motion } from "@/components/ui/motion";
 import { roleEntryPath } from "@/lib/auth/roles";
 import { requireRole } from "@/lib/auth/session";
 import { getDictionary } from "@/lib/i18n/server";
 import { getKycDocumentPreviewUrl } from "@/lib/kyc/preview";
 import { loadKycDocumentSummaries } from "@/lib/kyc/service";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { cn } from "@/lib/utils";
 
 import { completeDoctorOnboardingAction } from "../actions";
 
@@ -54,6 +57,7 @@ export default async function DoctorOnboardingStep3Page() {
       activeStep={3}
       themeLabels={copy.common.theme}
     >
+      <SaveStatusToast messages={copy.common.successToast} />
       <div className="mx-auto w-full max-w-3xl">
         <div className="mb-8 text-center sm:mb-12">
           <h1 className="text-3xl font-medium leading-tight tracking-normal text-[var(--color-charcoal-primary)] sm:text-3xl md:text-5xl md:leading-tight">
@@ -117,7 +121,7 @@ export default async function DoctorOnboardingStep3Page() {
         <form action={completeDoctorOnboardingAction} className="mt-10 grid gap-3 sm:mt-12 sm:flex sm:items-center sm:justify-between sm:gap-4">
           <Link
             href="/doctor/onboarding/step-2"
-            className="inline-flex min-h-11 items-center gap-2 text-sm font-medium leading-6 tracking-normal text-[var(--color-ash)] transition hover:text-[var(--color-midnight)]"
+            className={cn("inline-flex min-h-11 items-center gap-2 text-sm font-medium leading-6 tracking-normal text-[var(--color-ash)] hover:text-[var(--color-midnight)]", motion.navLink)}
           >
             <ArrowLeft size={18} aria-hidden="true" />
             {copy.doctor.onboarding.back}

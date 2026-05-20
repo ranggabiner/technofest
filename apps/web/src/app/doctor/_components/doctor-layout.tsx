@@ -39,6 +39,7 @@ export function DoctorLayout({
       role="doctor"
       sectionLabel={copy.doctor.dashboard.sidebarSection}
       title={copy.doctor.dashboard.title}
+      userAvatarUrl={role.avatarUrl}
       userEmail={role.email}
       userName={role.fullName}
     >

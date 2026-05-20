@@ -64,8 +64,10 @@ describe("role resolution", () => {
         email: "invited@example.com",
         full_name: "Invited Admin",
         admin_role: "admin",
+        profile_photo_url: "https://cdn.medproof.test/admin-row.png",
         revoked_at: null,
       },
+      avatarUrl: "https://accounts.google.com/admin-google.png",
       adminInvitation: {
         invitation_id: "invite-1",
         email: "invited@example.com",
@@ -75,6 +77,7 @@ describe("role resolution", () => {
     });
 
     expect(role).toMatchObject({ kind: "medical_admin", adminId: "admin-invited", adminLevel: "admin" });
+    expect(role?.avatarUrl).toBe("https://cdn.medproof.test/admin-row.png");
   });
 
   it("does not grant invited admin access to a different Google email", () => {
@@ -136,14 +139,17 @@ describe("role resolution", () => {
         patient_id: "patient-1",
         email: "patient@example.com",
         full_name: "Patient Demo",
+        profile_photo_url: "https://cdn.medproof.test/patient-row.png",
         onboarding_step: "complete",
         onboarding_completed_at: "2026-05-15T08:00:00.000Z",
       },
       doctor: null,
       admin: null,
+      avatarUrl: "https://accounts.google.com/google-avatar.png",
     });
 
     expect(role).toMatchObject({ kind: "patient", patientId: "patient-1" });
+    expect(role?.avatarUrl).toBe("https://cdn.medproof.test/patient-row.png");
   });
 
   it("keeps pending doctors locked out of doctor features", () => {
@@ -185,12 +191,15 @@ describe("role resolution", () => {
         full_name: "Dr Approved",
         account_status: "approved",
         rejection_reason: null,
+        profile_photo_url: "https://cdn.medproof.test/doctor-row.png",
         onboarding_step: "complete",
         onboarding_completed_at: "2026-05-15T08:00:00.000Z",
       },
+      avatarUrl: "https://accounts.google.com/doctor-google.png",
     });
 
     expect(role).toMatchObject({ kind: "doctor", status: "approved", canAccessDoctorFeatures: true });
+    expect(role?.avatarUrl).toBe("https://cdn.medproof.test/doctor-row.png");
   });
 
   it("sends incomplete patients to the exact onboarding step", () => {

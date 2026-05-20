@@ -3,6 +3,8 @@
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
+import { AuthPageSkeleton } from "@/components/loading-skeletons";
+
 export function PostLoginRedirect({ nextPath }: { nextPath: string }) {
   const router = useRouter();
 
@@ -19,7 +21,7 @@ export function PostLoginRedirect({ nextPath }: { nextPath: string }) {
     };
   }, [nextPath, router]);
 
-  return null;
+  return <AuthPageSkeleton />;
 }
 
 async function waitForNextStyles() {

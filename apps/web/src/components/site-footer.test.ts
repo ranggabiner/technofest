@@ -18,6 +18,7 @@ describe("SiteFooter", () => {
     expect(source).toContain('import { BrandScrollTopButton } from "@/components/brand-scroll-top-button";');
     expect(source).toContain('logoSrc="/assets/landing/logo.webp"');
     expect(source).toContain("landing.footer.description");
+    expect(source).toContain("landing.footer.contactTitle");
     expect(source).toContain("copy.common.copyright");
     expect(source).toContain("w-full bg-[var(--color-card)] px-4 pb-8 pt-14 text-[var(--color-graphite)] sm:px-6 sm:pb-10 sm:pt-20");
     expect(source).toContain("border-b border-[var(--color-stone-surface)] pb-8");
@@ -59,5 +60,27 @@ describe("SiteFooter", () => {
     expect(html).toContain(dictionary.id.common.copyright);
     expect(html).not.toContain('data-scroll-reveal-group="footer-copyright"');
     expect(html).not.toMatch(/<p[^>]*data-scroll-reveal[^>]*>© 2026 MedProof<\/p>/);
+  });
+
+  it("renders the localized Indonesian contact heading with a mailto email link", async () => {
+    const { SiteFooterContent } = await import("./site-footer");
+    const html = renderToStaticMarkup(
+      React.createElement(SiteFooterContent, { copy: dictionary.id }),
+    );
+
+    expect(html).toContain("Hubungi Kami");
+    expect(html).toContain("medproof@binerlabs.com");
+    expect(html).toContain('href="mailto:medproof@binerlabs.com"');
+  });
+
+  it("renders the localized English contact heading with the same mailto email link", async () => {
+    const { SiteFooterContent } = await import("./site-footer");
+    const html = renderToStaticMarkup(
+      React.createElement(SiteFooterContent, { copy: dictionary.en }),
+    );
+
+    expect(html).toContain("Contact Us");
+    expect(html).toContain("medproof@binerlabs.com");
+    expect(html).toContain('href="mailto:medproof@binerlabs.com"');
   });
 });

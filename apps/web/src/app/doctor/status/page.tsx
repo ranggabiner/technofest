@@ -4,6 +4,7 @@ import { CheckCircle2, Clock3, FileText, UserRound } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { DashboardCard, PortalForbiddenLayout, PortalLayout } from "@/app/_components/portal-layout";
+import { ProfileAvatar } from "@/app/_components/profile-avatar";
 import {
   DoctorStatusDesktopNavigation,
   DoctorStatusMobileNavigation,
@@ -68,6 +69,7 @@ export default async function DoctorStatusPage() {
       sectionLabel={copy.doctor.dashboard.sidebarSection}
       showProfileAction={false}
       title={copy.doctor.status.title}
+      userAvatarUrl={role.avatarUrl}
       userEmail={doctorEmail}
       userName={doctorName}
     >
@@ -102,9 +104,7 @@ export default async function DoctorStatusPage() {
         <div className="grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
           <DashboardCard className="p-6 md:p-8" data-doctor-status-profile>
             <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
-              <div className="grid size-16 shrink-0 place-items-center rounded-full border border-[var(--color-stone-surface)] bg-[var(--color-stone-surface)] text-lg font-semibold text-[var(--color-midnight)]">
-                {getInitials(doctorName)}
-              </div>
+              <ProfileAvatar src={role.avatarUrl} name={doctorName} fallback="D" className="size-16 text-lg" />
               <div className="min-w-0 flex-1">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div className="min-w-0">
@@ -221,14 +221,4 @@ function genderLabel(
     copy.doctor.onboarding.genderOptions.find((option) => option.value === gender)?.label ??
     copy.profile.doctor.emptyValue
   );
-}
-
-function getInitials(name: string) {
-  const initials = name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase())
-    .join("");
-  return initials || "D";
 }

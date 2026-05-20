@@ -1,5 +1,6 @@
 import { AlertCircle, CheckCircle2, FileWarning, RotateCcw } from "lucide-react";
 
+import { motion } from "@/components/ui/motion";
 import { cn } from "@/lib/utils";
 import type { KycDocumentSummary } from "@/lib/kyc/summaries";
 import { formatFileSize, getFileTypeLabel, getKycPreviewKind } from "@/lib/kyc/preview";
@@ -120,7 +121,7 @@ export function KycDocumentCompactPreviewContent({
           </p>
         </div>
         {actionLabel ? (
-          <span className="inline-flex min-h-8 max-w-full items-center gap-2 rounded-full border border-[var(--color-stone-surface)] bg-[var(--color-card)] px-3 text-xs font-medium leading-6 tracking-normal text-[var(--color-midnight)] transition group-hover:bg-[var(--color-parchment-card)]">
+          <span className={cn("inline-flex min-h-8 max-w-full items-center gap-2 rounded-full border border-[var(--color-stone-surface)] bg-[var(--color-card)] px-3 text-xs font-medium leading-6 tracking-normal text-[var(--color-midnight)] group-hover:bg-[var(--color-parchment-card)]", motion.base)}>
             <RotateCcw size={13} className="shrink-0" aria-hidden="true" />
             <span className="truncate">{actionLabel}</span>
           </span>

@@ -3,10 +3,13 @@ import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 import { ArrowRight, Bot, CheckCircle2, LockKeyhole, ShieldAlert } from "lucide-react";
 
+import { SaveStatusToast } from "@/app/_components/save-status-toast";
 import { PendingSubmitButton } from "@/components/ui/async-action-button";
+import { motion } from "@/components/ui/motion";
 import { roleEntryPath } from "@/lib/auth/roles";
 import { requireRole } from "@/lib/auth/session";
 import { getDictionary } from "@/lib/i18n/server";
+import { cn } from "@/lib/utils";
 
 import { PatientOnboardingShell } from "../_components/patient-onboarding-shell";
 import { completePatientOnboardingAction } from "../actions";
@@ -30,6 +33,7 @@ export default async function PatientOnboardingStep3Page() {
       variant="form-card"
       themeLabels={copy.common.theme}
     >
+      <SaveStatusToast messages={copy.common.successToast} />
       <form action={completePatientOnboardingAction} className="space-y-10 sm:space-y-12">
         <PatientOnboardingSection icon={<Bot size={20} aria-hidden="true" />} title={copy.patient.onboarding.step3.cardTitle}>
           <p className="text-sm leading-6 text-[var(--color-graphite)]">
@@ -50,7 +54,7 @@ export default async function PatientOnboardingStep3Page() {
         <div className="grid gap-3 border-t border-[var(--color-stone-surface)] pt-6 sm:flex sm:items-center sm:justify-between">
           <Link
             href="/patient/onboarding/step-2"
-            className="inline-flex min-h-11 items-center rounded-full px-4 py-2 text-sm leading-6 text-[var(--color-graphite)] transition-colors hover:bg-[var(--color-warm-canvas)] hover:text-[var(--color-midnight)]"
+            className={cn("inline-flex min-h-11 items-center rounded-full px-4 py-2 text-sm leading-6 text-[var(--color-graphite)] hover:bg-[var(--color-warm-canvas)] hover:text-[var(--color-midnight)]", motion.navLink)}
           >
             {copy.patient.onboarding.back}
           </Link>

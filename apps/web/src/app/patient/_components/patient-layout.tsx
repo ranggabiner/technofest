@@ -16,6 +16,7 @@ type PatientLayoutProps = {
   children: ReactNode;
   copy: Dictionary;
   header?: ReactNode;
+  patientAvatarUrl: string | null;
   patientEmail: string;
   patientName: string;
   title: string;
@@ -25,6 +26,7 @@ export function PatientLayout({
   children,
   copy,
   header,
+  patientAvatarUrl,
   patientEmail,
   patientName,
   title,
@@ -41,6 +43,7 @@ export function PatientLayout({
       role="patient"
       sectionLabel={copy.patient.dashboard.sidebarSection}
       title={title}
+      userAvatarUrl={patientAvatarUrl}
       userEmail={patientEmail}
       userName={patientName}
     >

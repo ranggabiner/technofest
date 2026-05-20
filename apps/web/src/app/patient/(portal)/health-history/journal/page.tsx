@@ -7,6 +7,7 @@ import {
 import { EmptyState, StatePanel } from "@/components/state-panel";
 import { StatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
+import { motion } from "@/components/ui/motion";
 import { requireRole } from "@/lib/auth/session";
 import { roleOnboardingPath } from "@/lib/auth/roles";
 import { getDictionary, getLocale } from "@/lib/i18n/server";
@@ -16,6 +17,7 @@ import {
   resolvePatientHealthJournalFilter,
   type PatientHealthJournalFilter,
 } from "@/lib/patient/health-journal";
+import { cn } from "@/lib/utils";
 
 import { DashboardCard } from "../../../_components/patient-layout";
 import { PatientTransitionLink } from "../../../_components/patient-navigation-transition";
@@ -130,7 +132,7 @@ function JournalHeader({
       <div className="mb-5 flex flex-wrap items-center gap-2 text-sm text-[var(--color-ash)]">
         <PatientTransitionLink
           href="/patient/health-history"
-          className="inline-flex min-h-11 cursor-pointer items-center gap-2 font-semibold text-[var(--color-teal-deep)] transition hover:text-[var(--color-midnight)]"
+          className={cn("inline-flex min-h-11 cursor-pointer items-center gap-2 font-semibold text-[var(--color-teal-deep)] hover:text-[var(--color-midnight)]", motion.navLink)}
         >
           <ArrowLeft size={16} aria-hidden="true" />
           {detailCopy.back}

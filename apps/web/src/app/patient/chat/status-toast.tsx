@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { AlertTriangle, CheckCircle2 } from "lucide-react";
+import { useEffect } from "react";
 
-export const STATUS_TOAST_AUTO_DISMISS_MS = 4000;
+import { AppToast, APP_TOAST_AUTO_DISMISS_MS } from "@/components/ui/app-toast";
+
+export const STATUS_TOAST_AUTO_DISMISS_MS = APP_TOAST_AUTO_DISMISS_MS;
 
 export function removeStatusToastParams(currentUrl: string) {
   const url = new URL(currentUrl);
@@ -22,7 +23,7 @@ export function StatusToast({
   successMessage: string | null;
 }) {
   const message = failedMessage ?? successMessage;
-  const [isVisible, setIsVisible] = useState(Boolean(message));
+  const isFailed = Boolean(failedMessage);
 
   useEffect(() => {
     if (!message) return;
@@ -32,34 +33,15 @@ export function StatusToast({
       "",
       removeStatusToastParams(window.location.href),
     );
-
-    const timer = window.setTimeout(() => {
-      setIsVisible(false);
-    }, STATUS_TOAST_AUTO_DISMISS_MS);
-
-    return () => window.clearTimeout(timer);
   }, [message]);
 
-  if (!message || !isVisible) return null;
-
-  const isFailed = Boolean(failedMessage);
+  if (!message) return null;
 
   return (
-    <div className="fixed inset-x-4 top-4 z-50 mx-auto max-w-[720px]">
-      <div
-        className={`flex items-start gap-3 rounded-xl border bg-[var(--color-card)] p-4 text-sm shadow-[var(--shadow-elevated)] ${
-          isFailed
-            ? "border-[var(--color-error-red)] text-[var(--color-error-red)]"
-            : "border-[var(--color-midnight)] text-[var(--color-midnight)]"
-        }`}
-      >
-        {isFailed ? (
-          <AlertTriangle className="mt-0.5 size-4 shrink-0" />
-        ) : (
-          <CheckCircle2 className="mt-0.5 size-4 shrink-0" />
-        )}
-        {message}
-      </div>
-    </div>
+    <AppToast
+      message={message}
+      tone={isFailed ? "danger" : "success"}
+      triggerKey={`${isFailed ? "failed" : "success"}:${message}`}
+    />
   );
 }
