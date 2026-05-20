@@ -6,7 +6,6 @@ import dynamic from "next/dynamic";
 import {
   Download,
   Pencil,
-  Plus,
   QrCode,
   Search,
   ShieldCheck,
@@ -361,7 +360,7 @@ export function DoctorAccessClient({
 function DoctorQrScannerModalFallback() {
   return (
     <ViewportModal className="bg-[color-mix(in_srgb,var(--color-ash)_28%,transparent)] p-3 backdrop-blur-sm sm:p-4">
-      <ViewportModalPanel as="section" className="my-4 grid max-h-[calc(100dvh-2rem)] min-h-[320px] w-full max-w-[560px] animate-pulse overflow-hidden rounded-[18px] border border-[var(--color-stone-surface)] bg-[var(--color-card)] shadow-[0_24px_80px_rgba(18,18,18,0.18),inset_0_0_0_1px_var(--color-stone-surface)] sm:my-6">
+      <ViewportModalPanel as="section" className="my-4 grid max-h-[calc(100dvh-2rem)] min-h-[min(320px,calc(100dvh-2rem))] w-full max-w-[560px] animate-pulse overflow-hidden rounded-[18px] border border-[var(--color-stone-surface)] bg-[var(--color-card)] shadow-[0_24px_80px_rgba(18,18,18,0.18),inset_0_0_0_1px_var(--color-stone-surface)] sm:my-6">
         <div className="px-5 pb-4 pt-5 sm:px-6">
           <div className="h-7 w-40 rounded-[10px] bg-[color-mix(in_srgb,var(--color-ash)_18%,transparent)]" />
           <div className="mt-3 h-4 w-full max-w-sm rounded-[10px] bg-[color-mix(in_srgb,var(--color-ash)_18%,transparent)]" />
@@ -458,16 +457,14 @@ function PermissionAccessModal({
     <ViewportModal
       className="bg-[color-mix(in_srgb,var(--color-ash)_28%,transparent)] p-3 backdrop-blur-sm sm:p-4"
       data-permission-access-modal
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="doctor-access-permission-title"
     >
-      <form
+      <ViewportModalPanel as="form"
         action={grantDoctorAccessAction}
-        data-viewport-modal-panel=""
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="doctor-access-permission-title"
         className={cn(
-          "my-4 grid max-h-[calc(100dvh-2rem)] w-full max-w-[640px] overflow-hidden rounded-[18px] border border-[var(--color-stone-surface)] bg-[var(--color-card)] shadow-[0_24px_80px_rgba(18,18,18,0.18),inset_0_0_0_1px_var(--color-stone-surface)] sm:my-6",
-          motion.modalPanel,
+          "my-4 grid w-full max-w-[640px] grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden rounded-[18px] border border-[var(--color-stone-surface)] bg-[var(--color-card)] shadow-[0_24px_80px_rgba(18,18,18,0.18),inset_0_0_0_1px_var(--color-stone-surface)] sm:my-6",
         )}
       >
         <input type="hidden" name="doctor_id" value={doctor.doctorId} />
@@ -531,7 +528,7 @@ function PermissionAccessModal({
                       <MedicalRecordPermissionRow
                         key={record.recordId}
                         record={record}
-                        disabled={!canViewScope1 || !record.attachmentFileId}
+                        disabled={!canViewScope1}
                         copy={copy}
                       />
                     ))
@@ -540,14 +537,6 @@ function PermissionAccessModal({
                       {copy.patient.access.permissionNoMedicalRecords}
                     </p>
                   )}
-                  <button
-                    type="button"
-                    disabled
-                  className="inline-flex w-fit cursor-not-allowed items-center gap-2 text-sm font-semibold text-[var(--color-ash)] opacity-70"
-                  >
-                    <Plus size={15} aria-hidden="true" />
-                    {copy.patient.access.permissionAddMedicalRecord}
-                  </button>
                 </div>
               </PermissionScopeCard>
 
@@ -570,14 +559,6 @@ function PermissionAccessModal({
                   copy={copy}
                   dataScope="scope2_mental"
                 />
-                <button
-                  type="button"
-                  disabled
-                  className="mt-3 inline-flex w-fit cursor-not-allowed items-center gap-2 text-sm font-semibold text-[var(--color-ash)] opacity-70"
-                >
-                  <Plus size={15} aria-hidden="true" />
-                  {copy.patient.access.permissionAddMentalConcern}
-                </button>
               </PermissionScopeCard>
 
               <PermissionScopeCard
@@ -599,14 +580,6 @@ function PermissionAccessModal({
                   copy={copy}
                   dataScope="scope2_physical"
                 />
-                <button
-                  type="button"
-                  disabled
-                  className="mt-3 inline-flex w-fit cursor-not-allowed items-center gap-2 text-sm font-semibold text-[var(--color-ash)] opacity-70"
-                >
-                  <Plus size={15} aria-hidden="true" />
-                  {copy.patient.access.permissionAddPhysicalConcern}
-                </button>
               </PermissionScopeCard>
             </div>
           </section>
@@ -696,7 +669,7 @@ function PermissionAccessModal({
             {copy.patient.access.permissionModalAllow}
           </PendingSubmitButton>
         </footer>
-      </form>
+      </ViewportModalPanel>
     </ViewportModal>
   );
 }
@@ -761,9 +734,14 @@ function MedicalRecordPermissionRow({
   disabled: boolean;
   copy: Dictionary;
 }) {
+  const hasDownloadableAttachment = Boolean(record.attachmentFileId);
+
   return (
     <div
-      className="grid gap-3 rounded-[10px] bg-[var(--color-warm-canvas)] p-3 sm:grid-cols-[1fr_auto] sm:items-center"
+      className={cn(
+        "grid gap-3 rounded-[10px] bg-[var(--color-warm-canvas)] p-3",
+        hasDownloadableAttachment ? "sm:grid-cols-[1fr_auto] sm:items-center" : "",
+      )}
       data-permission-record-row
     >
       <div className="min-w-0">
@@ -773,22 +751,24 @@ function MedicalRecordPermissionRow({
           {record.attachmentFilename ? ` · ${record.attachmentFilename}` : ""}
         </p>
       </div>
-      <label
-        className={[
-          "inline-flex items-center gap-2 text-xs font-semibold text-[var(--color-charcoal-primary)]",
-          disabled ? "cursor-not-allowed opacity-55" : "cursor-pointer",
-        ].join(" ")}
-      >
-        <input
-          type="checkbox"
-          name="attachment_record_ids"
-          value={record.recordId}
-          defaultChecked={!disabled}
-          disabled={disabled}
-          className="size-4 cursor-pointer accent-[var(--color-teal-primary)] disabled:cursor-not-allowed"
-        />
-        {copy.patient.access.permissionDownloadLabel}
-      </label>
+      {hasDownloadableAttachment ? (
+        <label
+          className={[
+            "inline-flex items-center gap-2 text-xs font-semibold text-[var(--color-charcoal-primary)]",
+            disabled ? "cursor-not-allowed opacity-55" : "cursor-pointer",
+          ].join(" ")}
+        >
+          <input
+            type="checkbox"
+            name="attachment_record_ids"
+            value={record.recordId}
+            defaultChecked={!disabled}
+            disabled={disabled}
+            className="size-4 cursor-pointer accent-[var(--color-teal-primary)] disabled:cursor-not-allowed"
+          />
+          {copy.patient.access.permissionDownloadLabel}
+        </label>
+      ) : null}
     </div>
   );
 }

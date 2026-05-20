@@ -3,6 +3,7 @@ import { expect, test, type Page } from "@playwright/test";
 const viewports = [
   { name: "desktop", width: 1280, height: 720 },
   { name: "mobile", width: 390, height: 844 },
+  { name: "short mobile", width: 390, height: 520 },
 ];
 
 async function mountViewportModalFixture(page: Page) {
@@ -35,6 +36,48 @@ async function mountViewportModalFixture(page: Page) {
 
     overlay.append(panel);
     document.body.append(hostileContainer, overlay);
+  });
+}
+
+async function mountLongFixedFooterModalFixture(page: Page) {
+  await page.evaluate(() => {
+    const overlay = document.createElement("div");
+    overlay.setAttribute("data-viewport-modal-overlay", "");
+    overlay.className = [
+      "fixed inset-0 z-50 grid h-dvh w-screen place-items-center overflow-y-auto",
+      "bg-black/35 px-3 py-4 sm:px-4 sm:py-6",
+    ].join(" ");
+
+    const panel = document.createElement("form");
+    panel.setAttribute("data-viewport-modal-panel", "");
+    panel.setAttribute("role", "dialog");
+    panel.setAttribute("aria-modal", "true");
+    panel.className = [
+      "grid max-h-[calc(100dvh-2rem)] min-h-0 w-full max-w-[640px]",
+      "grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden rounded-[18px] bg-white",
+    ].join(" ");
+
+    const header = document.createElement("header");
+    header.textContent = "Long modal header";
+    header.style.cssText = "height: 120px; padding: 16px; box-sizing: border-box;";
+
+    const body = document.createElement("div");
+    body.setAttribute("data-long-modal-body", "");
+    body.className = "grid min-h-0 gap-6 overflow-y-auto px-4 pb-5";
+
+    const content = document.createElement("div");
+    content.style.height = "1200px";
+    content.textContent = "Long modal content";
+    body.append(content);
+
+    const footer = document.createElement("footer");
+    footer.setAttribute("data-long-modal-footer", "");
+    footer.textContent = "Cancel Allow";
+    footer.style.cssText = "height: 96px; padding: 16px; box-sizing: border-box;";
+
+    panel.append(header, body, footer);
+    overlay.append(panel);
+    document.body.append(overlay);
   });
 }
 
@@ -74,6 +117,37 @@ test.describe("viewport modal geometry", () => {
       expect(Math.abs(geometry.overlay.height - geometry.viewport.height)).toBeLessThanOrEqual(1);
       expect(Math.abs(geometry.panelCenter.x - geometry.viewport.width / 2)).toBeLessThanOrEqual(1);
       expect(Math.abs(geometry.panelCenter.y - geometry.viewport.height / 2)).toBeLessThanOrEqual(1);
+    });
+
+    test(`keeps fixed-footer modal actions reachable with long content in the ${viewport.name} viewport`, async ({ page }) => {
+      await page.setViewportSize({ width: viewport.width, height: viewport.height });
+      await page.goto("/");
+      await mountLongFixedFooterModalFixture(page);
+
+      const geometry = await page.locator("[data-viewport-modal-panel]").evaluate((panel) => {
+        const panelRect = panel.getBoundingClientRect();
+        const body = panel.querySelector("[data-long-modal-body]") as HTMLElement;
+        const footer = panel.querySelector("[data-long-modal-footer]") as HTMLElement;
+        const footerRect = footer.getBoundingClientRect();
+
+        body.scrollTop = body.scrollHeight;
+
+        return {
+          bodyClientHeight: body.clientHeight,
+          bodyScrollHeight: body.scrollHeight,
+          bodyScrollTop: body.scrollTop,
+          footerBottom: footerRect.bottom,
+          panelBottom: panelRect.bottom,
+          panelTop: panelRect.top,
+          viewportHeight: window.innerHeight,
+        };
+      });
+
+      expect(geometry.panelTop).toBeGreaterThanOrEqual(0);
+      expect(geometry.panelBottom).toBeLessThanOrEqual(geometry.viewportHeight);
+      expect(geometry.footerBottom).toBeLessThanOrEqual(geometry.viewportHeight);
+      expect(geometry.bodyScrollHeight).toBeGreaterThan(geometry.bodyClientHeight);
+      expect(geometry.bodyScrollTop).toBeGreaterThan(0);
     });
   }
 });

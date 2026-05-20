@@ -1,5 +1,6 @@
 import { sanitizePostLoginNextPath } from "@/lib/auth/post-login";
 
+import { PostLoginDestinationSkeleton } from "./post-login-destination-skeleton";
 import { PostLoginRedirect } from "./post-login-redirect";
 
 type AuthCompleteSearchParams = {
@@ -17,5 +18,10 @@ export default async function AuthCompletePage({
   const rawNextPath = Array.isArray(params.next) ? params.next[0] : params.next;
   const nextPath = sanitizePostLoginNextPath(rawNextPath);
 
-  return <PostLoginRedirect nextPath={nextPath} />;
+  return (
+    <>
+      <PostLoginDestinationSkeleton nextPath={nextPath} />
+      <PostLoginRedirect nextPath={nextPath} />
+    </>
+  );
 }
