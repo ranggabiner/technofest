@@ -7,6 +7,7 @@ describe("login header", () => {
   const realSource = readOptionalSource("./real/page.tsx");
   const authCompleteSource = readFileSync(new URL("../auth/complete/page.tsx", import.meta.url), "utf8");
   const authCompleteLoadingSource = readOptionalSource("../auth/complete/loading.tsx");
+  const authCompleteDestinationSkeletonSource = readOptionalSource("../auth/complete/post-login-destination-skeleton.tsx");
   const authCompleteScreenSource = readOptionalSource("../auth/complete/auth-complete-loading-screen.tsx");
   const roleSelectionSource = readFileSync(new URL("./role/page.tsx", import.meta.url), "utf8");
   const sharedSource = readOptionalSource("./_components/login-content.tsx");
@@ -96,8 +97,14 @@ describe("login header", () => {
     expect(sessionSource).toContain("postLoginHandoffPath(roleEntryPath(role))");
     expect(authCompleteSource).toContain("PostLoginRedirect");
     expect(authCompleteSource).not.toContain("AuthCompleteLoadingScreen");
-    expect(authCompleteLoadingSource).toContain("AuthPageSkeleton");
-    expect(authCompleteRedirectSource).toContain("AuthPageSkeleton");
+    expect(authCompleteSource).toContain("PostLoginDestinationSkeleton");
+    expect(authCompleteLoadingSource).toContain("PostLoginDestinationSkeleton");
+    expect(authCompleteLoadingSource).not.toContain("AuthPageSkeleton");
+    expect(authCompleteRedirectSource).not.toContain("AuthPageSkeleton");
+    expect(authCompleteDestinationSkeletonSource).toContain("PatientDashboardSkeleton");
+    expect(authCompleteDestinationSkeletonSource).toContain("DoctorDashboardSkeleton");
+    expect(authCompleteDestinationSkeletonSource).toContain("AdminDashboardSkeleton");
+    expect(authCompleteDestinationSkeletonSource).toContain("SuperAdminDashboardSkeleton");
     expect(authCompleteScreenSource).toBe("");
     const dashboardLoadingCopy = new RegExp(
       ["Menyiapkan", "dashboard"].join(" ") + "|" + ["Preparing", "dashboard"].join(" "),

@@ -1,5 +1,5 @@
-import { AuthPageSkeleton } from "@/components/loading-skeletons";
+import { PostLoginDestinationSkeleton } from "./post-login-destination-skeleton";
 
 export default function Loading() {
-  return <AuthPageSkeleton />;
+  return <PostLoginDestinationSkeleton />;
 }

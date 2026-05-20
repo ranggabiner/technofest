@@ -28,6 +28,15 @@ describe("ViewportModal", () => {
     expect(source).toContain("overflow-y-auto");
   });
 
+  it("keeps panel height and scroll behavior safe by default", () => {
+    const source = readFileSync(componentUrl, "utf8");
+
+    expect(source).toContain('as?: "article" | "div" | "form" | "section"');
+    expect(source).toContain("max-h-[calc(100dvh-2rem)]");
+    expect(source).toContain("min-h-0");
+    expect(source).toContain("overflow-y-auto");
+  });
+
   it("locks body scroll with ref counting for nested modals", () => {
     const source = readFileSync(componentUrl, "utf8");
 

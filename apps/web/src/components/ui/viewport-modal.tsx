@@ -4,6 +4,7 @@ import {
   useEffect,
   useState,
   useSyncExternalStore,
+  type FormHTMLAttributes,
   type HTMLAttributes,
   type ReactNode,
 } from "react";
@@ -34,9 +35,10 @@ type ViewportModalProps = HTMLAttributes<HTMLDivElement> & {
   lockScroll?: boolean;
 };
 
-type ViewportModalPanelProps = HTMLAttributes<HTMLElement> & {
-  as?: "article" | "div" | "section";
-};
+type ViewportModalPanelProps = HTMLAttributes<HTMLElement> &
+  FormHTMLAttributes<HTMLFormElement> & {
+    as?: "article" | "div" | "form" | "section";
+  };
 
 export function useViewportModalPresence(isOpen: boolean) {
   const [isPresent, setIsPresent] = useState(isOpen);
@@ -79,7 +81,11 @@ export function ViewportModalPanel({
   return (
     <Component
       data-viewport-modal-panel=""
-      className={cn(motion.modalPanel, className)}
+      className={cn(
+        "max-h-[calc(100dvh-2rem)] min-h-0 overflow-y-auto",
+        motion.modalPanel,
+        className,
+      )}
       {...props}
     />
   );
