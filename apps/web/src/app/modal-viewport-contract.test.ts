@@ -34,4 +34,18 @@ describe("modal viewport contract", () => {
 
     expect(text).not.toMatch(/className=["']fixed inset-0 z-(?:50|\[)/);
   });
+
+  it.each(modalFiles)("%s does not bypass the shared viewport panel component", (path) => {
+    const text = source(path);
+
+    expect(text).not.toContain('data-viewport-modal-panel=""');
+  });
+
+  it("keeps permission modal actions fixed while the modal body scrolls", () => {
+    const text = source("patient/_components/doctor-access-client.tsx");
+
+    expect(text).toContain('<ViewportModalPanel as="form"');
+    expect(text).toContain("grid-rows-[auto_minmax(0,1fr)_auto]");
+    expect(text).toContain("grid min-h-0 gap-6 overflow-y-auto");
+  });
 });

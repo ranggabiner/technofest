@@ -130,7 +130,7 @@ export function AdminDoctorTable({
 function AdminReviewModalFallback() {
   return (
     <ViewportModal className="bg-black/35 sm:py-6">
-      <ViewportModalPanel className="grid max-h-[calc(100dvh-2rem)] min-h-[420px] w-full max-w-3xl animate-pulse gap-5 overflow-hidden rounded-[10px] border border-[var(--color-stone-surface)] bg-[var(--color-card)] p-4 shadow-[var(--shadow-elevated)] sm:p-5">
+      <ViewportModalPanel className="grid max-h-[calc(100dvh-2rem)] min-h-[min(420px,calc(100dvh-2rem))] w-full max-w-3xl animate-pulse gap-5 overflow-hidden rounded-[10px] border border-[var(--color-stone-surface)] bg-[var(--color-card)] p-4 shadow-[var(--shadow-elevated)] sm:p-5">
         <div className="flex items-start justify-between gap-4">
           <div className="grid flex-1 gap-3">
             <div className="h-7 w-44 rounded-[10px] bg-[color-mix(in_srgb,var(--color-ash)_18%,transparent)]" />

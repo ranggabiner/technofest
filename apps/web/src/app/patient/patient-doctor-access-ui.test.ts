@@ -129,6 +129,19 @@ describe("patient doctor access page", () => {
     expect(enAccess.permissionModalAllow).toBe("Grant Access");
   });
 
+  it("keeps permission options relevant inside the medical access modal", () => {
+    const client = clientSource();
+
+    expect(client).toContain('name="attachment_record_ids"');
+    expect(client).toContain("const hasDownloadableAttachment = Boolean(record.attachmentFileId)");
+    expect(client).toContain("hasDownloadableAttachment ? (");
+    expect(client).not.toContain("!canViewScope1 || !record.attachmentFileId");
+    expect(client).not.toContain("permissionAddMedicalRecord");
+    expect(client).not.toContain("permissionAddMentalConcern");
+    expect(client).not.toContain("permissionAddPhysicalConcern");
+    expect(client).not.toContain("Plus,");
+  });
+
   it("opens patient QR scanning inside a dismissible modal and stops camera on close", () => {
     const client = clientSource();
     const dashboardQuickAccess = dashboardQuickAccessSource();
