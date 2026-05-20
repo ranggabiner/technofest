@@ -37,11 +37,14 @@ describe("patient layout shell", () => {
     expect(source).toContain("children");
     expect(patientLayoutSource).toContain("PortalLayout");
     expect(patientLayoutSource).toContain("PortalForbiddenLayout");
-    expect(sharedLayoutSource).toContain("data-portal-layout");
-    expect(sharedLayoutSource).toContain("data-portal-sidebar");
-    expect(patientLayoutSource).toContain("profileLabel={copy.profile.shell.profile}");
-    expect(patientLayoutSource).not.toContain("copy.patient.dashboard.editProfile");
-  });
+      expect(sharedLayoutSource).toContain("data-portal-layout");
+      expect(sharedLayoutSource).toContain("data-portal-sidebar");
+      expect(sharedLayoutSource).toContain("userAvatarUrl");
+      expect(sharedLayoutSource).toContain("<ProfileAvatar");
+      expect(patientLayoutSource).toContain("profileLabel={copy.profile.shell.profile}");
+      expect(patientLayoutSource).toContain("patientAvatarUrl");
+      expect(patientLayoutSource).not.toContain("copy.patient.dashboard.editProfile");
+    });
 
   it.each(patientRouteFiles)("%s keeps route UI content-only", (relativePath) => {
     const source = readFileSync(new URL(`./${relativePath}`, import.meta.url), "utf8");
@@ -81,6 +84,7 @@ describe("patient layout shell", () => {
       header: React.createElement("header", { "data-test-header": true }),
       patientName: "Budi Santoso",
       patientEmail: "budi@example.com",
+      patientAvatarUrl: "https://project-ref.supabase.co/storage/v1/object/public/profile-photos/user-1/profile/avatar.png",
       children: React.createElement("section", null, "Konten halaman"),
     };
 
@@ -93,6 +97,7 @@ describe("patient layout shell", () => {
     expect(dashboardHtml).toContain('data-patient-layout="portal-shell"');
     expect(dashboardHtml).toContain('data-patient-sidebar="profile"');
     expect(dashboardHtml).toContain('data-patient-sidebar="mobile-profile"');
+    expect(dashboardHtml).toContain("profile-photos/user-1/profile/avatar.png");
     expect(dashboardHtml).toContain("Dashboard");
     expect(dashboardHtml).toContain("Jurnal AI");
     expect(dashboardHtml).toContain("Akses Dokter");
@@ -105,8 +110,9 @@ describe("patient layout shell", () => {
     const source = readFileSync(new URL("../_components/portal-layout.tsx", import.meta.url), "utf8");
 
     expect(source).toContain("border border-[color-mix(in_srgb,var(--color-error-red)_55%,white)] bg-[color-mix(in_srgb,var(--color-error-red)_8%,transparent)]");
-    expect(source).toContain("text-[var(--color-error-red)] transition hover:bg-[color-mix(in_srgb,var(--color-error-red)_14%,transparent)]");
+    expect(source).toContain("text-[var(--color-error-red)] hover:bg-[color-mix(in_srgb,var(--color-error-red)_14%,transparent)]");
     expect(source).toContain("loadingLabel={logoutLabel}");
+    expect(source).toContain('import { motion } from "@/components/ui/motion";');
     expect(source).not.toContain("border border-transparent");
     expect(source).not.toContain("hover:border-[var(--color-stone-surface)]");
     expect(source).not.toContain("text-[var(--color-ash)] transition hover:bg-[var(--color-stone-surface)]");
@@ -121,7 +127,8 @@ describe("patient layout shell", () => {
     expect(source).toContain("col-span-1 flex flex-col gap-5 md:col-span-9 md:gap-8");
     expect(source).toContain("inline-flex min-h-11 w-full cursor-pointer");
     expect(buttonSource).toContain("inline-flex min-h-11 max-w-full cursor-pointer");
-    expect(buttonSource).toContain("text-center transition");
+    expect(buttonSource).toContain("text-center disabled:cursor-not-allowed");
+    expect(buttonSource).toContain("motion.button");
     expect(buttonSource).toContain("typography.button");
   });
 
@@ -147,6 +154,16 @@ describe("patient layout shell", () => {
     expect(patientPendingSkeletonKey("/patient/access-history")).toBeNull();
     expect(patientPendingSkeletonKey("/patient/access-history/detail")).toBeNull();
     expect(patientPendingSkeletonKey("/patient/unknown")).toBeNull();
+  });
+
+  it("delays optimistic portal skeletons so fast navigations keep current content visible", () => {
+    const source = readFileSync(new URL("../../components/route-transition.tsx", import.meta.url), "utf8");
+
+    expect(source).toContain("pendingSkeletonDelayMs");
+    expect(source).toContain("window.setTimeout");
+    expect(source).toContain("showPendingSkeleton");
+    expect(source).toContain("const pendingSkeleton = showPendingSkeleton ? renderSkeleton(pendingPath) : null");
+    expect(source).toContain("return () => window.clearTimeout");
   });
 
   it("removes the retired access history route from the patient portal", () => {

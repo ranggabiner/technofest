@@ -134,6 +134,7 @@ describe("doctor dashboard contract", () => {
     expect(client).toContain("async function handleRecordSaved(grantId: string)");
     expect(client).toContain("onSaved={handleRecordSaved}");
     expect(client).toContain("onClose={closeGrantModal}");
+    expect(client).toContain("message={copy.common.successToast.medicalRecordSaved}");
     expect(modalContent).toContain("formRef.current?.reset()");
     expect(modalContent).toContain("onClose()");
     expect(modalContent).toContain("const refreshResult = await onSaved(state.grant.grantId)");

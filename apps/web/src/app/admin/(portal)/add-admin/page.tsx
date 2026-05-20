@@ -1,4 +1,5 @@
 import { DashboardCard } from "@/app/_components/portal-layout";
+import { EmptyState } from "@/components/state-panel";
 import { getCurrentRole } from "@/lib/auth/session";
 import { loadAdminInvitationsState } from "@/lib/admin/service";
 import { getDictionary } from "@/lib/i18n/server";
@@ -30,9 +31,7 @@ export default async function AdminAddAdminPage() {
         </header>
 
         <DashboardCard className="p-6 md:p-8">
-          <p className="rounded-[10px] bg-[var(--color-stone-surface)] p-4 text-sm text-[var(--color-ash)]">
-            {copy.admin.addAdmin.superadminRequired}
-          </p>
+          <EmptyState icon={false} className="block" message={copy.admin.addAdmin.superadminRequired} />
         </DashboardCard>
       </section>
     );

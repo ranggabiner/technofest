@@ -7,6 +7,7 @@ import type { ComponentPropsWithoutRef } from "react";
 import { cn } from "@/lib/utils";
 
 import { Button } from "./button";
+import { motion } from "./motion";
 
 type ButtonProps = ComponentPropsWithoutRef<typeof Button>;
 
@@ -42,7 +43,14 @@ function AsyncActionButton({
         disabled={isLoading || disabled}
         {...props}
       >
-        <span className={cn("inline-flex items-center justify-center gap-2", isLoading && "opacity-0")} aria-hidden={isLoading}>
+        <span
+          className={cn(
+            "inline-flex items-center justify-center gap-2",
+            motion.loadingContent,
+            isLoading && "opacity-0",
+          )}
+          aria-hidden={isLoading}
+        >
           {children}
         </span>
         {isLoading ? <LoadingSlot label={loadingLabel} /> : null}

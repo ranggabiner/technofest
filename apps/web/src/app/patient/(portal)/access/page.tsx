@@ -1,5 +1,4 @@
 import { redirect } from "next/navigation";
-import { AlertTriangle, CheckCircle2 } from "lucide-react";
 
 import {
   loadPatientAccessPermissionOptions,
@@ -8,6 +7,7 @@ import {
 import { requireRole } from "@/lib/auth/session";
 import { roleOnboardingPath } from "@/lib/auth/roles";
 import { getDictionary, getLocale } from "@/lib/i18n/server";
+import { InlineStatusMessage } from "@/components/state-panel";
 
 import {
   AccessHistoryList,
@@ -57,18 +57,7 @@ export default async function PatientAccessPage({
       </header>
 
       {params.access_error ? (
-        <StatusMessage tone="failed" message={params.access_error} />
-      ) : null}
-
-      {params.access_status === "granted" || params.access_status === "revoked" ? (
-        <StatusMessage
-          tone="approved"
-          message={
-            params.access_status === "granted"
-              ? copy.patient.access.granted
-              : copy.patient.access.revoked
-          }
-        />
+        <InlineStatusMessage tone="danger" message={params.access_error} />
       ) : null}
 
       <section data-doctor-access-section="grant">
@@ -135,21 +124,5 @@ export default async function PatientAccessPage({
       </section>
 
     </section>
-  );
-}
-
-function StatusMessage({ tone, message }: { tone: "approved" | "failed"; message: string }) {
-  const isFailed = tone === "failed";
-
-  return (
-    <div className={`flex items-start gap-3 rounded-[10px] border p-4 text-sm ${
-      isFailed
-        ? "border-[var(--color-error-red)] bg-[var(--color-error-surface)] text-[var(--color-error-red)]"
-        : "border-[var(--color-teal-primary)] bg-[var(--color-teal-surface)] text-[var(--color-teal-deep)]"
-    }`}
-    >
-      {isFailed ? <AlertTriangle className="mt-0.5 size-4 shrink-0" /> : <CheckCircle2 className="mt-0.5 size-4 shrink-0" />}
-      {message}
-    </div>
   );
 }

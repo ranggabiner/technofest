@@ -11,6 +11,7 @@ describe("login header", () => {
   const roleSelectionSource = readFileSync(new URL("./role/page.tsx", import.meta.url), "utf8");
   const sharedSource = readOptionalSource("./_components/login-content.tsx");
   const callbackRouteSource = readFileSync(new URL("../auth/callback/route.ts", import.meta.url), "utf8");
+  const authCompleteRedirectSource = readFileSync(new URL("../auth/complete/post-login-redirect.tsx", import.meta.url), "utf8");
   const actions = readFileSync(new URL("./actions.ts", import.meta.url), "utf8");
   const sessionSource = readFileSync(new URL("../../lib/auth/session.ts", import.meta.url), "utf8");
   const loginSurface = [source, sharedSource].join("\n");
@@ -95,7 +96,8 @@ describe("login header", () => {
     expect(sessionSource).toContain("postLoginHandoffPath(roleEntryPath(role))");
     expect(authCompleteSource).toContain("PostLoginRedirect");
     expect(authCompleteSource).not.toContain("AuthCompleteLoadingScreen");
-    expect(authCompleteLoadingSource).toBe("");
+    expect(authCompleteLoadingSource).toContain("AuthPageSkeleton");
+    expect(authCompleteRedirectSource).toContain("AuthPageSkeleton");
     expect(authCompleteScreenSource).toBe("");
     const dashboardLoadingCopy = new RegExp(
       ["Menyiapkan", "dashboard"].join(" ") + "|" + ["Preparing", "dashboard"].join(" "),

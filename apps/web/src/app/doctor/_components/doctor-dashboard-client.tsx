@@ -14,9 +14,12 @@ import {
 
 import { DashboardCard } from "@/app/_components/dashboard-card";
 import { SaveStatusToast } from "@/app/_components/save-status-toast";
+import { EmptyState } from "@/components/state-messages";
 import { StatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
 import { CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { motion } from "@/components/ui/motion";
+import { ViewportModal, ViewportModalPanel } from "@/components/ui/viewport-modal";
 import { loadDoctorGrantModalStateAction } from "@/app/doctor/actions";
 import {
   deriveDoctorSessionStatus,
@@ -110,7 +113,7 @@ export function DoctorDashboardClient({
 
   return (
     <div className="grid gap-8">
-      <SaveStatusToast message={copy.common.saveSuccess} triggerKey={saveToastKey} />
+      <SaveStatusToast message={copy.common.successToast.medicalRecordSaved} triggerKey={saveToastKey} />
       <DashboardCard className="p-6 md:p-8">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <CardHeader className="mb-0">
@@ -126,7 +129,10 @@ export function DoctorDashboardClient({
               type="button"
               onClick={openQrModal}
               title={copy.doctor.dashboard.openQrLarge}
-              className="cursor-pointer rounded-[10px] border border-[var(--color-fog)] bg-[var(--color-card)] p-2 transition hover:bg-[var(--color-stone-surface)]"
+              className={cn(
+                "cursor-pointer rounded-[10px] border border-[var(--color-fog)] bg-[var(--color-card)] p-2 hover:bg-[var(--color-stone-surface)]",
+                motion.iconButton,
+              )}
             >
               <Image
                 src={qrData}
@@ -201,7 +207,7 @@ export function DoctorDashboardClient({
                 />
               ))
             ) : (
-              <EmptyState message={copy.doctor.dashboard.noActivePatients} />
+              <EmptyState icon={false} className="block" message={copy.doctor.dashboard.noActivePatients} />
             )}
           </div>
 
@@ -528,15 +534,15 @@ function DashboardDialog({
   wide?: boolean;
 }) {
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-black/35 px-3 py-4 sm:px-4 sm:py-6">
-      <div
+    <ViewportModal className="bg-black/35 sm:py-6">
+      <ViewportModalPanel
         role="dialog"
         aria-modal="true"
         aria-labelledby="doctor-dashboard-modal-title"
-        className={[
+        className={cn(
           "max-h-[calc(100dvh-2rem)] w-full overflow-y-auto rounded-[10px] border border-[var(--color-stone-surface)] bg-[var(--color-card)] p-4 shadow-[var(--shadow-elevated)] sm:p-5",
           wide ? "max-w-5xl" : "max-w-md",
-        ].join(" ")}
+        )}
       >
         <div className="mb-4 flex items-start justify-between gap-4">
           <h2 id="doctor-dashboard-modal-title" className="text-lg font-semibold text-[var(--color-midnight)]">
@@ -546,14 +552,17 @@ function DashboardDialog({
             type="button"
             onClick={onClose}
             aria-label={closeLabel}
-            className="inline-flex size-10 cursor-pointer items-center justify-center rounded-full bg-[var(--color-stone-surface)] text-[var(--color-midnight)] transition hover:bg-[var(--color-parchment-card)]"
+            className={cn(
+              "inline-flex size-10 cursor-pointer items-center justify-center rounded-full bg-[var(--color-stone-surface)] text-[var(--color-midnight)] hover:bg-[var(--color-parchment-card)]",
+              motion.iconButton,
+            )}
           >
             <X size={18} />
           </button>
         </div>
         {children}
-      </div>
-    </div>
+      </ViewportModalPanel>
+    </ViewportModal>
   );
 }
 
@@ -580,14 +589,6 @@ function ModalLoadingState({ message }: { message: string }) {
       <Loader2 size={18} className="shrink-0 animate-spin text-[var(--color-midnight)]" aria-hidden="true" />
       <span>{message}</span>
     </div>
-  );
-}
-
-function EmptyState({ message }: { message: string }) {
-  return (
-    <p className="rounded-[10px] bg-[var(--color-stone-surface)] p-4 text-sm text-[var(--color-ash)]">
-      {message}
-    </p>
   );
 }
 

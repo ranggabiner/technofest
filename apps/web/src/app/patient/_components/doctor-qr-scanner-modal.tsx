@@ -5,7 +5,10 @@ import { Loader2, QrCode, RefreshCw, X } from "lucide-react";
 
 import { LoadingActionButton } from "@/components/ui/async-action-button";
 import { Button } from "@/components/ui/button";
+import { motion } from "@/components/ui/motion";
+import { ViewportModal, ViewportModalPanel } from "@/components/ui/viewport-modal";
 import type { Dictionary } from "@/lib/i18n/dictionary";
+import { cn } from "@/lib/utils";
 
 import { useDoctorQrScanner } from "./use-doctor-qr-scanner";
 
@@ -87,8 +90,8 @@ export function DoctorQrScannerModal({
   if (!open) return null;
 
   return (
-    <div
-      className="fixed inset-0 z-50 grid place-items-center overflow-y-auto bg-[color-mix(in_srgb,var(--color-ash)_28%,transparent)] p-3 backdrop-blur-sm sm:p-4"
+    <ViewportModal
+      className="bg-[color-mix(in_srgb,var(--color-ash)_28%,transparent)] p-3 backdrop-blur-sm sm:p-4"
       data-doctor-qr-scanner-modal
       role="dialog"
       aria-modal="true"
@@ -98,7 +101,7 @@ export function DoctorQrScannerModal({
         if (event.target === event.currentTarget) handleClose();
       }}
     >
-      <section className="my-4 grid max-h-[calc(100dvh-2rem)] w-full max-w-[560px] overflow-y-auto rounded-[18px] border border-[var(--color-stone-surface)] bg-[var(--color-card)] shadow-[0_24px_80px_rgba(18,18,18,0.18),inset_0_0_0_1px_var(--color-stone-surface)] sm:my-6">
+      <ViewportModalPanel as="section" className="my-4 grid max-h-[calc(100dvh-2rem)] w-full max-w-[560px] overflow-y-auto rounded-[18px] border border-[var(--color-stone-surface)] bg-[var(--color-card)] shadow-[0_24px_80px_rgba(18,18,18,0.18),inset_0_0_0_1px_var(--color-stone-surface)] sm:my-6">
         <header className="flex items-start justify-between gap-4 px-5 pb-4 pt-5 sm:px-6">
           <div className="min-w-0">
             <h2
@@ -116,7 +119,10 @@ export function DoctorQrScannerModal({
           </div>
           <button
             type="button"
-            className="grid size-10 shrink-0 cursor-pointer place-items-center rounded-full text-[var(--color-ash)] transition hover:bg-[var(--color-stone-surface)] hover:text-[var(--color-midnight)]"
+            className={cn(
+              "grid size-10 shrink-0 cursor-pointer place-items-center rounded-full text-[var(--color-ash)] hover:bg-[var(--color-stone-surface)] hover:text-[var(--color-midnight)]",
+              motion.iconButton,
+            )}
             aria-label={copy.patient.access.scannerModalClose}
             onClick={handleClose}
           >
@@ -175,7 +181,7 @@ export function DoctorQrScannerModal({
             </LoadingActionButton>
           </footer>
         </div>
-      </section>
-    </div>
+      </ViewportModalPanel>
+    </ViewportModal>
   );
 }

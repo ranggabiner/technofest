@@ -16,6 +16,26 @@ export const dictionary = {
       },
       logout: "Keluar akun",
       saveSuccess: "Data berhasil diperbarui dan disimpan.",
+      successToast: {
+        default: "Perubahan berhasil disimpan.",
+        profileUpdated: "Profil berhasil diperbarui.",
+        changesSaved: "Perubahan berhasil disimpan.",
+        documentUploaded: "Dokumen berhasil diunggah.",
+        documentsUploaded: "Dokumen berhasil diunggah.",
+        medicalRecordSaved: "Rekam medis berhasil disimpan.",
+        accessGranted: "Akses dokter berhasil diberikan.",
+        accessRevoked: "Akses dokter berhasil dicabut.",
+        doctorApproved: "Dokter berhasil disetujui.",
+        doctorRejected: "Dokter berhasil ditolak.",
+        adminInvitationCreated: "Undangan admin berhasil dibuat.",
+        adminAccessRevoked: "Akses admin berhasil dicabut.",
+        onboardingStepSaved: "Data onboarding berhasil disimpan.",
+        onboardingSubmitted: "Onboarding berhasil dikirim.",
+        aiSessionCreated: "Sesi AI baru berhasil dibuat.",
+        aiSessionFinished: "Sesi AI berhasil diakhiri.",
+        summaryRetryStarted: "Retry ringkasan berhasil dimulai.",
+        blockchainRetryCompleted: "Retry proof blockchain selesai.",
+      },
       indonesia: "ID",
       english: "EN",
       theme: {
@@ -360,6 +380,7 @@ export const dictionary = {
           ],
         },
         footer: {
+          contactTitle: "Hubungi Kami",
           description:
             "MedProof membantu pasien menyimpan rekam medis terverifikasi blockchain, melacak akses dokter, dan menyiapkan keluhan mental maupun fisik melalui Jurnal AI.",
         },
@@ -992,6 +1013,15 @@ export const dictionary = {
       },
       photo: {
         changePhoto: "Ganti Foto",
+        uploadErrors: {
+          compression_failed: "Foto profil gagal diproses. Pilih file JPG atau PNG lain.",
+          empty_file: "Foto profil kosong. Pilih file JPG atau PNG lain.",
+          file_too_large: "Foto profil melebihi batas 5 MB. Pilih file yang lebih kecil.",
+          unsupported_type: "Format foto profil tidak didukung. Gunakan JPG atau PNG.",
+          network: "Upload foto profil gagal karena koneksi bermasalah. Coba lagi.",
+          server: "Upload foto profil gagal karena layanan penyimpanan bermasalah. Coba lagi nanti.",
+          unknown: "Foto profil gagal disimpan. Coba lagi atau pilih file lain.",
+        },
       },
       patient: {
         eyebrow: "Profil",
@@ -1487,6 +1517,26 @@ export const dictionary = {
       },
       logout: "Log out",
       saveSuccess: "Data updated and saved successfully.",
+      successToast: {
+        default: "Changes saved successfully.",
+        profileUpdated: "Profile updated successfully.",
+        changesSaved: "Changes saved successfully.",
+        documentUploaded: "Document uploaded successfully.",
+        documentsUploaded: "Documents uploaded successfully.",
+        medicalRecordSaved: "Medical record saved successfully.",
+        accessGranted: "Doctor access granted successfully.",
+        accessRevoked: "Doctor access revoked successfully.",
+        doctorApproved: "Doctor approved successfully.",
+        doctorRejected: "Doctor rejected successfully.",
+        adminInvitationCreated: "Admin invitation created successfully.",
+        adminAccessRevoked: "Admin access revoked successfully.",
+        onboardingStepSaved: "Onboarding data saved successfully.",
+        onboardingSubmitted: "Onboarding submitted successfully.",
+        aiSessionCreated: "New AI session created successfully.",
+        aiSessionFinished: "AI session finished successfully.",
+        summaryRetryStarted: "Summary retry started successfully.",
+        blockchainRetryCompleted: "Blockchain proof retry completed.",
+      },
       indonesia: "ID",
       english: "EN",
       theme: {
@@ -1831,6 +1881,7 @@ export const dictionary = {
           ],
         },
         footer: {
+          contactTitle: "Contact Us",
           description:
             "MedProof helps patients store blockchain-verified medical records, track doctor access, and prepare mental or physical complaints through AI Journaling.",
         },
@@ -2463,6 +2514,15 @@ export const dictionary = {
       },
       photo: {
         changePhoto: "Change Photo",
+        uploadErrors: {
+          compression_failed: "Profile photo could not be processed. Choose another JPG or PNG file.",
+          empty_file: "Profile photo is empty. Choose another JPG or PNG file.",
+          file_too_large: "Profile photo exceeds the 5 MB limit. Choose a smaller file.",
+          unsupported_type: "Profile photo format is not supported. Use JPG or PNG.",
+          network: "Profile photo upload failed due to a network issue. Try again.",
+          server: "Profile photo upload failed because storage is unavailable. Try again later.",
+          unknown: "Profile photo could not be saved. Try again or choose another file.",
+        },
       },
       patient: {
         eyebrow: "Profile",

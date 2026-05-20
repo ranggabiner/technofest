@@ -9,6 +9,7 @@ import { ProofStatus } from "@/components/proof-status";
 import { EmptyState } from "@/components/state-panel";
 import { StatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
+import { motion } from "@/components/ui/motion";
 import { requireRole } from "@/lib/auth/session";
 import { roleOnboardingPath } from "@/lib/auth/roles";
 import { loadPatientJournalDashboardState } from "@/lib/ai/journal-service";
@@ -21,6 +22,7 @@ import {
 } from "@/lib/i18n/labels";
 import { getDictionary, getLocale } from "@/lib/i18n/server";
 import { loadPatientDashboardState } from "@/lib/patient/dashboard";
+import { cn } from "@/lib/utils";
 
 import { DashboardCard } from "../_components/patient-layout";
 import { PatientDashboardQuickAccess } from "../_components/patient-dashboard-quick-access";
@@ -165,7 +167,10 @@ export default async function PatientDashboardPage() {
                   {journalState.recentSummaries.map((summary) => (
                     <div
                       key={summary.id}
-                      className="rounded-[14px] border border-[var(--color-stone-surface)] bg-[var(--color-parchment-card)] p-4 transition hover:border-[color-mix(in_srgb,var(--color-teal-primary)_30%,transparent)] hover:bg-[var(--color-teal-surface)] sm:p-6"
+                      className={cn(
+                        "rounded-[14px] border border-[var(--color-stone-surface)] bg-[var(--color-parchment-card)] p-4 hover:border-[color-mix(in_srgb,var(--color-teal-primary)_30%,transparent)] hover:bg-[var(--color-teal-surface)] sm:p-6",
+                        motion.card,
+                      )}
                     >
                       <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                         <div className="flex min-w-0 items-center gap-2">

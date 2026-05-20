@@ -9,13 +9,18 @@ import {
   useMemo,
   useState,
   type AnchorHTMLAttributes,
-  type MouseEvent,
   type ReactNode,
 } from "react";
 import type { LucideIcon } from "lucide-react";
 
 import type { PortalNavigationTarget } from "@/app/_components/portal-navigation-model";
 import { resolvePortalNavigationPath } from "@/app/_components/portal-navigation-model";
+import {
+  RouteTransitionSurface,
+  beginTransitionFromLinkClick,
+  useRouteTransition,
+} from "@/components/route-transition";
+import { motion } from "@/components/ui/motion";
 import { cn } from "@/lib/utils";
 
 export type PortalNavItem = {
@@ -41,6 +46,7 @@ export function PortalNavigationTransitionProvider({
   targets: readonly PortalNavigationTarget[];
 }) {
   const pathname = usePathname() ?? "/";
+  const { beginRouteTransition } = useRouteTransition();
   const [pendingNavigation, setPendingNavigation] = useState<{
     fromPath: string;
     targetPath: string;
@@ -52,11 +58,12 @@ export function PortalNavigationTransitionProvider({
     () => ({
       beginPortalNavigation: (href) => {
         const targetPath = resolvePortalNavigationPath(href, pathname, targets);
+        beginRouteTransition(href);
         setPendingNavigation(targetPath ? { fromPath: pathname, targetPath } : null);
       },
       pendingPath,
     }),
-    [pathname, pendingPath, targets],
+    [beginRouteTransition, pathname, pendingPath, targets],
   );
 
   return (
@@ -83,18 +90,15 @@ export function PortalNavigationContent({
   renderSkeleton: (path: string) => ReactNode | null;
 }) {
   const { pendingPath } = usePortalNavigationTransition();
-  const skeleton = pendingPath ? renderSkeleton(pendingPath) : null;
-
-  if (!skeleton) return <>{children}</>;
 
   return (
-    <div
-      aria-busy="true"
-      className="contents"
-      {...{ [dataPendingAttribute]: pendingPath }}
+    <RouteTransitionSurface
+      dataPendingAttribute={dataPendingAttribute}
+      pendingPath={pendingPath}
+      renderSkeleton={renderSkeleton}
     >
-      {skeleton}
-    </div>
+      {children}
+    </RouteTransitionSurface>
   );
 }
 
@@ -118,7 +122,8 @@ export function PortalDesktopNavigation({
           href={item.href}
           aria-current={item.active ? "page" : undefined}
           className={cn(
-            "flex min-h-11 cursor-pointer items-center gap-4 rounded-lg px-3 py-2 text-sm font-medium text-[var(--color-ash)] transition hover:bg-[color-mix(in_srgb,var(--color-teal-primary)_5%,transparent)] hover:text-[var(--color-teal-deep)]",
+            "flex min-h-11 cursor-pointer items-center gap-4 rounded-lg px-3 py-2 text-sm font-medium text-[var(--color-ash)] hover:bg-[color-mix(in_srgb,var(--color-teal-primary)_5%,transparent)] hover:text-[var(--color-teal-deep)]",
+            motion.navItem,
             item.active && "bg-[color-mix(in_srgb,var(--color-teal-primary)_10%,transparent)] text-[var(--color-teal-deep)]",
           )}
         >
@@ -155,6 +160,7 @@ export function PortalMobileNavigation({
           aria-current={item.active ? "page" : undefined}
           className={cn(
             "inline-flex min-h-11 shrink-0 cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-[var(--color-ash)]",
+            motion.navItem,
             item.active && "bg-[color-mix(in_srgb,var(--color-teal-primary)_10%,transparent)] text-[var(--color-teal-deep)]",
           )}
         >
@@ -174,6 +180,7 @@ type PortalTransitionLinkProps = LinkProps &
 export const PortalTransitionLink = forwardRef<HTMLAnchorElement, PortalTransitionLinkProps>(
   function PortalTransitionLink({ href, onClick, onNavigate, ...props }, ref) {
     const { beginPortalNavigation } = usePortalNavigationTransition();
+    const { beginRouteTransition } = useRouteTransition();
     const hrefText = stringifyHref(href);
 
     return (
@@ -181,7 +188,9 @@ export const PortalTransitionLink = forwardRef<HTMLAnchorElement, PortalTransiti
         ref={ref}
         href={href}
         onClick={(event) => {
-          if (isPlainPrimaryClick(event)) beginPortalNavigation(hrefText);
+          if (beginTransitionFromLinkClick(event, hrefText, beginRouteTransition)) {
+            beginPortalNavigation(hrefText);
+          }
           onClick?.(event);
         }}
         onNavigate={(event) => {
@@ -197,15 +206,4 @@ export const PortalTransitionLink = forwardRef<HTMLAnchorElement, PortalTransiti
 function stringifyHref(href: LinkProps["href"]) {
   if (typeof href === "string") return href;
   return href.pathname ?? "";
-}
-
-function isPlainPrimaryClick(event: MouseEvent<HTMLAnchorElement>) {
-  return (
-    !event.defaultPrevented &&
-    event.button === 0 &&
-    !event.metaKey &&
-    !event.altKey &&
-    !event.ctrlKey &&
-    !event.shiftKey
-  );
 }

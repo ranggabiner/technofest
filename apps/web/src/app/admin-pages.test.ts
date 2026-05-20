@@ -95,6 +95,9 @@ describe("admin pages contract", () => {
     expect(superadminDashboard).toContain("requireSuperAdminRole");
     expect(superadminDashboard).toContain("AdminLayout");
     expect(superadminDashboard).toContain("loadAdminDashboardState");
+    expect(superadminDashboard).toContain("AdminDashboardContent");
+    expect(superadminDashboard).not.toContain("function StatCard");
+    expect(superadminDashboard).not.toContain("function describeDashboardAudit");
     expect(superadminProfile).toContain('<RoleProfilePage routeRole="superadmin" />');
   });
 
@@ -138,6 +141,7 @@ describe("admin pages contract", () => {
     const dashboard = route("admin/(portal)/dashboard/page.tsx");
     const approval = route("admin/(portal)/approval/page.tsx");
     const addAdminPage = route("admin/(portal)/add-admin/page.tsx");
+    const dashboardContent = route("admin/_components/admin-dashboard-content.tsx");
     const addAdmin = route("admin/(portal)/add-admin/add-admin-form.tsx");
     const addAdminList = route("admin/(portal)/add-admin/admin-invitations-list.tsx");
     const addAdminActions = route("admin/(portal)/add-admin/actions.ts");
@@ -145,18 +149,29 @@ describe("admin pages contract", () => {
     const modal = route("admin/_components/admin-review-modal.tsx");
 
     expect(dashboard).toContain("loadAdminDashboardState");
-    expect(dashboard).toContain("copy.admin.dashboard.priorityQueue");
-    expect(dashboard).toContain("copy.admin.dashboard.auditTrail");
+    expect(dashboard).toContain("AdminDashboardContent");
+    expect(dashboard).not.toContain("function StatCard");
+    expect(dashboard).not.toContain("function describeDashboardAudit");
+    expect(dashboardContent).toContain("export function AdminDashboardContent");
+    expect(dashboardContent).toContain("copy.admin.dashboard.priorityQueue");
+    expect(dashboardContent).toContain("copy.admin.dashboard.auditTrail");
+    expect(dashboardContent).toContain("successMessage=");
+    expect(dashboardContent).toContain("copy.common.successToast.blockchainRetryCompleted");
+    expect(dashboardContent).toContain("function describeDashboardAudit");
     expect(approval).toContain("loadAdminApprovalState");
     expect(approval).toContain("rowsPerPageOptions");
     expect(addAdminPage).toContain("loadAdminInvitationsState");
     expect(addAdminPage).toContain("AdminInvitationList");
     expect(addAdminPage).toContain("adminLevel");
     expect(addAdmin).toContain("inviteAdminAction");
+    expect(addAdmin).toContain("AppToast");
+    expect(addAdmin).toContain("triggerKey={state}");
     expect(addAdmin).toContain('state.status === "success" || state.status === "warning"');
     expect(addAdmin).toContain("color-warning-text");
     expect(addAdminList).toContain("useActionState");
     expect(addAdminList).toContain("revokeAdminInvitationAction");
+    expect(addAdminList).toContain("AppToast");
+    expect(addAdminList).toContain("toastMessage");
     expect(addAdminList).toContain('from "./form-state"');
     expect(addAdminActions).toContain("requireSuperAdminRole");
     expect(addAdminActions).toContain("sendAdminInvitationEmail");
@@ -233,6 +248,8 @@ describe("admin pages contract", () => {
       expect(dictionary[locale].admin.addAdmin.emailSendFailed).toBeTruthy();
       expect(dictionary[locale].admin.addAdmin.noAdmins).toBeTruthy();
       expect(dictionary[locale].admin.addAdmin.revoke).toBeTruthy();
+      expect(dictionary[locale].common.successToast.adminInvitationCreated).toBeTruthy();
+      expect(dictionary[locale].common.successToast.adminAccessRevoked).toBeTruthy();
       expect(dictionary[locale].admin.addAdmin.superadminRequired).toBeTruthy();
     }
   });

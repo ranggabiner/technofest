@@ -4,8 +4,10 @@ import { ArrowRight, Search } from "lucide-react";
 
 import { SharedHeader } from "@/components/shared-header";
 import { SiteFooter } from "@/components/site-footer";
+import { motion } from "@/components/ui/motion";
 import { articleAssets, getArticleDetailPath } from "@/lib/articles";
 import { getDictionary } from "@/lib/i18n/server";
+import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -35,7 +37,10 @@ export default async function ArticlesPage() {
             <input
               id="article-search"
               type="search"
-              className="min-h-14 w-full rounded-xl border border-[var(--color-stone-surface)] bg-[var(--color-card)] px-12 text-sm text-[var(--color-charcoal-primary)] outline-none transition focus:shadow-[inset_0_0_0_2px_var(--color-stone-surface)]"
+              className={cn(
+                "min-h-14 w-full rounded-xl border border-[var(--color-stone-surface)] bg-[var(--color-card)] px-12 text-sm text-[var(--color-charcoal-primary)] outline-none focus:shadow-[inset_0_0_0_2px_var(--color-stone-surface)]",
+                motion.input,
+              )}
               placeholder={articlesCopy.searchPlaceholder}
             />
           </div>
@@ -46,7 +51,10 @@ export default async function ArticlesPage() {
             <Link
               key={article.slug}
               href={getArticleDetailPath(article.slug)}
-              className="group flex cursor-pointer flex-col gap-6 rounded-xl bg-[var(--color-card)] p-6 shadow-[var(--shadow-subtle)] transition hover:bg-[var(--color-parchment-card)] md:flex-row md:gap-12"
+              className={cn(
+                "group flex cursor-pointer flex-col gap-6 rounded-xl bg-[var(--color-card)] p-6 shadow-[var(--shadow-subtle)] hover:bg-[var(--color-parchment-card)] md:flex-row md:gap-12",
+                motion.cardInteractive,
+              )}
             >
               <div className="aspect-[4/3] w-full shrink-0 overflow-hidden rounded-lg md:w-80">
                 <Image
@@ -55,7 +63,7 @@ export default async function ArticlesPage() {
                   width={640}
                   height={480}
                   sizes="(max-width: 767px) calc(100vw - 3rem), 320px"
-                  className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                  className="h-full w-full object-cover motion-safe:transition-transform motion-safe:duration-300 motion-safe:ease-out motion-safe:group-hover:scale-[1.03] motion-reduce:transition-none"
                 />
               </div>
               <article className="flex flex-1 flex-col justify-center">
@@ -66,7 +74,7 @@ export default async function ArticlesPage() {
                   <span className="text-[var(--color-fog)]">•</span>
                   <time className="text-[var(--color-graphite)]">{article.publishedAt}</time>
                 </div>
-                <h2 className="text-xl font-semibold leading-snug text-[var(--color-charcoal-primary)] transition group-hover:text-[var(--color-teal-deep)] md:text-2xl">
+                <h2 className={cn("text-xl font-semibold leading-snug text-[var(--color-charcoal-primary)] group-hover:text-[var(--color-teal-deep)] md:text-2xl", motion.base)}>
                   {article.title}
                 </h2>
                 <p className="mt-4 line-clamp-3 text-sm leading-7 text-[var(--color-graphite)]">

@@ -22,7 +22,7 @@ export async function savePatientBasicOnboardingAction(formData: FormData) {
 
   revalidatePath("/patient");
   revalidatePath("/patient/onboarding");
-  redirect("/patient/onboarding/step-2");
+  redirect("/patient/onboarding/step-2?save_status=patient_onboarding_step");
 }
 
 export async function savePatientHealthOnboardingAction(formData: FormData) {
@@ -39,7 +39,7 @@ export async function savePatientHealthOnboardingAction(formData: FormData) {
 
   revalidatePath("/patient");
   revalidatePath("/patient/onboarding");
-  redirect("/patient/onboarding/step-3");
+  redirect("/patient/onboarding/step-3?save_status=patient_onboarding_step");
 }
 
 export async function completePatientOnboardingAction() {
@@ -51,7 +51,7 @@ export async function completePatientOnboardingAction() {
   revalidatePath("/patient");
   revalidatePath("/patient/chat");
   revalidatePath("/patient/onboarding");
-  redirect("/patient");
+  redirect("/patient?save_status=patient_onboarding_complete");
 }
 
 function readText(formData: FormData, key: string) {

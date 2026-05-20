@@ -5,7 +5,7 @@ import { DashboardCard } from "@/app/_components/portal-layout";
 import { DoctorRagLazyPanel } from "@/app/doctor/_components/doctor-rag-lazy-panel";
 import { requireApprovedDoctorPortalRole } from "@/app/doctor/_components/doctor-portal-role";
 import { ProofStatus } from "@/components/proof-status";
-import { StatePanel } from "@/components/state-panel";
+import { EmptyState, StatePanel } from "@/components/state-panel";
 import { StatusBadge } from "@/components/status-badge";
 import { PendingSubmitButton } from "@/components/ui/async-action-button";
 import { Button } from "@/components/ui/button";
@@ -165,7 +165,7 @@ export default async function DoctorGrantPage({
                   </div>
                 ))
               ) : (
-                <EmptyState message={copy.doctor.grant.noScope1} />
+                <EmptyState icon={false} className="block" message={copy.doctor.grant.noScope1} />
               )}
             </div>
           </DashboardCard>
@@ -198,7 +198,7 @@ export default async function DoctorGrantPage({
                   />
                 ))
               ) : (
-                <EmptyState message={copy.doctor.grant.noMental} />
+                <EmptyState icon={false} className="block" message={copy.doctor.grant.noMental} />
               )}
             </div>
           </DashboardCard>
@@ -231,7 +231,7 @@ export default async function DoctorGrantPage({
                   />
                 ))
               ) : (
-                <EmptyState message={copy.doctor.grant.noPhysical} />
+                <EmptyState icon={false} className="block" message={copy.doctor.grant.noPhysical} />
               )}
             </div>
           </DashboardCard>
@@ -360,14 +360,6 @@ function Scope2Item({
           ))}
       </dl>
     </div>
-  );
-}
-
-function EmptyState({ message }: { message: string }) {
-  return (
-    <p className="rounded-[10px] bg-[var(--color-stone-surface)] p-4 text-sm text-[var(--color-ash)]">
-      {message}
-    </p>
   );
 }
 

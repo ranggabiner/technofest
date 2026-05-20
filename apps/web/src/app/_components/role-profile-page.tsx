@@ -28,7 +28,14 @@ export async function RoleProfilePage({
     const patient = await loadPatientProfileState(role);
 
     return (
-      <ProfileShell role="patient" copy={copy.profile} active={active} backHref={roleEntryPath(role)} profileHref="/patient/profile">
+      <ProfileShell
+        role="patient"
+        copy={copy.profile}
+        successToastMessages={copy.common.successToast}
+        active={active}
+        backHref={roleEntryPath(role)}
+        profileHref="/patient/profile"
+      >
         {active === "profiling" ? (
           <PatientProfilingClient copy={copy.profile} patient={patient} />
         ) : (
@@ -45,7 +52,14 @@ export async function RoleProfilePage({
     const state = await loadDoctorProfileState(role);
 
     return (
-      <ProfileShell role="doctor" copy={copy.profile} active="profile" backHref={roleEntryPath(role)} profileHref="/doctor/profile">
+      <ProfileShell
+        role="doctor"
+        copy={copy.profile}
+        successToastMessages={copy.common.successToast}
+        active="profile"
+        backHref={roleEntryPath(role)}
+        profileHref="/doctor/profile"
+      >
         <DoctorProfileClient
           copy={copy.profile}
           doctor={state.doctor}
@@ -65,8 +79,15 @@ export async function RoleProfilePage({
   const profileHref = role.adminLevel === "superadmin" ? "/superadmin/profile" : "/admin/profile";
 
   return (
-    <ProfileShell role="admin" copy={copy.profile} active="profile" backHref={roleEntryPath(role)} profileHref={profileHref}>
-      <AdminProfileClient copy={copy.profile} admin={admin} />
+    <ProfileShell
+      role="admin"
+      copy={copy.profile}
+      successToastMessages={copy.common.successToast}
+      active="profile"
+      backHref={roleEntryPath(role)}
+      profileHref={profileHref}
+    >
+      <AdminProfileClient copy={copy.profile} admin={admin} avatarUrl={role.avatarUrl} />
     </ProfileShell>
   );
 }

@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { RefreshCw } from "lucide-react";
 
+import { AppToast } from "@/components/ui/app-toast";
 import { LoadingActionButton } from "@/components/ui/async-action-button";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -16,6 +17,7 @@ type RetryResult = {
 
 export function BlockchainRetryButton({
   copy,
+  successMessage,
 }: {
   copy: {
     buttonIdle: string;
@@ -23,9 +25,11 @@ export function BlockchainRetryButton({
     failed: string;
     result: string;
   };
+  successMessage: string;
 }) {
   const [isRunning, setIsRunning] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [toastKey, setToastKey] = useState(0);
   const runningRef = useRef(false);
 
   async function runRetry() {
@@ -50,6 +54,7 @@ export function BlockchainRetryButton({
           .replace("{pending}", String(body.result.pending))
           .replace("{failed}", String(body.result.failed)),
       );
+      setToastKey((key) => key + 1);
     } catch (error) {
       setMessage(error instanceof Error ? error.message : copy.failed);
     } finally {
@@ -60,6 +65,7 @@ export function BlockchainRetryButton({
 
   return (
     <div className="grid gap-2 rounded-[10px] bg-[var(--color-parchment-card)] p-4 text-sm">
+      <AppToast message={successMessage} triggerKey={toastKey} />
       <LoadingActionButton
         type="button"
         className="w-full rounded-[10px] sm:w-fit"

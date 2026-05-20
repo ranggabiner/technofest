@@ -17,11 +17,13 @@ import {
 import { LandingScrollReveal } from "@/components/landing-scroll-reveal";
 import { SharedHeader } from "@/components/shared-header";
 import { SiteFooter } from "@/components/site-footer";
+import { motion } from "@/components/ui/motion";
 import { redirectAuthenticatedUserFromPublicRoute } from "@/lib/auth/session";
 import { articleAssets, getArticleDetailPath, getLandingArticlePreviews, type MarketingArticle } from "@/lib/articles";
 import { dictionary } from "@/lib/i18n/dictionary";
 import { defaultLocale } from "@/lib/i18n/locales";
 import { getDictionary } from "@/lib/i18n/server";
+import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -42,7 +44,7 @@ type LandingListItem = {
 };
 
 function revealDelay(index: number): CSSProperties {
-  return { "--scroll-reveal-delay": `${index * 80}ms` } as CSSProperties;
+  return { "--scroll-reveal-delay": `${index * 60}ms` } as CSSProperties;
 }
 
 function resolveLandingText(value: string | null | undefined, fallback: string) {
@@ -114,7 +116,10 @@ function HeroSection({ landing }: { landing: LandingCopy }) {
           </p>
           <Link
             href="/login"
-            className="mt-4 inline-flex min-h-12 w-full cursor-pointer items-center justify-center rounded-full bg-[var(--color-teal-deep)] px-8 text-center text-sm font-semibold uppercase tracking-normal text-[var(--color-inverted)] shadow-[0_18px_36px_color-mix(in_srgb,var(--color-teal-primary)_24%,transparent)] transition hover:-translate-y-1 hover:bg-[var(--color-teal-primary)] sm:w-auto"
+            className={cn(
+              "mt-4 inline-flex min-h-12 w-full cursor-pointer items-center justify-center rounded-full bg-[var(--color-teal-deep)] px-8 text-center text-sm font-semibold uppercase tracking-normal text-[var(--color-inverted)] shadow-[0_18px_36px_color-mix(in_srgb,var(--color-teal-primary)_24%,transparent)] hover:bg-[var(--color-teal-primary)] sm:w-auto",
+              motion.button,
+            )}
           >
             {landing.hero.primaryCta}
           </Link>
@@ -236,7 +241,10 @@ function ArticleSection({
           >
             <Link
               href={getArticleDetailPath(article.slug)}
-              className="group flex cursor-pointer overflow-hidden rounded-3xl border border-[var(--color-stone-surface)] bg-[var(--color-card)] shadow-[var(--shadow-elevated)] transition hover:-translate-y-1 hover:border-[color-mix(in_srgb,var(--color-teal-primary)_36%,var(--color-stone-surface))]"
+              className={cn(
+                "group flex cursor-pointer overflow-hidden rounded-3xl border border-[var(--color-stone-surface)] bg-[var(--color-card)] shadow-[var(--shadow-elevated)] hover:border-[color-mix(in_srgb,var(--color-teal-primary)_36%,var(--color-stone-surface))]",
+                motion.cardInteractive,
+              )}
             >
               <article className="flex w-full flex-col">
                 <Image
@@ -245,13 +253,13 @@ function ArticleSection({
                   width={512}
                   height={512}
                   sizes="(max-width: 767px) calc(100vw - 2rem), 33vw"
-                  className="h-48 w-full object-cover transition duration-500 group-hover:scale-105"
+                  className="h-48 w-full object-cover motion-safe:transition-transform motion-safe:duration-300 motion-safe:ease-out motion-safe:group-hover:scale-[1.03] motion-reduce:transition-none"
                 />
                 <div className="flex flex-1 flex-col p-6">
                   <h3 className="mb-3 text-lg font-bold leading-snug text-[var(--color-charcoal-primary)]">{article.title}</h3>
                   <p className="mb-5 flex-1 text-sm leading-6 text-[var(--color-graphite)]">{article.excerpt}</p>
                   <span
-                    className="inline-flex cursor-pointer items-center gap-2 text-sm font-semibold uppercase tracking-normal text-[var(--color-teal-deep)] transition hover:text-[var(--color-teal-primary)]"
+                    className={cn("inline-flex cursor-pointer items-center gap-2 text-sm font-semibold uppercase tracking-normal text-[var(--color-teal-deep)] hover:text-[var(--color-teal-primary)]", motion.navLink)}
                   >
                     <Send size={15} aria-hidden="true" />
                     {readMoreLabel}
@@ -265,7 +273,7 @@ function ArticleSection({
       <div data-scroll-reveal="" data-scroll-reveal-group="articles-view-all" className="mx-auto mt-10 flex w-full max-w-[1100px] justify-start sm:justify-end">
         <Link
           href="/articles"
-          className="cursor-pointer font-medium text-[var(--color-midnight)] underline underline-offset-4 transition-colors hover:text-[var(--color-teal-deep)]"
+          className={cn("cursor-pointer font-medium text-[var(--color-midnight)] underline underline-offset-4 hover:text-[var(--color-teal-deep)]", motion.navLink)}
         >
           {landing.articles.viewAll}
         </Link>
@@ -303,7 +311,10 @@ function WorkflowSection({ landing }: { landing: LandingCopy }) {
                   className={
                     active
                       ? "mb-4 flex h-24 w-24 items-center justify-center rounded-full border-4 border-[color-mix(in_srgb,var(--color-teal-primary)_22%,var(--color-card))] bg-[var(--color-teal-deep)] text-[var(--color-inverted)] shadow-[0_18px_36px_color-mix(in_srgb,var(--color-teal-primary)_24%,transparent)]"
-                      : "mb-4 flex h-24 w-24 items-center justify-center rounded-full border-4 border-[var(--color-stone-surface)] bg-[var(--color-card)] text-[var(--color-teal-deep)] transition-colors hover:border-[var(--color-teal-primary)]"
+                      : cn(
+                          "mb-4 flex h-24 w-24 items-center justify-center rounded-full border-4 border-[var(--color-stone-surface)] bg-[var(--color-card)] text-[var(--color-teal-deep)] hover:border-[var(--color-teal-primary)]",
+                          motion.base,
+                        )
                   }
                 >
                   <Icon size={36} aria-hidden="true" />
@@ -346,11 +357,12 @@ function InfoCard({
 
   return (
     <div
-      className={
+      className={cn(
         left
-          ? "flex flex-col items-center gap-5 rounded-3xl border border-[var(--color-stone-surface)] bg-[var(--color-warm-canvas)] p-5 text-center shadow-[var(--shadow-elevated)] transition-colors hover:border-[color-mix(in_srgb,var(--color-teal-primary)_36%,var(--color-stone-surface))] sm:gap-6 sm:p-8 lg:flex-row lg:items-start lg:text-left"
-          : "flex flex-col items-center rounded-3xl border border-[var(--color-stone-surface)] bg-[var(--color-card)] p-5 text-center shadow-[var(--shadow-elevated)] transition-transform duration-300 hover:-translate-y-2 sm:p-8"
-      }
+          ? "flex flex-col items-center gap-5 rounded-3xl border border-[var(--color-stone-surface)] bg-[var(--color-warm-canvas)] p-5 text-center shadow-[var(--shadow-elevated)] hover:border-[color-mix(in_srgb,var(--color-teal-primary)_36%,var(--color-stone-surface))] sm:gap-6 sm:p-8 lg:flex-row lg:items-start lg:text-left"
+          : "flex flex-col items-center rounded-3xl border border-[var(--color-stone-surface)] bg-[var(--color-card)] p-5 text-center shadow-[var(--shadow-elevated)] sm:p-8",
+        motion.cardInteractive,
+      )}
     >
       <IconBadge icon={Icon} className={left ? "shrink-0" : "mb-6"} />
       <div>

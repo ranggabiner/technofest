@@ -26,6 +26,7 @@ export default async function PatientPortalLayout({
   return (
     <PatientLayout
       copy={copy}
+      patientAvatarUrl={role.avatarUrl}
       patientEmail={role.email}
       patientName={role.fullName}
       title={copy.patient.dashboard.title}

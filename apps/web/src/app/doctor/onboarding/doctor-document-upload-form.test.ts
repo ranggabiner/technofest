@@ -66,4 +66,13 @@ describe("doctor document upload form", () => {
     expect(step3Source).toContain("const previewUrl = getKycDocumentPreviewUrl(document);");
     expect(step3Source).toContain("key={previewUrl}");
   });
+
+  it("shows top-right success feedback after confirmed document mutations", () => {
+    expect(source).toContain('import { AppToast } from "@/components/ui/app-toast";');
+    expect(source).toContain("setUploadToastKey((key) => key + 1)");
+    expect(source).toContain("message={copy.uploadPreview.uploadSuccess}");
+    expect(source).toContain('router.push("/doctor/onboarding/step-3?save_status=doctor_documents_review")');
+    expect(step3Source).toContain("SaveStatusToast");
+    expect(step3Source).toContain("messages={copy.common.successToast}");
+  });
 });

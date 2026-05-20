@@ -1,9 +1,16 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+import { hasSupabaseAuthCookie, isSupabaseAuthCookieName } from "@/lib/supabase/auth-cookies";
 import type { Database } from "@/lib/supabase/database.types";
 
+export { isSupabaseAuthCookieName };
+
 export async function updateSession(request: NextRequest) {
+  if (!hasSupabaseAuthCookie(request.cookies.getAll())) {
+    return NextResponse.next({ request });
+  }
+
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
@@ -25,8 +32,8 @@ export async function updateSession(request: NextRequest) {
     },
   });
 
-  const authResult = await supabase.auth.getUser().catch((error: unknown) => ({
-    data: { user: null },
+  const authResult = await supabase.auth.getClaims().catch((error: unknown) => ({
+    data: { claims: null },
     error,
   }));
 
@@ -55,10 +62,6 @@ function isSupabaseAuthErrorCode(error: unknown, code: string) {
     && "code" in error
     && error.code === code
   );
-}
-
-export function isSupabaseAuthCookieName(name: string) {
-  return name.startsWith("sb-") && /-auth-token(?:\.\d+)?$/.test(name);
 }
 
 function clearSupabaseAuthCookies(request: NextRequest, response: NextResponse) {

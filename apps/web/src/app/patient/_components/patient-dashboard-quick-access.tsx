@@ -6,7 +6,11 @@ import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { ArrowRight, QrCode } from "lucide-react";
 
+import { Input } from "@/components/ui/form";
+import { motion } from "@/components/ui/motion";
+import { ViewportModal, ViewportModalPanel } from "@/components/ui/viewport-modal";
 import type { Dictionary } from "@/lib/i18n/dictionary";
+import { cn } from "@/lib/utils";
 
 import {
   DOCTOR_ACCESS_CODE_MAX_LENGTH,
@@ -89,10 +93,13 @@ export function PatientDashboardQuickAccess({ copy }: { copy: Dictionary }) {
           <button
             type="button"
             aria-label={copy.patient.dashboard.scanQrDoctor}
-            className="group grid size-20 cursor-pointer place-items-center rounded-[10px] border border-[var(--color-stone-surface)] bg-[var(--color-warm-canvas)] text-[var(--color-teal-deep)] shadow-[inset_0_0_0_1px_var(--color-stone-surface)] transition hover:border-[var(--color-teal-primary)] hover:bg-[var(--color-teal-surface)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--color-teal-primary)]"
+            className={cn(
+              "group grid size-20 cursor-pointer place-items-center rounded-[10px] border border-[var(--color-stone-surface)] bg-[var(--color-warm-canvas)] text-[var(--color-teal-deep)] shadow-[inset_0_0_0_1px_var(--color-stone-surface)] hover:border-[var(--color-teal-primary)] hover:bg-[var(--color-teal-surface)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--color-teal-primary)]",
+              motion.iconButton,
+            )}
             onClick={openScannerModal}
           >
-            <QrCode size={46} aria-hidden="true" className="transition group-hover:scale-[1.04]" />
+            <QrCode size={46} aria-hidden="true" className="motion-safe:transition-transform motion-safe:duration-200 motion-safe:ease-out motion-safe:group-hover:scale-[1.04] motion-reduce:transition-none" />
           </button>
           <span className="text-center text-xs font-semibold uppercase leading-4 tracking-widest text-[var(--color-teal-deep)]">
             {copy.patient.dashboard.scanQrDoctor}
@@ -114,13 +121,13 @@ export function PatientDashboardQuickAccess({ copy }: { copy: Dictionary }) {
           {copy.patient.dashboard.doctorCodeLabel}
         </label>
         <div className="flex gap-3">
-          <input
+          <Input
             id="dashboard_doctor_lookup"
             value={lookupValue}
             onBeforeInput={preventNonNumericDoctorCodeInput}
             onChange={(event) => setLookupValue(normalizeDoctorAccessCodeInput(event.target.value))}
             onPaste={handleDoctorCodePaste}
-            className="min-h-12 min-w-0 flex-1 rounded-[10px] border border-[var(--color-fog)] bg-[var(--color-warm-canvas)] px-4 text-sm text-[var(--color-midnight)] outline-none transition focus:border-[var(--color-teal-primary)] focus:shadow-[inset_0_0_0_1px_var(--color-teal-primary)]"
+            className="min-h-12 min-w-0 flex-1 rounded-[10px] border border-[var(--color-fog)] bg-[var(--color-warm-canvas)] px-4 text-sm text-[var(--color-midnight)] outline-none focus:border-[var(--color-teal-primary)] focus:shadow-[inset_0_0_0_1px_var(--color-teal-primary)]"
             placeholder={copy.patient.dashboard.doctorCodePlaceholder}
             maxLength={DOCTOR_ACCESS_CODE_MAX_LENGTH}
             inputMode="numeric"
@@ -129,7 +136,10 @@ export function PatientDashboardQuickAccess({ copy }: { copy: Dictionary }) {
           <button
             type="submit"
             aria-label={copy.patient.dashboard.submitDoctorCode}
-            className="grid size-12 shrink-0 cursor-pointer place-items-center rounded-full bg-[var(--color-teal-primary)] text-[var(--color-inverted)] transition hover:bg-[var(--color-teal-deep)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-teal-primary)]"
+            className={cn(
+              "grid size-12 shrink-0 cursor-pointer place-items-center rounded-full bg-[var(--color-teal-primary)] text-[var(--color-inverted)] hover:bg-[var(--color-teal-deep)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-teal-primary)]",
+              motion.iconButton,
+            )}
           >
             <ArrowRight size={18} aria-hidden="true" />
           </button>
@@ -150,8 +160,8 @@ export function PatientDashboardQuickAccess({ copy }: { copy: Dictionary }) {
 
 function DoctorQrScannerModalFallback() {
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center overflow-y-auto bg-[color-mix(in_srgb,var(--color-ash)_28%,transparent)] p-3 backdrop-blur-sm sm:p-4">
-      <section className="my-4 grid max-h-[calc(100dvh-2rem)] min-h-[320px] w-full max-w-[560px] animate-pulse overflow-hidden rounded-[18px] border border-[var(--color-stone-surface)] bg-[var(--color-card)] shadow-[0_24px_80px_rgba(18,18,18,0.18),inset_0_0_0_1px_var(--color-stone-surface)] sm:my-6">
+    <ViewportModal className="bg-[color-mix(in_srgb,var(--color-ash)_28%,transparent)] p-3 backdrop-blur-sm sm:p-4">
+      <ViewportModalPanel as="section" className="my-4 grid max-h-[calc(100dvh-2rem)] min-h-[320px] w-full max-w-[560px] animate-pulse overflow-hidden rounded-[18px] border border-[var(--color-stone-surface)] bg-[var(--color-card)] shadow-[0_24px_80px_rgba(18,18,18,0.18),inset_0_0_0_1px_var(--color-stone-surface)] sm:my-6">
         <div className="px-5 pb-4 pt-5 sm:px-6">
           <div className="h-7 w-40 rounded-[10px] bg-[color-mix(in_srgb,var(--color-ash)_18%,transparent)]" />
           <div className="mt-3 h-4 w-full max-w-sm rounded-[10px] bg-[color-mix(in_srgb,var(--color-ash)_18%,transparent)]" />
@@ -163,7 +173,7 @@ function DoctorQrScannerModalFallback() {
             <div className="h-11 rounded-[10px] bg-[color-mix(in_srgb,var(--color-ash)_18%,transparent)] sm:w-32" />
           </div>
         </div>
-      </section>
-    </div>
+      </ViewportModalPanel>
+    </ViewportModal>
   );
 }

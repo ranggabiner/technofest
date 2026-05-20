@@ -9,6 +9,7 @@ export type PatientRow = {
   patient_id: string;
   email: string;
   full_name: string;
+  profile_photo_url?: string | null;
   onboarding_step?: PatientOnboardingStep | string | null;
   onboarding_completed_at?: string | null;
 };
@@ -19,6 +20,7 @@ export type DoctorRow = {
   full_name: string;
   account_status: DoctorStatus;
   rejection_reason: string | null;
+  profile_photo_url?: string | null;
   onboarding_step?: DoctorOnboardingStep | string | null;
   onboarding_completed_at?: string | null;
 };
@@ -28,6 +30,7 @@ export type AdminRow = {
   email: string;
   full_name: string;
   admin_role?: AdminLevel | string | null;
+  profile_photo_url?: string | null;
   revoked_at?: string | null;
 };
 
@@ -100,7 +103,7 @@ export function resolveRoleFromRows(input: RoleResolutionInput): ResolvedRole | 
       adminLevel: isAllowlistedSuperadmin ? "superadmin" : "admin",
       email,
       fullName: input.admin?.full_name ?? input.fullName,
-      avatarUrl: input.avatarUrl ?? null,
+      avatarUrl: input.admin?.profile_photo_url ?? input.avatarUrl ?? null,
     };
   }
 
@@ -114,7 +117,7 @@ export function resolveRoleFromRows(input: RoleResolutionInput): ResolvedRole | 
       status,
       email,
       fullName: input.doctor.full_name,
-      avatarUrl: input.avatarUrl ?? null,
+      avatarUrl: input.doctor.profile_photo_url ?? input.avatarUrl ?? null,
       rejectionReason: input.doctor.rejection_reason,
       onboardingStep: normalizeDoctorOnboardingStep(input.doctor.onboarding_step),
       onboardingCompletedAt: input.doctor.onboarding_completed_at ?? null,
@@ -129,7 +132,7 @@ export function resolveRoleFromRows(input: RoleResolutionInput): ResolvedRole | 
       patientId: input.patient.patient_id,
       email,
       fullName: input.patient.full_name,
-      avatarUrl: input.avatarUrl ?? null,
+      avatarUrl: input.patient.profile_photo_url ?? input.avatarUrl ?? null,
       onboardingStep: normalizePatientOnboardingStep(input.patient.onboarding_step),
       onboardingCompletedAt: input.patient.onboarding_completed_at ?? null,
     };

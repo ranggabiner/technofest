@@ -3,13 +3,16 @@ import Link from "next/link";
 import { DashboardCard } from "@/app/_components/portal-layout";
 import { approveDoctorAction, rejectDoctorAction } from "@/app/admin/doctors/actions";
 import { ProofStatus } from "@/components/proof-status";
+import { EmptyState } from "@/components/state-panel";
 import { StatusBadge } from "@/components/status-badge";
 import { PendingSubmitButton } from "@/components/ui/async-action-button";
 import { Field, Label, Textarea } from "@/components/ui/form";
+import { motion } from "@/components/ui/motion";
 import { loadAdminDoctorDetailState } from "@/lib/admin/service";
 import { formatDateTime } from "@/lib/i18n/format";
 import { proofLabel, proofStatusMessages, proofTone, statusLabel, statusTone } from "@/lib/i18n/labels";
 import { getDictionary, getLocale } from "@/lib/i18n/server";
+import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -74,7 +77,10 @@ export default async function AdminDoctorDetailPage({
             <Link
               key={document.document_id}
               href={`/admin/doctors/${doctorId}/documents/${document.document_id}`}
-              className="inline-flex min-h-11 cursor-pointer items-center rounded-[10px] bg-[var(--color-parchment-card)] p-4 text-sm font-semibold uppercase text-[var(--color-midnight)] transition hover:bg-[var(--color-teal-surface)]"
+              className={cn(
+                "inline-flex min-h-11 cursor-pointer items-center rounded-[10px] bg-[var(--color-parchment-card)] p-4 text-sm font-semibold uppercase text-[var(--color-midnight)] hover:bg-[var(--color-teal-surface)]",
+                motion.navItem,
+              )}
             >
               {document.document_type}
             </Link>
@@ -151,9 +157,7 @@ export default async function AdminDoctorDetailPage({
               </div>
             ))
           ) : (
-            <p className="rounded-[10px] bg-[var(--color-stone-surface)] p-4 text-sm text-[var(--color-ash)]">
-              {copy.admin.detail.noAudit}
-            </p>
+            <EmptyState icon={false} className="block" message={copy.admin.detail.noAudit} />
           )}
         </div>
       </DashboardCard>

@@ -2,6 +2,7 @@ import { Check } from "lucide-react";
 
 import { SharedHeader } from "@/components/shared-header";
 import { SiteFooter } from "@/components/site-footer";
+import { motion } from "@/components/ui/motion";
 import { cn } from "@/lib/utils";
 
 import { getPatientOnboardingProgressItems } from "./patient-onboarding-progress";
@@ -55,7 +56,7 @@ export async function PatientOnboardingShell({
             <PatientOnboardingProgress steps={steps} activeStep={activeStep} variant="bar" />
             <PatientOnboardingHeading title={title} description={description} />
           </header>
-          <section className="relative overflow-hidden rounded-xl bg-[var(--color-card)] p-5 shadow-[var(--shadow-subtle)] transition sm:p-6 md:p-12">
+          <section className={cn("relative overflow-hidden rounded-xl bg-[var(--color-card)] p-5 shadow-[var(--shadow-subtle)] sm:p-6 md:p-12", motion.card)}>
             <div className="absolute left-0 top-0 h-1 w-full bg-[var(--color-stone-surface)]" />
             {children}
           </section>

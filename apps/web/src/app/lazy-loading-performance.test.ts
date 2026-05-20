@@ -1,4 +1,5 @@
 import { existsSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 const appSource = (path: string) => readFileSync(new URL(`./${path}`, import.meta.url), "utf8");
@@ -99,5 +100,23 @@ describe("lazy loading performance contracts", () => {
     expect(articleDetailPage.match(/sizes=/g)?.length).toBeGreaterThanOrEqual(2);
     expect(kycPreview.match(/loading="lazy"/g)?.length).toBeGreaterThanOrEqual(2);
     expect(kycPreview.match(/decoding="async"/g)?.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it("stores article .webp assets as real WebP bytes instead of mislabeled PNG files", () => {
+    const articleAssetDir = join(process.cwd(), "public", "assets", "articles");
+    const articleImages = [
+      "ai-diagnostics-clinic.webp",
+      "encryption-records.webp",
+      "medical-network.webp",
+      "medical-research-lab.webp",
+      "patient-rights.webp",
+    ];
+
+    for (const image of articleImages) {
+      const bytes = readFileSync(join(articleAssetDir, image));
+      expect(bytes.subarray(0, 4).toString("ascii"), image).toBe("RIFF");
+      expect(bytes.subarray(8, 12).toString("ascii"), image).toBe("WEBP");
+      expect(bytes.byteLength, image).toBeLessThan(80 * 1024);
+    }
   });
 });

@@ -7,6 +7,7 @@ import { cache } from "react";
 
 import { parseAdminEmailAllowlist, requireEnv } from "@/lib/config/env";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { hasSupabaseAuthCookie } from "@/lib/supabase/auth-cookies";
 import { createClient } from "@/lib/supabase/server";
 
 import { roleIntentCookie } from "./intent";
@@ -50,6 +51,9 @@ export async function requireCurrentUser() {
 }
 
 export async function redirectAuthenticatedUserFromPublicRoute() {
+  const cookieStore = await cookies();
+  if (!hasSupabaseAuthCookie(cookieStore.getAll())) return;
+
   const user = await getCurrentUser();
   if (!user) return;
 
@@ -142,6 +146,7 @@ export async function resolveRoleForUser(
         email,
         full_name: fullName,
         admin_role: role.adminLevel,
+        profile_photo_url: avatarUrl,
       });
       if (error && error.code !== "23505") throw error;
       shouldReloadAdminProfile = true;
@@ -227,6 +232,7 @@ export async function completeRoleForUser(
           auth_user_id: user.id,
           email,
           full_name: fullName,
+          profile_photo_url: avatarUrl,
           account_status: "pending",
           onboarding_step: "profile",
         })
@@ -234,6 +240,7 @@ export async function completeRoleForUser(
           auth_user_id: user.id,
           email,
           full_name: fullName,
+          profile_photo_url: avatarUrl,
           onboarding_step: "basic",
         });
 
@@ -286,17 +293,17 @@ async function loadRoleRowsUncached(authUserId: string, email: string): Promise<
   const [patient, doctor, medicalAdmin, adminInvitation] = await Promise.all([
     admin
       .from("patients")
-      .select("patient_id,email,full_name,onboarding_step,onboarding_completed_at")
+      .select("patient_id,email,full_name,profile_photo_url,onboarding_step,onboarding_completed_at")
       .eq("auth_user_id", authUserId)
       .maybeSingle(),
     admin
       .from("doctors")
-      .select("doctor_id,email,full_name,account_status,rejection_reason,onboarding_step,onboarding_completed_at")
+      .select("doctor_id,email,full_name,account_status,rejection_reason,profile_photo_url,onboarding_step,onboarding_completed_at")
       .eq("auth_user_id", authUserId)
       .maybeSingle(),
     admin
       .from("medical_admins")
-      .select("admin_id,email,full_name,admin_role,revoked_at")
+      .select("admin_id,email,full_name,admin_role,profile_photo_url,revoked_at")
       .eq("auth_user_id", authUserId)
       .maybeSingle(),
     admin

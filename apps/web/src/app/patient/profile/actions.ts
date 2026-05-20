@@ -4,17 +4,33 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { requireRole } from "@/lib/auth/session";
+import { getDictionary } from "@/lib/i18n/server";
+import { profileUpdateErrorMessage } from "@/lib/profile/errors";
+import { readSelectedProfilePhotoFile } from "@/lib/profile/form-file";
+import type { ProfileFormState } from "@/lib/profile/form-state";
 import { updatePatientAccountSettings, updatePatientProfiling } from "@/lib/profile/service";
 
-export async function updatePatientAccountSettingsAction(formData: FormData) {
+export async function updatePatientAccountSettingsAction(
+  _previousState: ProfileFormState,
+  formData: FormData,
+): Promise<ProfileFormState> {
+  const copy = await getDictionary();
   const role = await requireRole();
   if (role.kind !== "patient") redirect("/login?error=unauthorized");
 
-  await updatePatientAccountSettings(role, {
-    fullName: readText(formData, "full_name"),
-    dateOfBirth: readText(formData, "date_of_birth"),
-    gender: readText(formData, "gender"),
-  });
+  try {
+    await updatePatientAccountSettings(role, {
+      fullName: readText(formData, "full_name"),
+      dateOfBirth: readText(formData, "date_of_birth"),
+      gender: readText(formData, "gender"),
+      profilePhoto: readSelectedProfilePhotoFile(formData, "profile_photo"),
+    });
+  } catch (error) {
+    return {
+      status: "error",
+      message: profileUpdateErrorMessage(error, copy.profile.photo.uploadErrors),
+    };
+  }
 
   revalidatePath("/patient/profile");
   revalidatePath("/patient");

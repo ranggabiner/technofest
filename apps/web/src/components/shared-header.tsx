@@ -6,6 +6,7 @@ import { BrandScrollTopButton } from "@/components/brand-scroll-top-button";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { PendingSubmitButton } from "@/components/ui/async-action-button";
+import { motion } from "@/components/ui/motion";
 import { cn } from "@/lib/utils";
 
 export const MEDPROOF_LOGO_SRC = "/assets/landing/logo.webp";
@@ -83,7 +84,10 @@ export async function SharedHeader({
   const loginAction = primaryAction ?? { href: landingLoginHref, label: copy.marketing.loginCta };
   const visiblePrimaryAction = showAuthAction && action === "login" ? loginAction : null;
   const hasMobileMenu = navigation.length > 0 || Boolean(visiblePrimaryAction);
-  const brandRootClassName = "flex min-w-0 cursor-pointer items-center gap-2 text-[var(--color-teal-deep)]";
+  const brandRootClassName = cn(
+    "flex min-w-0 cursor-pointer items-center gap-2 text-[var(--color-teal-deep)]",
+    motion.navLink,
+  );
   const brandLogoClassName = "h-8 w-auto object-contain sm:h-10";
   const brandTextClassName = "truncate text-xl font-semibold leading-none tracking-tight sm:text-2xl";
 
@@ -137,7 +141,10 @@ export async function SharedHeader({
           {contextAction ? (
             <Link
               href={contextAction.href}
-              className="hidden min-h-11 cursor-pointer items-center justify-center rounded-full border border-[var(--color-stone-surface)] bg-[var(--color-card)] px-5 text-sm font-semibold leading-none text-[var(--color-teal-deep)] transition-colors hover:bg-[var(--color-teal-surface)] sm:inline-flex"
+              className={cn(
+                "hidden min-h-11 cursor-pointer items-center justify-center rounded-full border border-[var(--color-stone-surface)] bg-[var(--color-card)] px-5 text-sm font-semibold leading-none text-[var(--color-teal-deep)] hover:bg-[var(--color-teal-surface)] sm:inline-flex",
+                motion.navLink,
+              )}
             >
               {contextAction.label}
             </Link>
@@ -146,7 +153,7 @@ export async function SharedHeader({
             <form action={signOutAction}>
               <PendingSubmitButton
                 type="submit"
-                className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-full bg-[var(--color-teal-deep)] px-4 text-sm font-semibold text-[var(--color-inverted)] transition-colors hover:bg-[var(--color-teal-primary)]"
+                className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-full bg-[var(--color-teal-deep)] px-4 text-sm font-semibold text-[var(--color-inverted)] hover:bg-[var(--color-teal-primary)]"
                 loadingLabel={copy.common.logout}
               >
                 <span className="hidden sm:inline">{copy.common.logout}</span>
@@ -158,7 +165,10 @@ export async function SharedHeader({
             <div className="hidden items-center lg:flex">
               <Link
                 href={visiblePrimaryAction.href}
-                className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-full border-2 border-[var(--color-teal-deep)] bg-[var(--color-card)] px-6 text-sm font-semibold leading-none text-[var(--color-teal-deep)] transition-colors hover:bg-[var(--color-teal-deep)] hover:text-[var(--color-inverted)]"
+                className={cn(
+                  "inline-flex min-h-11 cursor-pointer items-center justify-center rounded-full border-2 border-[var(--color-teal-deep)] bg-[var(--color-card)] px-6 text-sm font-semibold leading-none text-[var(--color-teal-deep)] hover:bg-[var(--color-teal-deep)] hover:text-[var(--color-inverted)]",
+                  motion.button,
+                )}
               >
                 {visiblePrimaryAction.label}
               </Link>
@@ -168,12 +178,21 @@ export async function SharedHeader({
           {hasMobileMenu ? (
             <details className="relative lg:hidden">
               <summary
-                className="flex h-11 w-11 cursor-pointer list-none items-center justify-center rounded-full bg-[var(--color-card)] text-[var(--color-midnight)] shadow-[var(--shadow-subtle)] [&::-webkit-details-marker]:hidden"
+                className={cn(
+                  "flex h-11 w-11 cursor-pointer list-none items-center justify-center rounded-full bg-[var(--color-card)] text-[var(--color-midnight)] shadow-[var(--shadow-subtle)] [&::-webkit-details-marker]:hidden",
+                  motion.menuTrigger,
+                )}
                 aria-label={mobileMenuLabel ?? landing.mobileMenuLabel}
               >
                 <Menu size={24} aria-hidden="true" />
               </summary>
-              <div className="absolute right-0 mt-3 w-[min(calc(100vw-2rem),18rem)] rounded-2xl border border-[var(--color-stone-surface)] bg-[var(--color-card)] p-4 shadow-[var(--shadow-elevated)] sm:rounded-3xl">
+              <div
+                data-menu-panel=""
+                className={cn(
+                  "absolute right-0 mt-3 w-[min(calc(100vw-2rem),18rem)] rounded-2xl border border-[var(--color-stone-surface)] bg-[var(--color-card)] p-4 shadow-[var(--shadow-elevated)] sm:rounded-3xl",
+                  motion.menuPanel,
+                )}
+              >
                 <nav className="flex flex-col gap-1" aria-label={navigationLabel ?? copy.marketing.primaryNavLabel}>
                   {navigation.map((item) => (
                     <HeaderNavigationItem key={`${item.label}-${item.href ?? "button"}-mobile`} item={item} variant="mobile" />
@@ -181,7 +200,10 @@ export async function SharedHeader({
                   {visiblePrimaryAction ? (
                     <Link
                       href={visiblePrimaryAction.href}
-                      className="mt-2 inline-flex min-h-11 cursor-pointer items-center justify-center rounded-full bg-[var(--color-teal-deep)] px-5 text-sm font-semibold text-[var(--color-inverted)] transition-colors hover:bg-[var(--color-teal-primary)]"
+                      className={cn(
+                        "mt-2 inline-flex min-h-11 cursor-pointer items-center justify-center rounded-full bg-[var(--color-teal-deep)] px-5 text-sm font-semibold text-[var(--color-inverted)] hover:bg-[var(--color-teal-primary)]",
+                        motion.button,
+                      )}
                     >
                       {visiblePrimaryAction.label}
                     </Link>
@@ -206,11 +228,13 @@ function HeaderNavigationItem({
   const className =
     variant === "mobile"
       ? cn(
-          "cursor-pointer rounded-full px-4 py-3 text-sm font-medium text-[var(--color-graphite)] transition-colors hover:bg-[var(--color-teal-surface)] hover:text-[var(--color-teal-deep)]",
+          "cursor-pointer rounded-full px-4 py-3 text-sm font-medium text-[var(--color-graphite)] hover:bg-[var(--color-teal-surface)] hover:text-[var(--color-teal-deep)]",
+          motion.navItem,
           item.active && "bg-[var(--color-teal-surface)] text-[var(--color-teal-deep)]",
         )
       : cn(
-          "cursor-pointer text-sm font-medium text-[var(--color-graphite)] transition-colors hover:text-[var(--color-teal-deep)]",
+          "cursor-pointer text-sm font-medium text-[var(--color-graphite)] hover:text-[var(--color-teal-deep)]",
+          motion.navLink,
           item.active && "text-[var(--color-teal-deep)]",
         );
 
