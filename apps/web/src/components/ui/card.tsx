@@ -1,12 +1,17 @@
 import * as React from "react";
 
 import { cn } from "@/lib/utils";
+import { motion } from "@/components/ui/motion";
 import { typography } from "@/components/ui/typography";
 
 export function Card({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <section
-      className={cn("rounded-[10px] bg-[var(--color-card)] p-6 shadow-[var(--shadow-subtle)]", className)}
+      className={cn(
+        "rounded-[10px] bg-[var(--color-card)] p-6 shadow-[var(--shadow-subtle)]",
+        motion.card,
+        className,
+      )}
       {...props}
     />
   );

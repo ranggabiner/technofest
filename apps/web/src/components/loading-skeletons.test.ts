@@ -174,11 +174,17 @@ describe("loading skeleton components", () => {
 describe("route loading skeletons", () => {
   const appDir = join(process.cwd(), "src", "app");
   const routeLoadingFiles = [
-    "loading.tsx",
     "login/loading.tsx",
+    "login/demo/loading.tsx",
+    "login/real/loading.tsx",
     "login/role/loading.tsx",
+    "auth/complete/loading.tsx",
+    "articles/loading.tsx",
+    "articles/[slug]/loading.tsx",
     "patient/(portal)/loading.tsx",
     "patient/chat/loading.tsx",
+    "patient/profile/loading.tsx",
+    "patient/profile/profiling/loading.tsx",
     "patient/(portal)/access/loading.tsx",
     "patient/(portal)/health-history/loading.tsx",
     "patient/(portal)/health-history/records/loading.tsx",
@@ -187,15 +193,19 @@ describe("route loading skeletons", () => {
     "patient/onboarding/step-3/loading.tsx",
     "doctor/(portal)/loading.tsx",
     "doctor/status/loading.tsx",
+    "doctor/profile/loading.tsx",
     "doctor/(portal)/medical-record-library/loading.tsx",
     "doctor/(portal)/grants/[grantId]/loading.tsx",
     "doctor/onboarding/step-1/loading.tsx",
     "doctor/onboarding/step-2/loading.tsx",
     "doctor/onboarding/step-3/loading.tsx",
+    "admin/profile/loading.tsx",
     "admin/(portal)/dashboard/loading.tsx",
     "admin/(portal)/approval/loading.tsx",
     "admin/(portal)/add-admin/loading.tsx",
     "admin/(portal)/doctors/[doctorId]/loading.tsx",
+    "superadmin/dashboard/loading.tsx",
+    "superadmin/profile/loading.tsx",
   ];
 
   it.each(routeLoadingFiles)("%s uses skeleton UI", (relativePath) => {
@@ -205,11 +215,7 @@ describe("route loading skeletons", () => {
     expect(readFileSync(loadingPath, "utf8")).toMatch(/Skeleton|LoadingCard|root-loading-shell/);
   });
 
-  it("keeps the root loading fallback styled without global CSS", () => {
-    const source = readFileSync(join(appDir, "loading.tsx"), "utf8");
-
-    expect(source).toContain("<style>");
-    expect(source).toContain("root-loading-shell");
-    expect(source).not.toContain("HomeSkeleton");
+  it("does not keep a root loading fallback that can cover streamed page content", () => {
+    expect(existsSync(join(appDir, "loading.tsx"))).toBe(false);
   });
 });

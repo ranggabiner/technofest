@@ -7,6 +7,7 @@ import { AlertTriangle, Download, Eye, Send } from "lucide-react";
 import { createScope1RecordFromDashboardAction } from "@/app/doctor/actions";
 import { DoctorRagLazyPanel } from "@/app/doctor/_components/doctor-rag-lazy-panel";
 import { ProofStatus } from "@/components/proof-status";
+import { EmptyState } from "@/components/state-messages";
 import { StatusBadge } from "@/components/status-badge";
 import { LoadingActionButton } from "@/components/ui/async-action-button";
 import { Button } from "@/components/ui/button";
@@ -76,7 +77,7 @@ function GrantSummary({ state, locale, copy }: { state: DoctorGrantPageState; lo
 
 function ChatModal({ state, copy }: { state: DoctorGrantPageState; copy: Dictionary }) {
   if (!state.ragAvailable) {
-    return <EmptyState message={copy.doctor.grant.ragUnavailableDescription} />;
+    return <EmptyState icon={false} className="block" message={copy.doctor.grant.ragUnavailableDescription} />;
   }
 
   return (
@@ -126,7 +127,7 @@ function CreateRecordModal({
   const savingRef = useRef(false);
 
   if (!state.grant.canViewScope1) {
-    return <EmptyState message={copy.doctor.dashboard.unavailableNoScope1} />;
+    return <EmptyState icon={false} className="block" message={copy.doctor.dashboard.unavailableNoScope1} />;
   }
 
   async function submit(formData: FormData) {
@@ -285,7 +286,7 @@ function Scope1RecordList({
           </div>
         ))
       ) : (
-        <EmptyState message={copy.doctor.grant.noScope1} />
+        <EmptyState icon={false} className="block" message={copy.doctor.grant.noScope1} />
       )}
     </section>
   );
@@ -392,17 +393,9 @@ function Scope2Section({
           </div>
         ))
       ) : (
-        <EmptyState message={empty} />
+        <EmptyState icon={false} className="block" message={empty} />
       )}
     </section>
-  );
-}
-
-function EmptyState({ message }: { message: string }) {
-  return (
-    <p className="rounded-[10px] bg-[var(--color-stone-surface)] p-4 text-sm text-[var(--color-ash)]">
-      {message}
-    </p>
   );
 }
 

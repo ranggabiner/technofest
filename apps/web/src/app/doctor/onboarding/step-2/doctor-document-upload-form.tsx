@@ -16,8 +16,10 @@ import {
   kycDocumentCompactPreviewSurfaceClassName,
   type KycDocumentPreviewLabels,
 } from "@/components/kyc-document-preview";
+import { AppToast } from "@/components/ui/app-toast";
 import { LoadingActionButton } from "@/components/ui/async-action-button";
 import { Label } from "@/components/ui/form";
+import { motion } from "@/components/ui/motion";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { validateKycFile } from "@/lib/kyc/files";
@@ -69,6 +71,7 @@ export function DoctorDocumentUploadForm({
   const [errors, setErrors] = useState<Partial<Record<KycDocumentType, string>>>({});
   const [continueError, setContinueError] = useState<string | null>(null);
   const [isContinuing, setIsContinuing] = useState(false);
+  const [uploadToastKey, setUploadToastKey] = useState(0);
   const uploadInFlightRef = useRef(false);
   const router = useRouter();
 
@@ -111,6 +114,7 @@ export function DoctorDocumentUploadForm({
             document.documentType === result.document.documentType ? result.document : document,
           ),
         );
+        setUploadToastKey((key) => key + 1);
       } else {
         setErrors((current) => ({ ...current, [documentType]: result.message }));
       }
@@ -134,7 +138,7 @@ export function DoctorDocumentUploadForm({
     try {
       const result = await continueDoctorDocumentsStepAction();
       if (result.ok) {
-        router.push("/doctor/onboarding/step-3");
+        router.push("/doctor/onboarding/step-3?save_status=doctor_documents_review");
       } else {
         setContinueError(result.message);
         setIsContinuing(false);
@@ -147,6 +151,7 @@ export function DoctorDocumentUploadForm({
 
   return (
     <div className="rounded-2xl border border-[var(--color-stone-surface)] bg-[var(--color-card)] p-5 shadow-[var(--shadow-elevated)] sm:p-6 md:p-12">
+      <AppToast message={copy.uploadPreview.uploadSuccess} triggerKey={uploadToastKey} />
       <div className="space-y-6">
         {documents.map((document, index) => (
           <div key={document.documentType}>
@@ -309,7 +314,8 @@ function DocumentUploadField({
         onDrop={handleDrop}
         className={cn(
           kycDocumentCompactPreviewSurfaceClassName,
-          "cursor-pointer transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-teal-deep)] focus-visible:ring-offset-2",
+          "cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-teal-deep)] focus-visible:ring-offset-2",
+          motion.cardInteractive,
           previewUrl ? "border-solid border-[var(--color-stone-surface)]" : "border-dashed border-[var(--color-stone-surface)]",
           error && "border-[var(--color-error-red)] bg-[var(--color-error-surface)]",
           isDraggingOver &&
@@ -385,11 +391,11 @@ function EmptyDocumentUploadState({
 }) {
   return (
     <div
-      className="flex h-full w-full flex-col items-center justify-center p-6 text-center transition group-hover:bg-[var(--color-parchment-card)]"
+      className={cn("flex h-full w-full flex-col items-center justify-center p-6 text-center group-hover:bg-[var(--color-parchment-card)]", motion.base)}
     >
       <span
         className={cn(
-          "flex size-10 items-center justify-center rounded-full bg-[var(--color-stone-surface)] text-[var(--color-ash)] transition group-hover:scale-105",
+          "flex size-10 items-center justify-center rounded-full bg-[var(--color-stone-surface)] text-[var(--color-ash)] motion-safe:transition-transform motion-safe:duration-200 motion-safe:ease-out motion-safe:group-hover:scale-105 motion-reduce:transition-none",
           error && "bg-[var(--color-card)] text-[var(--color-error-red)]",
         )}
       >

@@ -17,8 +17,11 @@ import {
 } from "lucide-react";
 
 import { AssistantBubbleSkeleton } from "@/components/loading-skeletons";
+import { AppToast } from "@/components/ui/app-toast";
 import { LoadingActionButton } from "@/components/ui/async-action-button";
+import { motion } from "@/components/ui/motion";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ViewportModal, ViewportModalPanel } from "@/components/ui/viewport-modal";
 import type {
   JournalMessageView,
   JournalSessionDetailView,
@@ -49,6 +52,7 @@ type ChatCopy = {
   backToDashboardTitle: string;
   backNavigationTitle: string;
   backNavigationMenuLabel: string;
+  finalizeFailed: string;
   newChat: string;
   newChatTitle: string;
   searchChat: string;
@@ -107,6 +111,12 @@ type ChatNavigationCopy = {
   healthHistory: string;
 };
 
+type ChatSuccessToastCopy = {
+  aiSessionCreated: string;
+  aiSessionFinished: string;
+  summaryRetryStarted: string;
+};
+
 export function AiJournalClient({
   initialSessionId,
   initialHistory,
@@ -116,6 +126,7 @@ export function AiJournalClient({
   initialSummaryGenerationStatus,
   copy,
   navigationCopy,
+  successToast,
 }: {
   initialSessionId: string | null;
   initialHistory: JournalSessionHistoryItem[];
@@ -125,6 +136,7 @@ export function AiJournalClient({
   initialSummaryGenerationStatus: SummaryGenerationStatus;
   copy: ChatCopy;
   navigationCopy: ChatNavigationCopy;
+  successToast: ChatSuccessToastCopy;
 }) {
   const [sessionId, setSessionId] = useState(initialSessionId);
   const [history, setHistory] = useState<JournalSessionHistoryItem[]>(initialHistory);
@@ -143,10 +155,14 @@ export function AiJournalClient({
   const [selectedSessionIsClosed, setSelectedSessionIsClosed] = useState(initialSessionClosed);
   const [sessionSummary, setSessionSummary] = useState(latestSummary);
   const [summaryStatus, setSummaryStatus] = useState<SummaryGenerationStatus>(initialSummaryGenerationStatus);
+  const [toastMessage, setToastMessage] = useState("");
+  const [toastKey, setToastKey] = useState(0);
   const [isFinishing, startFinishTransition] = useTransition();
   const [isRetryingSummary, startSummaryRetryTransition] = useTransition();
   const inputRef = useRef<HTMLInputElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const pendingAssistantContentRef = useRef<Record<string, string>>({});
+  const streamFlushFrameRef = useRef<number | null>(null);
   const hasMessages = messages.length > 0;
   const showFinishAction = hasMessages && !selectedSessionIsClosed && !isSessionLoading;
 
@@ -157,6 +173,11 @@ export function AiJournalClient({
       !selectedSessionIsClosed,
     [input, isStreaming, selectedSessionIsClosed],
   );
+
+  function showSuccessToast(message: string) {
+    setToastMessage(message);
+    setToastKey((key) => key + 1);
+  }
 
   const loadHistory = useCallback(async () => {
     setIsHistoryLoading(true);
@@ -177,9 +198,16 @@ export function AiJournalClient({
   }, [copy.historyLoadFailed]);
 
   const loadSearchResults = useCallback(async (nextQuery: string) => {
+    const trimmedQuery = nextQuery.trim();
+    if (!trimmedQuery) {
+      setSearchResults(history);
+      setIsSearchHistoryLoading(false);
+      return;
+    }
+
     setIsSearchHistoryLoading(true);
     try {
-      const response = await fetch("/api/patient/ai/sessions?query=" + encodeURIComponent(nextQuery), {
+      const response = await fetch("/api/patient/ai/sessions?query=" + encodeURIComponent(trimmedQuery), {
         cache: "no-store",
       });
       const body = await response.json().catch(() => null) as
@@ -192,7 +220,7 @@ export function AiJournalClient({
     } finally {
       setIsSearchHistoryLoading(false);
     }
-  }, [copy.historyLoadFailed]);
+  }, [copy.historyLoadFailed, history]);
 
   const openSearchOverlay = useCallback(() => {
     setSearchQuery("");
@@ -228,6 +256,41 @@ export function AiJournalClient({
 
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [closeSearchOverlay, isSearchOpen]);
+
+  const flushAssistantContent = useCallback((messageId: string) => {
+    const nextContent = pendingAssistantContentRef.current[messageId];
+    delete pendingAssistantContentRef.current[messageId];
+    streamFlushFrameRef.current = null;
+
+    if (!nextContent) return;
+
+    setMessages((current) =>
+      current.map((message) =>
+        message.id === messageId
+          ? { ...message, content: message.content + nextContent }
+          : message,
+      ),
+    );
+  }, []);
+
+  const appendAssistantContent = useCallback((messageId: string, chunk: string) => {
+    pendingAssistantContentRef.current[messageId] =
+      (pendingAssistantContentRef.current[messageId] ?? "") + chunk;
+
+    if (streamFlushFrameRef.current !== null) return;
+
+    streamFlushFrameRef.current = window.requestAnimationFrame(() => {
+      flushAssistantContent(messageId);
+    });
+  }, [flushAssistantContent]);
+
+  useEffect(() => {
+    return () => {
+      if (streamFlushFrameRef.current !== null) {
+        window.cancelAnimationFrame(streamFlushFrameRef.current);
+      }
+    };
+  }, []);
 
   async function sendMessage() {
     const text = input.trim();
@@ -275,18 +338,16 @@ export function AiJournalClient({
         const { done, value } = await reader.read();
         if (done) break;
         const chunk = decoder.decode(value, { stream: true });
-        setMessages((current) =>
-          current.map((message) =>
-            message.id === assistantMessage.id
-              ? { ...message, content: message.content + chunk }
-              : message,
-          ),
-        );
+        appendAssistantContent(assistantMessage.id, chunk);
       }
     } catch (err) {
       setMessages((current) => current.filter((message) => message.id !== assistantMessage.id));
       setError(err instanceof Error ? err.message : copy.aiContactFailed);
     } finally {
+      if (streamFlushFrameRef.current !== null) {
+        window.cancelAnimationFrame(streamFlushFrameRef.current);
+      }
+      flushAssistantContent(assistantMessage.id);
       setIsStreaming(false);
       void loadHistory();
     }
@@ -343,6 +404,7 @@ export function AiJournalClient({
       if (!response.ok || !body) throw new Error(body?.error ?? copy.newChatFailed);
       applySessionDetail(body);
       setInput("");
+      showSuccessToast(successToast.aiSessionCreated);
       void loadHistory();
       window.setTimeout(() => inputRef.current?.focus(), 0);
     } catch (newChatError) {
@@ -370,6 +432,22 @@ export function AiJournalClient({
     setSummaryStatus(detail.summaryGenerationStatus);
   }
 
+  function finishCurrentSession() {
+    if (!sessionId || isStreaming || selectedSessionIsClosed) return;
+
+    startFinishTransition(async () => {
+      setError(null);
+      try {
+        const detail = await finishAiSessionAction(sessionId);
+        applySessionDetail(detail);
+        showSuccessToast(successToast.aiSessionFinished);
+        void loadHistory();
+      } catch {
+        setError(copy.finalizeFailed);
+      }
+    });
+  }
+
   function retrySummaryGeneration() {
     if (!sessionId || isRetryingSummary) return;
 
@@ -378,6 +456,7 @@ export function AiJournalClient({
       try {
         const detail = await retryAiSessionSummaryAction(sessionId);
         applySessionDetail(detail);
+        showSuccessToast(successToast.summaryRetryStarted);
         void loadHistory();
       } catch {
         setError(copy.summaryRetryFailed);
@@ -390,6 +469,7 @@ export function AiJournalClient({
 
   return (
     <div className="grid h-full min-h-0 grid-rows-[auto_minmax(0,1fr)] overflow-hidden bg-[var(--color-warm-canvas)] lg:grid-cols-[280px_minmax(0,1fr)] lg:grid-rows-1">
+      <AppToast message={toastMessage} triggerKey={toastKey} />
       <aside
         data-chat-sidebar="actions"
         className="grid min-h-0 max-h-[min(220px,34dvh)] shrink-0 grid-rows-[auto_auto_minmax(0,1fr)] gap-3 overflow-hidden border-b border-[var(--color-stone-surface)] bg-[color-mix(in_srgb,var(--color-stone-surface)_55%,var(--color-warm-canvas))] p-3 sm:p-4 lg:flex lg:h-full lg:max-h-none lg:flex-col lg:gap-6 lg:border-b-0 lg:border-r lg:p-6"
@@ -437,7 +517,8 @@ export function AiJournalClient({
                     aria-current={item.id === sessionId ? "true" : undefined}
                     onClick={() => void loadSelectedSession(item.id)}
                     className={cn(
-                      "grid min-h-12 w-[min(220px,70vw)] shrink-0 cursor-pointer gap-0.5 rounded-xl px-3 py-2 text-left text-xs transition hover:bg-[var(--color-card)] hover:text-[var(--color-midnight)] disabled:cursor-wait disabled:opacity-70 lg:w-auto lg:shrink",
+                      "grid min-h-12 w-[min(220px,70vw)] shrink-0 cursor-pointer gap-0.5 rounded-xl px-3 py-2 text-left text-xs hover:bg-[var(--color-card)] hover:text-[var(--color-midnight)] disabled:cursor-wait disabled:opacity-70 lg:w-auto lg:shrink",
+                      motion.navItem,
                       item.id === sessionId
                         ? "bg-[var(--color-card)] text-[var(--color-midnight)] shadow-[var(--shadow-subtle)]"
                         : "text-[var(--color-graphite)]",
@@ -469,12 +550,8 @@ export function AiJournalClient({
                 isLoading={isFinishing}
                 loadingLabel={copy.finish}
                 title={copy.finishTitle}
-                onClick={() => {
-                  startFinishTransition(async () => {
-                    await finishAiSessionAction();
-                  });
-                }}
-                className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full border border-[var(--color-error-red)] bg-[var(--color-card)] px-4 text-sm font-medium text-[var(--color-error-red)] shadow-[var(--shadow-subtle)] transition hover:bg-[var(--color-error-surface)] disabled:cursor-not-allowed"
+                onClick={() => void finishCurrentSession()}
+                className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full border border-[var(--color-error-red)] bg-[var(--color-card)] px-4 text-sm font-medium text-[var(--color-error-red)] shadow-[var(--shadow-subtle)] hover:bg-[var(--color-error-surface)] disabled:cursor-not-allowed"
               >
                 <Square size={18} aria-hidden="true" />
                 <span>{copy.finish}</span>
@@ -583,7 +660,7 @@ export function AiJournalClient({
               {copy.messageLabel}
             </label>
             <div className="mx-auto w-full max-w-[800px]">
-              <div className="flex items-center gap-1 rounded-[28px] border border-[var(--color-stone-surface)] bg-[var(--color-card)] p-1.5 shadow-[var(--shadow-subtle)] transition focus-within:border-[var(--color-midnight)] focus-within:shadow-[0_0_0_4px_color-mix(in_srgb,var(--color-midnight)_5%,transparent)] sm:rounded-full">
+              <div className={cn("flex items-center gap-1 rounded-[28px] border border-[var(--color-stone-surface)] bg-[var(--color-card)] p-1.5 shadow-[var(--shadow-subtle)] focus-within:border-[var(--color-midnight)] focus-within:shadow-[0_0_0_4px_color-mix(in_srgb,var(--color-midnight)_5%,transparent)] sm:rounded-full", motion.input)}>
                 <input
                   ref={inputRef}
                   id="ai-message"
@@ -606,7 +683,7 @@ export function AiJournalClient({
                   loadingLabel={copy.sendDisabledTitle}
                   title={isStreaming ? copy.sendDisabledTitle : copy.sendTitle}
                   aria-label={isStreaming ? copy.sendDisabledTitle : copy.sendTitle}
-                  className="inline-flex size-11 min-h-11 shrink-0 cursor-pointer items-center justify-center rounded-full bg-[var(--color-midnight)] px-0 text-[var(--color-inverted)] shadow-[var(--shadow-subtle)] transition hover:bg-[var(--color-charcoal-primary)] disabled:cursor-not-allowed"
+                  className="inline-flex size-11 min-h-11 shrink-0 cursor-pointer items-center justify-center rounded-full bg-[var(--color-midnight)] px-0 text-[var(--color-inverted)] shadow-[var(--shadow-subtle)] hover:bg-[var(--color-charcoal-primary)] disabled:cursor-not-allowed"
                   slotClassName="size-11 shrink-0"
                 >
                   <ArrowUp size={20} aria-hidden="true" />
@@ -630,12 +707,12 @@ export function AiJournalClient({
       ) : null}
 
       {isSearchOpen ? (
-        <div
+        <ViewportModal
           data-chat-search-overlay="global"
-          className="fixed inset-0 z-50 grid place-items-center bg-black/45 px-3 py-5 backdrop-blur-[2px] sm:px-4 sm:py-8"
+          className="bg-black/45 px-3 py-5 backdrop-blur-[2px] sm:px-4 sm:py-8"
           onClick={closeSearchOverlay}
         >
-          <div
+          <ViewportModalPanel
             role="dialog"
             aria-modal="true"
             aria-labelledby="chat-search-overlay-title"
@@ -676,7 +753,8 @@ export function AiJournalClient({
                         closeSearchOverlay();
                       }}
                       className={cn(
-                        "grid min-h-14 cursor-pointer gap-1 rounded-xl px-3 py-2.5 text-left text-sm transition hover:bg-[var(--color-stone-surface)] hover:text-[var(--color-midnight)] disabled:cursor-wait disabled:opacity-70",
+                        "grid min-h-14 cursor-pointer gap-1 rounded-xl px-3 py-2.5 text-left text-sm hover:bg-[var(--color-stone-surface)] hover:text-[var(--color-midnight)] disabled:cursor-wait disabled:opacity-70",
+                        motion.navItem,
                         item.id === sessionId
                           ? "bg-[var(--color-stone-surface)] text-[var(--color-midnight)]"
                           : "text-[var(--color-graphite)]",
@@ -692,8 +770,8 @@ export function AiJournalClient({
                 </div>
               )}
             </div>
-          </div>
-        </div>
+          </ViewportModalPanel>
+        </ViewportModal>
       ) : null}
     </div>
   );
@@ -826,7 +904,7 @@ function SessionSummaryPanel({
             onClick={onRetrySummary}
             isLoading={isRetryingSummary}
             loadingLabel={copy.retrySummary}
-            className="mt-1 inline-flex min-h-11 w-full cursor-pointer items-center justify-center rounded-full border border-[var(--color-error-red)] bg-[var(--color-card)] px-3 text-sm font-medium text-[var(--color-error-red)] transition hover:bg-[var(--color-error-surface)] disabled:cursor-not-allowed sm:w-fit"
+            className="mt-1 inline-flex min-h-11 w-full cursor-pointer items-center justify-center rounded-full border border-[var(--color-error-red)] bg-[var(--color-card)] px-3 text-sm font-medium text-[var(--color-error-red)] hover:bg-[var(--color-error-surface)] disabled:cursor-not-allowed sm:w-fit"
             slotClassName="mt-1 w-full sm:w-fit"
           >
             {copy.retrySummary}
@@ -955,7 +1033,8 @@ function BackNavigationMenu({
         aria-haspopup="menu"
         onClick={() => setIsOpen((current) => !current)}
         className={cn(
-          "inline-flex size-11 cursor-pointer items-center justify-center rounded-full text-[var(--color-graphite)] transition hover:bg-[var(--color-card)] hover:text-[var(--color-midnight)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-teal-primary)] lg:size-9",
+          "inline-flex size-11 cursor-pointer items-center justify-center rounded-full text-[var(--color-graphite)] hover:bg-[var(--color-card)] hover:text-[var(--color-midnight)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-teal-primary)] lg:size-9",
+          motion.iconButton,
           isOpen && "bg-[var(--color-card)] text-[var(--color-midnight)] shadow-[var(--shadow-subtle)]",
         )}
       >
@@ -974,7 +1053,8 @@ function BackNavigationMenu({
             role="menu"
             aria-label={copy.backNavigationMenuLabel}
             data-chat-back-menu="patient-navigation"
-            className="absolute left-0 top-11 z-40 w-[min(240px,calc(100vw-2rem))] overflow-hidden rounded-xl border border-[var(--color-stone-surface)] bg-[var(--color-card)] p-1.5 shadow-[var(--shadow-elevated)]"
+            data-menu-panel=""
+            className={cn("absolute left-0 top-11 z-40 w-[min(240px,calc(100vw-2rem))] overflow-hidden rounded-xl border border-[var(--color-stone-surface)] bg-[var(--color-card)] p-1.5 shadow-[var(--shadow-elevated)]", motion.menuPanel)}
           >
             <BackNavigationMenuItem
               href="/patient"
@@ -1017,7 +1097,7 @@ function BackNavigationMenuItem({
       href={href}
       role="menuitem"
       onClick={onSelect}
-      className="flex min-h-11 cursor-pointer items-center gap-3 rounded-[10px] px-3 text-sm font-medium text-[var(--color-graphite)] transition hover:bg-[var(--color-stone-surface)] hover:text-[var(--color-midnight)] focus-visible:bg-[var(--color-stone-surface)] focus-visible:text-[var(--color-midnight)] focus-visible:outline-none active:scale-[0.99]"
+      className={cn("flex min-h-11 cursor-pointer items-center gap-3 rounded-[10px] px-3 text-sm font-medium text-[var(--color-graphite)] hover:bg-[var(--color-stone-surface)] hover:text-[var(--color-midnight)] focus-visible:bg-[var(--color-stone-surface)] focus-visible:text-[var(--color-midnight)] focus-visible:outline-none", motion.navItem)}
     >
       {icon}
       <span>{label}</span>
@@ -1059,7 +1139,7 @@ function ActionRailButton({
       loadingLabel={loadingLabel ?? label}
       onClick={onClick}
       variant="ghost"
-      className="flex min-h-11 w-full min-w-0 cursor-pointer items-center justify-center gap-2 rounded-xl bg-transparent px-2 text-sm font-medium text-[var(--color-graphite)] transition hover:bg-[var(--color-card)] hover:text-[var(--color-midnight)] disabled:cursor-not-allowed lg:justify-start lg:gap-3 lg:px-3"
+      className="flex min-h-11 w-full min-w-0 cursor-pointer items-center justify-center gap-2 rounded-xl bg-transparent px-2 text-sm font-medium text-[var(--color-graphite)] hover:bg-[var(--color-card)] hover:text-[var(--color-midnight)] disabled:cursor-not-allowed lg:justify-start lg:gap-3 lg:px-3"
       slotClassName="w-full"
     >
       {icon}
@@ -1093,8 +1173,8 @@ function ConfirmNewChatDialog({
   onConfirm: () => void;
 }) {
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-black/30 px-3 py-4 sm:px-4">
-      <div
+    <ViewportModal className="bg-black/30">
+      <ViewportModalPanel
         role="dialog"
         aria-modal="true"
         aria-labelledby="new-chat-confirm-title"
@@ -1114,7 +1194,10 @@ function ConfirmNewChatDialog({
             type="button"
             onClick={onCancel}
             disabled={isCreating}
-            className="min-h-11 cursor-pointer rounded-full border border-[var(--color-stone-surface)] px-4 text-sm font-medium text-[var(--color-graphite)] transition hover:bg-[var(--color-stone-surface)] disabled:cursor-not-allowed disabled:opacity-60"
+            className={cn(
+              "min-h-11 cursor-pointer rounded-full border border-[var(--color-stone-surface)] px-4 text-sm font-medium text-[var(--color-graphite)] hover:bg-[var(--color-stone-surface)] disabled:cursor-not-allowed disabled:opacity-60",
+              motion.button,
+            )}
           >
             {copy.newChatCancel}
           </button>
@@ -1123,12 +1206,12 @@ function ConfirmNewChatDialog({
             onClick={onConfirm}
             isLoading={isCreating}
             loadingLabel={copy.newChatConfirm}
-            className="min-h-11 cursor-pointer rounded-full bg-[var(--color-midnight)] px-4 text-sm font-medium text-[var(--color-inverted)] transition hover:bg-[var(--color-charcoal-primary)] disabled:cursor-not-allowed"
+            className="min-h-11 cursor-pointer rounded-full bg-[var(--color-midnight)] px-4 text-sm font-medium text-[var(--color-inverted)] hover:bg-[var(--color-charcoal-primary)] disabled:cursor-not-allowed"
           >
             {copy.newChatConfirm}
           </LoadingActionButton>
         </div>
-      </div>
-    </div>
+      </ViewportModalPanel>
+    </ViewportModal>
   );
 }

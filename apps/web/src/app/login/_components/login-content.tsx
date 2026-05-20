@@ -13,8 +13,11 @@ import {
 import { SharedHeader } from "@/components/shared-header";
 import { SiteFooter } from "@/components/site-footer";
 import { PendingSubmitButton } from "@/components/ui/async-action-button";
+import { Field, Input, Label } from "@/components/ui/form";
+import { motion } from "@/components/ui/motion";
 import type { getDictionary } from "@/lib/i18n/server";
 import { landingLoginHref } from "@/lib/i18n/marketing";
+import { cn } from "@/lib/utils";
 
 import { startGoogleOAuthAction, startManualLoginAction } from "../actions";
 import { DemoCredentialCopyButton } from "../demo-credential-copy-button";
@@ -144,9 +147,12 @@ export function LoginOptionGrid({ options }: { options: readonly LoginOption[] }
           <Link
             key={option.href}
             href={option.href}
-            className="group flex min-h-[144px] cursor-pointer flex-col rounded-xl border border-[var(--color-stone-surface)] bg-[var(--color-warm-canvas)] p-4 text-left transition duration-300 hover:-translate-y-0.5 hover:border-[var(--color-midnight)] hover:bg-[var(--color-card)] sm:min-h-[168px] sm:p-5"
+            className={cn(
+              "group flex min-h-[144px] cursor-pointer flex-col rounded-xl border border-[var(--color-stone-surface)] bg-[var(--color-warm-canvas)] p-4 text-left hover:border-[var(--color-midnight)] hover:bg-[var(--color-card)] sm:min-h-[168px] sm:p-5",
+              motion.cardInteractive,
+            )}
           >
-            <span className="mb-5 flex size-11 items-center justify-center rounded-full bg-[var(--color-stone-surface)] text-[var(--color-midnight)] transition group-hover:bg-[var(--color-midnight)] group-hover:text-[var(--color-inverted)]">
+            <span className={cn("mb-5 flex size-11 items-center justify-center rounded-full bg-[var(--color-stone-surface)] text-[var(--color-midnight)] group-hover:bg-[var(--color-midnight)] group-hover:text-[var(--color-inverted)]", motion.base)}>
               <Icon size={19} aria-hidden="true" />
             </span>
             <span className="mb-2 text-xl font-semibold leading-tight text-[var(--color-charcoal-primary)]">
@@ -171,31 +177,37 @@ export function ManualLoginForm({ copy }: { copy: LoginCopy }) {
     <section className="rounded-[10px] border border-[var(--color-stone-surface)] bg-[var(--color-warm-canvas)] p-4">
       <h2 className="mb-3 text-sm font-semibold text-[var(--color-midnight)]">{copy.manualTitle}</h2>
       <form action={startManualLoginAction} className="space-y-3">
-        <label className="block text-xs font-semibold text-[var(--color-ash)]">
-          <span>{copy.emailLabel}</span>
-          <input
+        <Field className="space-y-1.5">
+          <Label htmlFor="manual-login-email" className="text-xs font-semibold text-[var(--color-ash)]">
+            {copy.emailLabel}
+          </Label>
+          <Input
+            id="manual-login-email"
             name="email"
             type="email"
             required
             autoComplete="email"
             placeholder={copy.emailPlaceholder}
-            className="mt-1.5 min-h-11 w-full rounded-[10px] border border-[var(--color-stone-surface)] bg-[var(--color-card)] px-3 text-sm font-medium text-[var(--color-midnight)] outline-none transition placeholder:text-[var(--color-ash)] focus:border-[var(--color-teal-primary)]"
+            className="mt-1.5 min-h-11 w-full rounded-[10px] border border-[var(--color-stone-surface)] bg-[var(--color-card)] px-3 text-sm font-medium text-[var(--color-midnight)] outline-none placeholder:text-[var(--color-ash)] focus:border-[var(--color-teal-primary)]"
           />
-        </label>
-        <label className="block text-xs font-semibold text-[var(--color-ash)]">
-          <span>{copy.passwordLabel}</span>
-          <input
+        </Field>
+        <Field className="space-y-1.5">
+          <Label htmlFor="manual-login-password" className="text-xs font-semibold text-[var(--color-ash)]">
+            {copy.passwordLabel}
+          </Label>
+          <Input
+            id="manual-login-password"
             name="password"
             type="password"
             required
             autoComplete="current-password"
             placeholder={copy.passwordPlaceholder}
-            className="mt-1.5 min-h-11 w-full rounded-[10px] border border-[var(--color-stone-surface)] bg-[var(--color-card)] px-3 text-sm font-medium text-[var(--color-midnight)] outline-none transition placeholder:text-[var(--color-ash)] focus:border-[var(--color-teal-primary)]"
+            className="mt-1.5 min-h-11 w-full rounded-[10px] border border-[var(--color-stone-surface)] bg-[var(--color-card)] px-3 text-sm font-medium text-[var(--color-midnight)] outline-none placeholder:text-[var(--color-ash)] focus:border-[var(--color-teal-primary)]"
           />
-        </label>
+        </Field>
         <PendingSubmitButton
           type="submit"
-          className="inline-flex min-h-11 w-full cursor-pointer items-center justify-center rounded-full bg-[var(--color-teal-primary)] px-5 py-2.5 text-sm font-semibold text-[var(--color-inverted)] transition hover:bg-[var(--color-teal-deep)]"
+          className="inline-flex min-h-11 w-full cursor-pointer items-center justify-center rounded-full bg-[var(--color-teal-primary)] px-5 py-2.5 text-sm font-semibold text-[var(--color-inverted)] hover:bg-[var(--color-teal-deep)]"
           loadingLabel={copy.manualSubmitting}
           slotClassName="w-full"
         >
@@ -223,12 +235,10 @@ export function GoogleLoginForm({
       <form action={startGoogleOAuthAction}>
         <PendingSubmitButton
           type="submit"
-          className={[
-            "inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-full bg-[var(--color-midnight)] px-5 py-3 text-sm font-semibold text-[var(--color-inverted)] transition hover:bg-[var(--color-charcoal-primary)] hover:text-[var(--color-warm-canvas)]",
+          className={cn(
+            "inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-full bg-[var(--color-midnight)] px-5 py-3 text-sm font-semibold text-[var(--color-inverted)] hover:bg-[var(--color-charcoal-primary)] hover:text-[var(--color-warm-canvas)]",
             className,
-          ]
-            .filter(Boolean)
-            .join(" ")}
+          )}
           loadingLabel={loadingLabel}
           slotClassName={className?.includes("w-full") ? "w-full" : undefined}
         >
@@ -285,7 +295,10 @@ export function BackToLoginOptions({ label }: { label: string }) {
   return (
     <Link
       href={landingLoginHref}
-      className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-full border border-[var(--color-stone-surface)] bg-[var(--color-card)] px-4 text-center text-xs font-semibold text-[var(--color-teal-deep)] transition hover:bg-[var(--color-teal-surface)]"
+      className={cn(
+        "inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-full border border-[var(--color-stone-surface)] bg-[var(--color-card)] px-4 text-center text-xs font-semibold text-[var(--color-teal-deep)] hover:bg-[var(--color-teal-surface)]",
+        motion.button,
+      )}
     >
       <ArrowLeft size={14} aria-hidden="true" />
       {label}

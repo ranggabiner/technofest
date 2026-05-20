@@ -15,11 +15,15 @@ import {
   X,
 } from "lucide-react";
 
+import { ProfileAvatar } from "@/app/_components/profile-avatar";
 import { ProofStatus } from "@/components/proof-status";
+import { EmptyState } from "@/components/state-messages";
 import { StatusBadge } from "@/components/status-badge";
 import { LoadingActionButton, PendingSubmitButton } from "@/components/ui/async-action-button";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Label } from "@/components/ui/form";
+import { motion } from "@/components/ui/motion";
+import { ViewportModal, ViewportModalPanel } from "@/components/ui/viewport-modal";
 import type { Dictionary } from "@/lib/i18n/dictionary";
 import { formatDateTime } from "@/lib/i18n/format";
 import {
@@ -38,6 +42,7 @@ import type {
   PatientAccessPermissionRecord,
   PatientAccessState,
 } from "@/lib/access/doctor-access";
+import { cn } from "@/lib/utils";
 
 import { grantDoctorAccessAction, revokeDoctorAccessAction } from "../actions";
 import {
@@ -266,7 +271,10 @@ export function DoctorAccessClient({
           </div>
           <button
             type="button"
-            className="grid min-h-[178px] cursor-pointer place-items-center gap-4 rounded-xl border border-dashed border-[var(--color-fog)] bg-[var(--color-warm-canvas)] p-6 text-center transition hover:border-[var(--color-teal-primary)] hover:bg-[var(--color-teal-surface)]"
+            className={cn(
+              "grid min-h-[178px] cursor-pointer place-items-center gap-4 rounded-xl border border-dashed border-[var(--color-fog)] bg-[var(--color-warm-canvas)] p-6 text-center hover:border-[var(--color-teal-primary)] hover:bg-[var(--color-teal-surface)]",
+              motion.cardInteractive,
+            )}
             onClick={() => openScannerModal()}
           >
             <span className="grid size-16 place-items-center rounded-full bg-[var(--color-stone-surface)] text-[var(--color-midnight)]">
@@ -352,8 +360,8 @@ export function DoctorAccessClient({
 
 function DoctorQrScannerModalFallback() {
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center overflow-y-auto bg-[color-mix(in_srgb,var(--color-ash)_28%,transparent)] p-3 backdrop-blur-sm sm:p-4">
-      <section className="my-4 grid max-h-[calc(100dvh-2rem)] min-h-[320px] w-full max-w-[560px] animate-pulse overflow-hidden rounded-[18px] border border-[var(--color-stone-surface)] bg-[var(--color-card)] shadow-[0_24px_80px_rgba(18,18,18,0.18),inset_0_0_0_1px_var(--color-stone-surface)] sm:my-6">
+    <ViewportModal className="bg-[color-mix(in_srgb,var(--color-ash)_28%,transparent)] p-3 backdrop-blur-sm sm:p-4">
+      <ViewportModalPanel as="section" className="my-4 grid max-h-[calc(100dvh-2rem)] min-h-[320px] w-full max-w-[560px] animate-pulse overflow-hidden rounded-[18px] border border-[var(--color-stone-surface)] bg-[var(--color-card)] shadow-[0_24px_80px_rgba(18,18,18,0.18),inset_0_0_0_1px_var(--color-stone-surface)] sm:my-6">
         <div className="px-5 pb-4 pt-5 sm:px-6">
           <div className="h-7 w-40 rounded-[10px] bg-[color-mix(in_srgb,var(--color-ash)_18%,transparent)]" />
           <div className="mt-3 h-4 w-full max-w-sm rounded-[10px] bg-[color-mix(in_srgb,var(--color-ash)_18%,transparent)]" />
@@ -365,8 +373,8 @@ function DoctorQrScannerModalFallback() {
             <div className="h-11 rounded-[10px] bg-[color-mix(in_srgb,var(--color-ash)_18%,transparent)] sm:w-32" />
           </div>
         </div>
-      </section>
-    </div>
+      </ViewportModalPanel>
+    </ViewportModal>
   );
 }
 
@@ -447,8 +455,8 @@ function PermissionAccessModal({
     scope2PhysicalRangeInvalid;
 
   return (
-    <div
-      className="fixed inset-0 z-50 grid place-items-center overflow-y-auto bg-[color-mix(in_srgb,var(--color-ash)_28%,transparent)] p-3 backdrop-blur-sm sm:p-4"
+    <ViewportModal
+      className="bg-[color-mix(in_srgb,var(--color-ash)_28%,transparent)] p-3 backdrop-blur-sm sm:p-4"
       data-permission-access-modal
       role="dialog"
       aria-modal="true"
@@ -456,7 +464,11 @@ function PermissionAccessModal({
     >
       <form
         action={grantDoctorAccessAction}
-        className="my-4 grid max-h-[calc(100dvh-2rem)] w-full max-w-[640px] overflow-hidden rounded-[18px] border border-[var(--color-stone-surface)] bg-[var(--color-card)] shadow-[0_24px_80px_rgba(18,18,18,0.18),inset_0_0_0_1px_var(--color-stone-surface)] sm:my-6"
+        data-viewport-modal-panel=""
+        className={cn(
+          "my-4 grid max-h-[calc(100dvh-2rem)] w-full max-w-[640px] overflow-hidden rounded-[18px] border border-[var(--color-stone-surface)] bg-[var(--color-card)] shadow-[0_24px_80px_rgba(18,18,18,0.18),inset_0_0_0_1px_var(--color-stone-surface)] sm:my-6",
+          motion.modalPanel,
+        )}
       >
         <input type="hidden" name="doctor_id" value={doctor.doctorId} />
         <input type="hidden" name="expires_at" value={expiresAt} />
@@ -469,7 +481,10 @@ function PermissionAccessModal({
           </h2>
           <button
             type="button"
-            className="grid size-10 cursor-pointer place-items-center rounded-full text-[var(--color-ash)] transition hover:bg-[var(--color-stone-surface)] hover:text-[var(--color-midnight)]"
+            className={cn(
+              "grid size-10 cursor-pointer place-items-center rounded-full text-[var(--color-ash)] hover:bg-[var(--color-stone-surface)] hover:text-[var(--color-midnight)]",
+              motion.iconButton,
+            )}
             aria-label={copy.patient.access.permissionModalClose}
             onClick={onCancel}
           >
@@ -621,12 +636,13 @@ function PermissionAccessModal({
               />
               <button
                 type="button"
-                className={[
-                  "inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-[10px] border px-3 text-sm font-semibold transition",
+                className={cn(
+                  "inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-[10px] border px-3 text-sm font-semibold",
+                  motion.button,
                   timePreset === "custom"
                     ? "border-[var(--color-teal-primary)] bg-[var(--color-teal-surface)] text-[var(--color-teal-deep)]"
                     : "border-[var(--color-stone-surface)] bg-[var(--color-card)] text-[var(--color-charcoal-primary)] hover:border-[var(--color-teal-primary)]",
-                ].join(" ")}
+                )}
                 data-permission-time-option="custom"
                 onClick={() => onExpiryChange(expiresAt)}
               >
@@ -681,26 +697,12 @@ function PermissionAccessModal({
           </PendingSubmitButton>
         </footer>
       </form>
-    </div>
+    </ViewportModal>
   );
 }
 
 function DoctorAvatar({ doctor }: { doctor: DoctorLookupResult }) {
-  if (doctor.profilePhotoUrl) {
-    return (
-      <span
-        aria-hidden="true"
-        className="size-16 shrink-0 rounded-full border border-[var(--color-stone-surface)] bg-cover bg-center"
-        style={{ backgroundImage: `url(${doctor.profilePhotoUrl})` }}
-      />
-    );
-  }
-
-  return (
-    <span className="grid size-16 shrink-0 place-items-center rounded-full border border-[var(--color-stone-surface)] bg-[var(--color-stone-surface)] text-base font-semibold text-[var(--color-midnight)]">
-      {getInitials(doctor.fullName)}
-    </span>
-  );
+  return <ProfileAvatar src={doctor.profilePhotoUrl} name={doctor.fullName} fallback="D" className="size-16 text-base" />;
 }
 
 function PermissionScopeCard({
@@ -722,10 +724,13 @@ function PermissionScopeCard({
 }) {
   return (
     <section
-      className="rounded-[12px] border border-[var(--color-stone-surface)] bg-[var(--color-card)] p-4 shadow-[inset_0_0_0_1px_var(--color-stone-surface)]"
+      className={cn(
+        "rounded-[12px] border border-[var(--color-stone-surface)] bg-[var(--color-card)] p-4 shadow-[inset_0_0_0_1px_var(--color-stone-surface)]",
+        motion.card,
+      )}
       data-permission-scope-card={dataScope}
     >
-      <label className="flex cursor-pointer items-start gap-3">
+      <label className={cn("flex cursor-pointer items-start gap-3", motion.navItem)}>
         <input
           type="checkbox"
           name={name}
@@ -872,12 +877,13 @@ function TimePresetButton({
   return (
     <button
       type="button"
-      className={[
-        "min-h-12 cursor-pointer rounded-[10px] border px-3 text-sm font-semibold transition",
+      className={cn(
+        "min-h-12 cursor-pointer rounded-[10px] border px-3 text-sm font-semibold",
+        motion.button,
         selected
           ? "border-[var(--color-teal-primary)] bg-[var(--color-teal-surface)] text-[var(--color-teal-deep)]"
           : "border-[var(--color-stone-surface)] bg-[var(--color-card)] text-[var(--color-charcoal-primary)] hover:border-[var(--color-teal-primary)]",
-      ].join(" ")}
+      )}
       data-permission-time-option={dataValue}
       onClick={onClick}
     >
@@ -959,9 +965,7 @@ export function DoctorAccessActivity({
           </div>
         ))
       ) : (
-        <p className="rounded-[10px] bg-[var(--color-stone-surface)] p-4 text-sm text-[var(--color-ash)]">
-          {copy.patient.dashboard.noActiveAccess}
-        </p>
+        <EmptyState icon={false} className="block" message={copy.patient.dashboard.noActiveAccess} />
       )}
 
     </div>
@@ -1014,9 +1018,7 @@ export function AccessHistoryList({
           ))}
         </div>
       ) : (
-        <p className="rounded-[10px] bg-[var(--color-stone-surface)] p-4 text-sm text-[var(--color-ash)]">
-          {copy.patient.dashboard.noHistory}
-        </p>
+        <EmptyState icon={false} className="block" message={copy.patient.dashboard.noHistory} />
       )}
     </div>
   );
@@ -1074,9 +1076,7 @@ export function DoctorAccessStatusLog({
           ))}
         </div>
       ) : (
-        <p className="rounded-[10px] bg-[var(--color-stone-surface)] p-4 text-sm text-[var(--color-ash)]">
-          {copy.patient.dashboard.noHistory}
-        </p>
+        <EmptyState icon={false} className="block" message={copy.patient.dashboard.noHistory} />
       )}
     </div>
   );

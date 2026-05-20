@@ -1,21 +1,55 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { CheckCircle2 } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
-export const SAVE_STATUS_TOAST_AUTO_DISMISS_MS = 4000;
+import {
+  AppToast,
+  APP_TOAST_AUTO_DISMISS_MS,
+  type AppToastTone,
+} from "@/components/ui/app-toast";
+
+export const SAVE_STATUS_TOAST_AUTO_DISMISS_MS = APP_TOAST_AUTO_DISMISS_MS;
 
 type SaveStatusToastTrigger = string | number | null | undefined;
 
-export function shouldShowSaveStatusToast(currentUrl: string) {
-  const url = new URL(currentUrl);
+type SuccessToastMessages = {
+  default: string;
+  profileUpdated: string;
+  changesSaved: string;
+  documentUploaded: string;
+  documentsUploaded: string;
+  medicalRecordSaved: string;
+  accessGranted: string;
+  accessRevoked: string;
+  doctorApproved: string;
+  doctorRejected: string;
+  adminInvitationCreated: string;
+  adminAccessRevoked: string;
+  onboardingStepSaved: string;
+  onboardingSubmitted: string;
+  aiSessionCreated: string;
+  aiSessionFinished: string;
+  summaryRetryStarted: string;
+  blockchainRetryCompleted: string;
+};
 
-  return (
-    url.searchParams.has("saved") ||
-    url.searchParams.has("updated") ||
-    url.searchParams.get("scope1_status") === "saved" ||
-    url.searchParams.get("save_status") === "saved"
-  );
+type UrlToastState = {
+  key: number;
+  message: string;
+};
+
+export function shouldShowSaveStatusToast(currentUrl: string) {
+  return Boolean(resolveSaveStatusToastKind(currentUrl));
+}
+
+export function resolveSaveStatusToastMessage(
+  currentUrl: string,
+  messages: SuccessToastMessages,
+  fallbackMessage = messages.default,
+) {
+  const kind = resolveSaveStatusToastKind(currentUrl);
+  if (!kind) return null;
+  return messages[kind] ?? fallbackMessage;
 }
 
 export function removeSaveStatusToastParams(currentUrl: string) {
@@ -24,66 +58,120 @@ export function removeSaveStatusToastParams(currentUrl: string) {
   url.searchParams.delete("updated");
   url.searchParams.delete("scope1_status");
   url.searchParams.delete("save_status");
+  url.searchParams.delete("access_status");
+  url.searchParams.delete("submitted");
 
   return `${url.pathname}${url.search}${url.hash}`;
 }
 
 export function SaveStatusToast({
   message,
+  messages,
   triggerKey,
+  tone = "success",
 }: {
-  message: string;
+  message?: string;
+  messages?: SuccessToastMessages;
   triggerKey?: SaveStatusToastTrigger;
+  tone?: AppToastTone;
 }) {
-  const [isVisible, setIsVisible] = useState(false);
-  const previousTriggerKeyRef = useRef<SaveStatusToastTrigger>(null);
+  const [urlToast, setUrlToast] = useState<UrlToastState | null>(null);
+  const urlToastKeyRef = useRef(0);
+  const resolvedMessages = useMemo(
+    () => messages ?? fallbackMessages(message),
+    [message, messages],
+  );
+  const hasManualToast = hasToastTrigger(triggerKey);
 
   useEffect(() => {
-    const hasUrlToast = shouldShowSaveStatusToast(window.location.href);
-    const hasManualToast =
-      triggerKey !== null &&
-      triggerKey !== undefined &&
-      triggerKey !== "" &&
-      triggerKey !== 0 &&
-      triggerKey !== previousTriggerKeyRef.current;
+    const nextMessage = resolveSaveStatusToastMessage(
+      window.location.href,
+      resolvedMessages,
+      message ?? resolvedMessages.default,
+    );
+    if (!nextMessage) return;
 
-    previousTriggerKeyRef.current = triggerKey;
+    window.history.replaceState(
+      window.history.state,
+      "",
+      removeSaveStatusToastParams(window.location.href),
+    );
 
-    if (!hasUrlToast && !hasManualToast) return;
+    urlToastKeyRef.current += 1;
+    setUrlToast({
+      key: urlToastKeyRef.current,
+      message: nextMessage,
+    });
+  }, [message, resolvedMessages]);
 
-    if (hasUrlToast) {
-      window.history.replaceState(
-        window.history.state,
-        "",
-        removeSaveStatusToastParams(window.location.href),
-      );
-    }
-
-    const showTimer = window.setTimeout(() => {
-      setIsVisible(true);
-    }, 0);
-    const hideTimer = window.setTimeout(() => {
-      setIsVisible(false);
-    }, SAVE_STATUS_TOAST_AUTO_DISMISS_MS);
-
-    return () => {
-      window.clearTimeout(showTimer);
-      window.clearTimeout(hideTimer);
-    };
-  }, [triggerKey]);
-
-  if (!isVisible) return null;
+  if (!urlToast && !hasManualToast) return null;
 
   return (
-    <div className="fixed inset-x-4 top-4 z-50 mx-auto max-w-[720px]" data-save-status-toast="saved">
-      <div
-        role="status"
-        aria-live="polite"
-        className="flex items-start gap-3 rounded-xl border border-[var(--color-midnight)] bg-[var(--color-card)] p-4 text-sm text-[var(--color-midnight)] shadow-[var(--shadow-elevated)]"
-      >
-        <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-[var(--color-teal-deep)]" aria-hidden="true" />
-        <span>{message}</span>
-      </div>
-    </div>
+    <AppToast
+      data-save-status-toast="saved"
+      message={urlToast?.message ?? message ?? resolvedMessages.default}
+      tone={tone}
+      triggerKey={urlToast ? `url:${urlToast.key}` : triggerKey}
+    />
   );
+}
+
+function resolveSaveStatusToastKind(currentUrl: string): keyof SuccessToastMessages | null {
+  const url = new URL(currentUrl);
+  const saved = url.searchParams.get("saved");
+  const updated = url.searchParams.get("updated");
+  const scope1Status = url.searchParams.get("scope1_status");
+  const saveStatus = url.searchParams.get("save_status");
+  const accessStatus = url.searchParams.get("access_status");
+
+  if (scope1Status === "saved") return "medicalRecordSaved";
+  if (accessStatus === "granted") return "accessGranted";
+  if (accessStatus === "revoked") return "accessRevoked";
+  if (updated === "approved") return "doctorApproved";
+  if (updated === "rejected") return "doctorRejected";
+  if (url.searchParams.has("submitted")) return "onboardingSubmitted";
+
+  if (saveStatus) {
+    if (saveStatus === "doctor_documents_review") return "documentsUploaded";
+    if (saveStatus === "patient_onboarding_complete") return "onboardingSubmitted";
+    if (saveStatus.endsWith("_onboarding_step")) return "onboardingStepSaved";
+    if (saveStatus === "saved") return "changesSaved";
+    return "default";
+  }
+
+  if (saved) {
+    if (saved === "letters") return "documentsUploaded";
+    if (saved === "profile" || url.pathname.includes("/profile")) return "profileUpdated";
+    return "changesSaved";
+  }
+
+  return null;
+}
+
+function fallbackMessages(message?: string): SuccessToastMessages {
+  const fallback = message ?? "Changes saved successfully";
+  return {
+    default: fallback,
+    profileUpdated: fallback,
+    changesSaved: fallback,
+    documentUploaded: fallback,
+    documentsUploaded: fallback,
+    medicalRecordSaved: fallback,
+    accessGranted: fallback,
+    accessRevoked: fallback,
+    doctorApproved: fallback,
+    doctorRejected: fallback,
+    adminInvitationCreated: fallback,
+    adminAccessRevoked: fallback,
+    onboardingStepSaved: fallback,
+    onboardingSubmitted: fallback,
+    aiSessionCreated: fallback,
+    aiSessionFinished: fallback,
+    summaryRetryStarted: fallback,
+    blockchainRetryCompleted: fallback,
+  };
+}
+
+function hasToastTrigger(triggerKey: SaveStatusToastTrigger) {
+  return triggerKey !== null && triggerKey !== undefined && triggerKey !== "" && triggerKey !== 0;
 }

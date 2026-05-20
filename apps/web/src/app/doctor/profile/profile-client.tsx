@@ -1,18 +1,24 @@
 "use client";
 
-import { useRef } from "react";
+import { useActionState, useId, useRef, useState } from "react";
 import { Download, Eye, FileText } from "lucide-react";
 
 import {
   ProfileConfirmationHost,
+  ProfileFormPanel,
   ProfileFormControls,
+  ProfileIdentityPanel,
   ProfilePhotoPicker,
+  preventCleanProfileSubmit,
+  useProfileFormDirty,
 } from "@/app/_components/profile-shell";
 import { Button } from "@/components/ui/button";
+import { InlineStatusMessage } from "@/components/state-messages";
 import { Field, Input, Label, Select } from "@/components/ui/form";
 import type { Dictionary } from "@/lib/i18n/dictionary";
 import { formatFileSize, getFileTypeLabel } from "@/lib/kyc/preview";
 import type { KycDocumentSummary } from "@/lib/kyc/summaries";
+import { initialProfileFormState } from "@/lib/profile/form-state";
 
 import { updateDoctorLettersAction, updateDoctorProfileAction } from "./actions";
 
@@ -37,6 +43,11 @@ export function DoctorProfileClient({
 }) {
   const profileFormRef = useRef<HTMLFormElement>(null);
   const lettersFormRef = useRef<HTMLFormElement>(null);
+  const profileFormId = useId();
+  const [isPhotoBusy, setIsPhotoBusy] = useState(false);
+  const [profileState, profileFormAction] = useActionState(updateDoctorProfileAction, initialProfileFormState);
+  const profileFormDirty = useProfileFormDirty(profileFormRef);
+  const lettersFormDirty = useProfileFormDirty(lettersFormRef);
   const verified = doctor.account_status === "approved";
   const displayName = doctor.full_name.replace(/^dr\.?\s+/i, "").trim() || doctor.full_name;
 
@@ -47,24 +58,33 @@ export function DoctorProfileClient({
         {copy.doctor.title}
       </h1>
 
-      <section className="rounded-xl border border-[var(--color-stone-surface)] bg-[var(--color-card)] p-5 shadow-[var(--shadow-subtle)] sm:p-6">
-        <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
-          <ProfilePhotoPicker src={avatarUrl} name={doctor.full_name} changeLabel={copy.photo.changePhoto} />
-          <div className="min-w-0 flex-1">
-            <h2 className="text-2xl font-semibold text-[var(--color-midnight)]">
-              Dr. {displayName}.Msi&apos;s Profile
-            </h2>
-            <span className="mt-3 inline-flex rounded-full bg-[var(--color-teal-muted)] px-3 py-1 text-xs font-semibold text-[var(--color-teal-deep)]">
-              {verified ? copy.doctor.verified : copy.doctor.underVerification}
-            </span>
-          </div>
-        </div>
-      </section>
+      <ProfileIdentityPanel
+        photo={
+          <ProfilePhotoPicker
+            src={avatarUrl}
+            name={doctor.full_name}
+            changeLabel={copy.photo.changePhoto}
+            formId={profileFormId}
+            inputName="profile_photo"
+            onDirtyStateChange={profileFormDirty.updateDirtyState}
+            uploadErrors={copy.photo.uploadErrors}
+            onBusyChange={setIsPhotoBusy}
+          />
+        }
+      >
+        <h2 className="text-2xl font-semibold text-[var(--color-midnight)]">
+          Dr. {displayName}.Msi&apos;s Profile
+        </h2>
+        <span className="mt-3 inline-flex rounded-full bg-[var(--color-teal-muted)] px-3 py-1 text-xs font-semibold text-[var(--color-teal-deep)]">
+          {verified ? copy.doctor.verified : copy.doctor.underVerification}
+        </span>
+      </ProfileIdentityPanel>
 
-      <form
-        ref={profileFormRef}
-        action={updateDoctorProfileAction}
-        className="rounded-xl border border-[var(--color-stone-surface)] bg-[var(--color-card)] p-5 shadow-[var(--shadow-subtle)] sm:p-6"
+      <ProfileFormPanel
+        id={profileFormId}
+        formRef={profileFormRef}
+        action={profileFormAction}
+        onSubmit={(event) => preventCleanProfileSubmit(event, profileFormDirty)}
       >
         <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -99,21 +119,23 @@ export function DoctorProfileClient({
             <Input id="phone_number" name="phone_number" defaultValue={doctor.phone_number ?? ""} />
           </Field>
         </div>
+        {profileState.message ? <InlineStatusMessage className="mt-5" tone="danger" message={profileState.message} /> : null}
         <ProfileFormControls
           copy={copy}
           saveLabel={copy.doctor.save}
           cancelLabel={copy.doctor.cancel}
+          disabled={!profileFormDirty.isDirty || isPhotoBusy}
           formRef={profileFormRef}
           onCancel={() => {
             profileFormRef.current?.reset();
           }}
         />
-      </form>
+      </ProfileFormPanel>
 
-      <form
-        ref={lettersFormRef}
+      <ProfileFormPanel
+        formRef={lettersFormRef}
         action={updateDoctorLettersAction}
-        className="rounded-xl border border-[var(--color-stone-surface)] bg-[var(--color-card)] p-5 shadow-[var(--shadow-subtle)] sm:p-6"
+        onSubmit={(event) => preventCleanProfileSubmit(event, lettersFormDirty)}
       >
         <h2 className="mb-6 text-lg font-semibold text-[var(--color-midnight)]">{copy.doctor.lettersTitle}</h2>
         <div className="grid gap-4">
@@ -164,10 +186,11 @@ export function DoctorProfileClient({
           copy={copy}
           saveLabel={copy.doctor.save}
           cancelLabel={copy.doctor.cancel}
+          disabled={!lettersFormDirty.isDirty}
           formRef={lettersFormRef}
           onCancel={() => lettersFormRef.current?.reset()}
         />
-      </form>
+      </ProfileFormPanel>
     </div>
   );
 }

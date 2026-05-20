@@ -34,6 +34,7 @@ export function AdminLayout({
       role="admin"
       sectionLabel={copy.admin.doctors.title}
       title={copy.admin.dashboard.title}
+      userAvatarUrl={role.avatarUrl}
       userEmail={role.email}
       userName={role.fullName}
     >

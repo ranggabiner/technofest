@@ -14,6 +14,8 @@ import { AssistantBubbleSkeleton } from "@/components/loading-skeletons";
 import { StatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { motion } from "@/components/ui/motion";
+import { ViewportModal, ViewportModalPanel } from "@/components/ui/viewport-modal";
 import type { JournalSessionDetailView } from "@/lib/ai/journal-service";
 import type { Dictionary } from "@/lib/i18n/dictionary";
 import type { Locale } from "@/lib/i18n/locales";
@@ -110,14 +112,15 @@ export function JournalHistoryClient({
       </div>
 
       {activeItem ? (
-        <div
-          className="fixed inset-0 z-50 flex min-h-dvh items-center justify-center bg-[rgba(29,27,25,0.24)] p-3 backdrop-blur-[2px] sm:p-4 md:p-8"
+        <ViewportModal
+          className="bg-[rgba(29,27,25,0.24)] p-3 backdrop-blur-[2px] sm:p-4 md:p-8"
           data-journal-chat-dialog="overlay"
           onMouseDown={(event) => {
             if (event.target === event.currentTarget) closeDialog();
           }}
         >
-          <section
+          <ViewportModalPanel
+            as="section"
             aria-labelledby="journal-chat-dialog-title"
             aria-modal="true"
             className="flex max-h-[calc(100dvh-2rem)] w-full max-w-[520px] flex-col overflow-hidden rounded-[18px] border border-[color-mix(in_srgb,var(--color-card)_80%,transparent)] bg-[color-mix(in_srgb,var(--color-card)_86%,transparent)] shadow-[0_24px_70px_-32px_rgba(0,107,94,0.72)] backdrop-blur-md"
@@ -143,7 +146,10 @@ export function JournalHistoryClient({
               </div>
               <button
                 aria-label={copy.closeChatPopup}
-                className="grid size-10 cursor-pointer place-items-center rounded-full text-[var(--color-ash)] transition hover:bg-[var(--color-stone-surface)] hover:text-[var(--color-midnight)]"
+                className={cn(
+                  "grid size-10 cursor-pointer place-items-center rounded-full text-[var(--color-ash)] hover:bg-[var(--color-stone-surface)] hover:text-[var(--color-midnight)]",
+                  motion.iconButton,
+                )}
                 onClick={closeDialog}
                 type="button"
               >
@@ -199,8 +205,8 @@ export function JournalHistoryClient({
                 {formatChatFooter(activeItem, copy, locale)}
               </p>
             </footer>
-          </section>
-        </div>
+          </ViewportModalPanel>
+        </ViewportModal>
       ) : null}
     </>
   );

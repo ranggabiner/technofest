@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useRef } from "react";
 import { UserPlus } from "lucide-react";
 
+import { AppToast } from "@/components/ui/app-toast";
 import { PendingSubmitButton } from "@/components/ui/async-action-button";
 import { Field, Input, Label } from "@/components/ui/form";
 import type { Dictionary } from "@/lib/i18n/dictionary";
@@ -13,6 +14,8 @@ import { initialInviteAdminFormState } from "./form-state";
 export function AddAdminForm({ copy }: { copy: Dictionary["admin"]["addAdmin"] }) {
   const [state, formAction] = useActionState(inviteAdminAction, initialInviteAdminFormState);
   const formRef = useRef<HTMLFormElement>(null);
+  const toastMessage = state.status === "success" || state.status === "warning" ? state.message : "";
+  const toastTone = state.status === "warning" ? "warning" : "success";
 
   useEffect(() => {
     if (state.status === "success" || state.status === "warning") {
@@ -22,6 +25,7 @@ export function AddAdminForm({ copy }: { copy: Dictionary["admin"]["addAdmin"] }
 
   return (
     <form ref={formRef} action={formAction} className="grid gap-5">
+      <AppToast message={toastMessage} tone={toastTone} triggerKey={state} />
       <Field>
         <Label htmlFor="admin_email">{copy.emailLabel}</Label>
         <Input
@@ -33,15 +37,13 @@ export function AddAdminForm({ copy }: { copy: Dictionary["admin"]["addAdmin"] }
         />
       </Field>
 
-      {state.message ? (
+      {state.message && state.status !== "success" ? (
         <p
           id="admin-invite-message"
           className={
-            state.status === "success"
-              ? "text-sm text-[var(--color-success-text)]"
-              : state.status === "warning"
-                ? "text-sm text-[var(--color-warning-text)]"
-                : "text-sm text-[var(--color-error-red)]"
+            state.status === "warning"
+              ? "text-sm text-[var(--color-warning-text)]"
+              : "text-sm text-[var(--color-error-red)]"
           }
         >
           {state.message}

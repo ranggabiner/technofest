@@ -3,11 +3,14 @@ import { redirect } from "next/navigation";
 import type { ComponentPropsWithoutRef, ReactNode } from "react";
 import { Activity, ArrowRight, Home, Smile } from "lucide-react";
 
+import { SaveStatusToast } from "@/app/_components/save-status-toast";
 import { PendingSubmitButton } from "@/components/ui/async-action-button";
 import { Field, Input, Label, Select, Textarea } from "@/components/ui/form";
+import { motion } from "@/components/ui/motion";
 import { roleEntryPath } from "@/lib/auth/roles";
 import { requireRole } from "@/lib/auth/session";
 import { getDictionary } from "@/lib/i18n/server";
+import { cn } from "@/lib/utils";
 
 import { PatientOnboardingShell } from "../_components/patient-onboarding-shell";
 import { savePatientHealthOnboardingAction } from "../actions";
@@ -31,6 +34,7 @@ export default async function PatientOnboardingStep2Page() {
       variant="form-card"
       themeLabels={copy.common.theme}
     >
+      <SaveStatusToast messages={copy.common.successToast} />
       <form action={savePatientHealthOnboardingAction} className="space-y-10 sm:space-y-12">
         <PatientOnboardingSection
           icon={<Activity size={20} aria-hidden="true" />}
@@ -91,7 +95,7 @@ export default async function PatientOnboardingStep2Page() {
                     defaultChecked={index === 0}
                     required
                   />
-                  <span className="flex min-h-11 items-center justify-center rounded-full border border-[var(--color-stone-surface)] bg-[var(--color-warm-canvas)] px-4 text-sm text-[var(--color-graphite)] transition-colors peer-checked:border-[var(--color-midnight)] peer-checked:bg-[var(--color-stone-surface)] peer-checked:text-[var(--color-midnight)]">
+                  <span className={cn("flex min-h-11 items-center justify-center rounded-full border border-[var(--color-stone-surface)] bg-[var(--color-warm-canvas)] px-4 text-sm text-[var(--color-graphite)] peer-checked:border-[var(--color-midnight)] peer-checked:bg-[var(--color-stone-surface)] peer-checked:text-[var(--color-midnight)]", motion.navItem)}>
                     {option.label}
                   </span>
                 </label>
@@ -129,7 +133,7 @@ export default async function PatientOnboardingStep2Page() {
         <div className="grid gap-3 border-t border-[var(--color-stone-surface)] pt-6 sm:flex sm:items-center sm:justify-between">
           <Link
             href="/patient/onboarding/step-1"
-            className="inline-flex min-h-11 items-center rounded-full px-4 py-2 text-sm leading-6 text-[var(--color-graphite)] transition-colors hover:bg-[var(--color-warm-canvas)] hover:text-[var(--color-midnight)]"
+            className={cn("inline-flex min-h-11 items-center rounded-full px-4 py-2 text-sm leading-6 text-[var(--color-graphite)] hover:bg-[var(--color-warm-canvas)] hover:text-[var(--color-midnight)]", motion.navLink)}
           >
             {copy.patient.onboarding.back}
           </Link>

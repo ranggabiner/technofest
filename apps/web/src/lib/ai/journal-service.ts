@@ -143,8 +143,7 @@ export async function loadPatientJournalState(role: ResolvedRole): Promise<Patie
   const recentSummaries = buildRecentSummaries(summaryResult.data ?? []);
   const chatHistory = await loadPatientChatHistory(role);
   const activeSession = sessionResult.data;
-  const selectedSession =
-    activeSession ?? (chatHistory[0] ? await loadPatientSessionRow(patientId, chatHistory[0].id) : null);
+  const selectedSession = activeSession;
   const messages = selectedSession
     ? await loadDecryptedMessages(selectedSession.session_id, patientId)
     : [];
@@ -443,13 +442,31 @@ export async function finishActiveAiSession(
   if (error) throw error;
   if (!data) return;
 
-  const session = await markAiSessionFinished({
-    patientId,
-    sessionId: data.session_id,
-    endReason,
-  });
+  return finishPatientChatSession(role, data.session_id, endReason);
+}
 
-  scheduleAiSessionSummaryGeneration(session);
+export async function finishPatientChatSession(
+  role: ResolvedRole,
+  sessionId: string,
+  endReason: "manual_end" | "new_session_started" | "inactivity_timeout" = "manual_end",
+): Promise<JournalSessionDetailView> {
+  const patientId = requirePatientId(role);
+  await assertConsentAndProfileAccess(role.authUserId, patientId, { requireProfile: true });
+
+  const currentSession = await loadPatientSessionRow(patientId, sessionId);
+  if (!currentSession) throw new Error("Sesi chat tidak ditemukan");
+
+  const session = currentSession.ended_at
+    ? currentSession
+    : await markAiSessionFinished({
+        patientId,
+        sessionId,
+        endReason,
+      });
+
+  if (!currentSession.ended_at) scheduleAiSessionSummaryGeneration(session);
+
+  return buildSessionDetail(session, await loadDecryptedMessages(session.session_id, patientId));
 }
 
 export async function loadPatientChatHistory(

@@ -1,14 +1,21 @@
 "use client";
 
-import { useRef } from "react";
+import { useActionState, useId, useRef, useState } from "react";
 
 import {
   ProfileConfirmationHost,
+  ProfileFormPanel,
   ProfileFormControls,
+  ProfileIdentityPanel,
+  ProfilePanel,
   ProfilePhotoPicker,
+  preventCleanProfileSubmit,
+  useProfileFormDirty,
 } from "@/app/_components/profile-shell";
+import { InlineStatusMessage } from "@/components/state-messages";
 import { Field, Input, Label, Select, Textarea } from "@/components/ui/form";
 import type { Dictionary } from "@/lib/i18n/dictionary";
+import { initialProfileFormState } from "@/lib/profile/form-state";
 import type { PatientProfileState } from "@/lib/profile/service";
 
 import { updatePatientAccountSettingsAction, updatePatientProfilingAction } from "./actions";
@@ -23,6 +30,10 @@ export function PatientProfileSettingsClient({
   avatarUrl: string | null;
 }) {
   const formRef = useRef<HTMLFormElement>(null);
+  const formId = useId();
+  const [isPhotoBusy, setIsPhotoBusy] = useState(false);
+  const [state, formAction] = useActionState(updatePatientAccountSettingsAction, initialProfileFormState);
+  const profileFormDirty = useProfileFormDirty(formRef);
 
   return (
     <div className="space-y-6">
@@ -38,20 +49,29 @@ export function PatientProfileSettingsClient({
         </div>
       </div>
 
-      <section className="rounded-xl border border-[var(--color-stone-surface)] bg-[var(--color-card)] p-5 shadow-[var(--shadow-subtle)] sm:p-6">
-        <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
-          <ProfilePhotoPicker src={avatarUrl} name={patient.fullName} changeLabel={copy.photo.changePhoto} />
-          <div className="min-w-0 flex-1">
-            <h2 className="text-2xl font-semibold text-[var(--color-midnight)]">{patient.fullName}</h2>
-            <p className="mt-1 text-sm text-[var(--color-ash)]">{copy.patient.identityGreeting}</p>
-          </div>
-        </div>
-      </section>
+      <ProfileIdentityPanel
+        photo={
+          <ProfilePhotoPicker
+            src={avatarUrl}
+            name={patient.fullName}
+            changeLabel={copy.photo.changePhoto}
+            formId={formId}
+            inputName="profile_photo"
+            onDirtyStateChange={profileFormDirty.updateDirtyState}
+            uploadErrors={copy.photo.uploadErrors}
+            onBusyChange={setIsPhotoBusy}
+          />
+        }
+      >
+        <h2 className="text-2xl font-semibold text-[var(--color-midnight)]">{patient.fullName}</h2>
+        <p className="mt-1 text-sm text-[var(--color-ash)]">{copy.patient.identityGreeting}</p>
+      </ProfileIdentityPanel>
 
-      <form
-        ref={formRef}
-        action={updatePatientAccountSettingsAction}
-        className="rounded-xl border border-[var(--color-stone-surface)] bg-[var(--color-card)] p-5 shadow-[var(--shadow-subtle)] sm:p-6"
+      <ProfileFormPanel
+        id={formId}
+        formRef={formRef}
+        action={formAction}
+        onSubmit={(event) => preventCleanProfileSubmit(event, profileFormDirty)}
       >
         <h2 className="mb-6 text-sm font-semibold uppercase tracking-widest text-[var(--color-midnight)]">
           {copy.patient.personalDataTitle}
@@ -84,16 +104,18 @@ export function PatientProfileSettingsClient({
             </Select>
           </Field>
         </div>
+        {state.message ? <InlineStatusMessage className="mt-5" tone="danger" message={state.message} /> : null}
         <ProfileFormControls
           copy={copy}
           saveLabel={copy.patient.save}
           cancelLabel={copy.patient.cancel}
+          disabled={!profileFormDirty.isDirty || isPhotoBusy}
           formRef={formRef}
           onCancel={() => {
             formRef.current?.reset();
           }}
         />
-      </form>
+      </ProfileFormPanel>
     </div>
   );
 }
@@ -106,6 +128,7 @@ export function PatientProfilingClient({
   patient: PatientProfileState;
 }) {
   const formRef = useRef<HTMLFormElement>(null);
+  const profilingFormDirty = useProfileFormDirty(formRef);
 
   return (
     <div className="space-y-6">
@@ -116,8 +139,13 @@ export function PatientProfilingClient({
         </h1>
       </div>
 
-      <form ref={formRef} action={updatePatientProfilingAction} className="space-y-5">
-        <section className="rounded-xl border border-[var(--color-stone-surface)] bg-[var(--color-card)] p-5 shadow-[var(--shadow-subtle)] sm:p-6">
+      <form
+        ref={formRef}
+        action={updatePatientProfilingAction}
+        className="space-y-5"
+        onSubmit={(event) => preventCleanProfileSubmit(event, profilingFormDirty)}
+      >
+        <ProfilePanel>
           <h2 className="mb-5 text-sm font-semibold uppercase tracking-widest text-[var(--color-midnight)]">
             {copy.patient.dailyLifeTitle}
           </h2>
@@ -153,9 +181,9 @@ export function PatientProfilingClient({
               <Input id="living_environment" name="living_environment" defaultValue={patient.profiling.livingEnvironment} />
             </Field>
           </div>
-        </section>
+        </ProfilePanel>
 
-        <section className="rounded-xl border border-[var(--color-stone-surface)] bg-[var(--color-card)] p-5 shadow-[var(--shadow-subtle)] sm:p-6">
+        <ProfilePanel>
           <h2 className="mb-5 text-sm font-semibold uppercase tracking-widest text-[var(--color-midnight)]">
             {copy.patient.additionalInfoTitle}
           </h2>
@@ -173,12 +201,13 @@ export function PatientProfilingClient({
               <Input id="discovered_from" name="discovered_from" defaultValue={patient.profiling.discoveredFrom} />
             </Field>
           </div>
-        </section>
+        </ProfilePanel>
 
         <ProfileFormControls
           copy={copy}
           saveLabel={copy.patient.save}
           cancelLabel={copy.patient.cancel}
+          disabled={!profilingFormDirty.isDirty}
           formRef={formRef}
           onCancel={() => {
             formRef.current?.reset();

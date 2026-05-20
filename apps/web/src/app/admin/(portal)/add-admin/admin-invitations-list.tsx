@@ -4,7 +4,9 @@ import { useActionState, useEffect, useMemo, useState } from "react";
 import { Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
+import { AppToast } from "@/components/ui/app-toast";
 import { PendingSubmitButton } from "@/components/ui/async-action-button";
+import { EmptyState } from "@/components/state-messages";
 import { StatusBadge } from "@/components/status-badge";
 import type { AdminInvitationListItem } from "@/lib/admin/service";
 import { formatDateTime } from "@/lib/i18n/format";
@@ -25,7 +27,8 @@ type AdminInvitationListProps = {
 
 export function AdminInvitationList({ copy, invitations, locale }: AdminInvitationListProps) {
   const [hiddenInvitationIds, setHiddenInvitationIds] = useState<ReadonlySet<string>>(new Set());
-  const [successMessage, setSuccessMessage] = useState("");
+  const [toastMessage, setToastMessage] = useState("");
+  const [toastKey, setToastKey] = useState(0);
   const visibleInvitations = useMemo(
     () => invitations.filter((invitation) => !hiddenInvitationIds.has(invitation.invitationId)),
     [hiddenInvitationIds, invitations],
@@ -33,21 +36,16 @@ export function AdminInvitationList({ copy, invitations, locale }: AdminInvitati
 
   function handleRevoked(invitationId: string, message: string) {
     setHiddenInvitationIds((current) => new Set(current).add(invitationId));
-    setSuccessMessage(message);
+    setToastMessage(message);
+    setToastKey((key) => key + 1);
   }
 
   return (
     <div className="grid gap-4" data-admin-invitations-list="active">
-      {successMessage ? (
-        <p className="rounded-[10px] bg-[var(--color-success-surface)] p-4 text-sm font-medium text-[var(--color-success-text)]">
-          {successMessage}
-        </p>
-      ) : null}
+      <AppToast message={toastMessage} triggerKey={toastKey} />
 
       {visibleInvitations.length === 0 ? (
-        <p className="rounded-[10px] bg-[var(--color-stone-surface)] p-4 text-sm text-[var(--color-ash)]">
-          {copy.noAdmins}
-        </p>
+        <EmptyState icon={false} className="block" message={copy.noAdmins} />
       ) : (
         <ul className="grid gap-3">
           {visibleInvitations.map((invitation) => (

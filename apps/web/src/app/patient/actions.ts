@@ -15,7 +15,7 @@ import { parseScope2DateRangeFilter } from "@/lib/access/granular-grants";
 import { requireRole } from "@/lib/auth/session";
 import {
   acceptAiConsent,
-  finishActiveAiSession,
+  finishPatientChatSession,
   retryAiSessionSummaryGeneration,
   savePatientProfiling,
 } from "@/lib/ai/journal-service";
@@ -44,18 +44,14 @@ export async function saveProfilingAction(formData: FormData) {
   revalidatePath("/patient/chat");
 }
 
-export async function finishAiSessionAction() {
+export async function finishAiSessionAction(sessionId: string) {
   const role = await requireRole();
-
-  try {
-    await finishActiveAiSession(role, "manual_end");
-  } catch {
-    redirect(`/patient/chat?ai_error=finalize_failed&ai_toast=${Date.now()}`);
-  }
+  const detail = await finishPatientChatSession(role, sessionId);
 
   revalidatePath("/patient");
   revalidatePath("/patient/chat");
-  redirect(`/patient/chat?ai_status=finalized&ai_toast=${Date.now()}`);
+
+  return detail;
 }
 
 export async function retryAiSessionSummaryAction(sessionId: string) {

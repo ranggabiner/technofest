@@ -16,13 +16,13 @@ describe("patient chat status toast", () => {
     const component = source();
 
     expect(component).toContain('"use client"');
-    expect(component).toContain("export const STATUS_TOAST_AUTO_DISMISS_MS = 4000");
-    expect(component).toContain("window.setTimeout");
-    expect(component).toContain("window.clearTimeout");
+    expect(component).toContain("export const STATUS_TOAST_AUTO_DISMISS_MS = APP_TOAST_AUTO_DISMISS_MS");
+    expect(component).toContain('import { AppToast');
     expect(component).toContain("window.history.replaceState");
     expect(component).toContain('url.searchParams.delete("ai_status")');
     expect(component).toContain('url.searchParams.delete("ai_error")');
     expect(component).toContain('url.searchParams.delete("ai_toast")');
+    expect(component).toContain('tone={isFailed ? "danger" : "success"}');
   });
 
   it("uses a four second auto-dismiss duration", () => {

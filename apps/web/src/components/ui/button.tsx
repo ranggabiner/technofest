@@ -2,6 +2,7 @@ import * as React from "react";
 import { Slot } from "@radix-ui/react-slot";
 
 import { cn } from "@/lib/utils";
+import { motion } from "@/components/ui/motion";
 import { typography } from "@/components/ui/typography";
 
 type ButtonVariant = "primary" | "secondary" | "ghost" | "destructive";
@@ -33,7 +34,8 @@ export function Button({
   return (
     <Comp
       className={cn(
-        "inline-flex min-h-11 max-w-full cursor-pointer items-center justify-center gap-2 rounded-full px-5 py-2 text-center transition disabled:cursor-not-allowed disabled:opacity-50",
+        "inline-flex min-h-11 max-w-full cursor-pointer items-center justify-center gap-2 rounded-full px-5 py-2 text-center disabled:cursor-not-allowed disabled:opacity-50",
+        motion.button,
         typography.button,
         variants[variant],
         className,

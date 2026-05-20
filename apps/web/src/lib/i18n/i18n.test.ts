@@ -218,4 +218,14 @@ describe("i18n locale contracts", () => {
       }
     }
   });
+
+  it("localizes profile photo optimization errors", () => {
+    const uploadErrorKeys = ["empty_file", "file_too_large", "unsupported_type", "compression_failed", "network", "server", "unknown"] as const;
+
+    for (const locale of ["id", "en"] as const) {
+      for (const key of uploadErrorKeys) {
+        expect(dictionary[locale].profile.photo.uploadErrors[key]).toBeTruthy();
+      }
+    }
+  });
 });

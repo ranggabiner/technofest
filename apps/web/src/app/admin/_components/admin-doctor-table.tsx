@@ -4,7 +4,9 @@ import { useState } from "react";
 import dynamic from "next/dynamic";
 import { FileSearch } from "lucide-react";
 
+import { EmptyState } from "@/components/state-messages";
 import { Button } from "@/components/ui/button";
+import { ViewportModal, ViewportModalPanel } from "@/components/ui/viewport-modal";
 import type { Dictionary } from "@/lib/i18n/dictionary";
 import { formatDateTime } from "@/lib/i18n/format";
 import type { Locale } from "@/lib/i18n/locales";
@@ -38,9 +40,7 @@ export function AdminDoctorTable({
     <>
       <div data-admin-doctor-cards className="grid gap-3 md:hidden">
         {doctors.length === 0 ? (
-          <p className="rounded-[10px] bg-[var(--color-stone-surface)] p-4 text-center text-sm text-[var(--color-ash)]">
-            {emptyMessage}
-          </p>
+          <EmptyState icon={false} className="block text-center" message={emptyMessage} />
         ) : (
           doctors.map((doctor) => (
             <article
@@ -129,8 +129,8 @@ export function AdminDoctorTable({
 
 function AdminReviewModalFallback() {
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-black/35 px-3 py-4 sm:px-4 sm:py-6">
-      <div className="grid max-h-[calc(100dvh-2rem)] min-h-[420px] w-full max-w-3xl animate-pulse gap-5 overflow-hidden rounded-[10px] border border-[var(--color-stone-surface)] bg-[var(--color-card)] p-4 shadow-[var(--shadow-elevated)] sm:p-5">
+    <ViewportModal className="bg-black/35 sm:py-6">
+      <ViewportModalPanel className="grid max-h-[calc(100dvh-2rem)] min-h-[420px] w-full max-w-3xl animate-pulse gap-5 overflow-hidden rounded-[10px] border border-[var(--color-stone-surface)] bg-[var(--color-card)] p-4 shadow-[var(--shadow-elevated)] sm:p-5">
         <div className="flex items-start justify-between gap-4">
           <div className="grid flex-1 gap-3">
             <div className="h-7 w-44 rounded-[10px] bg-[color-mix(in_srgb,var(--color-ash)_18%,transparent)]" />
@@ -148,7 +148,7 @@ function AdminReviewModalFallback() {
           <div className="h-16 rounded-[10px] border border-[var(--color-stone-surface)] bg-[color-mix(in_srgb,var(--color-ash)_10%,transparent)]" />
           <div className="h-16 rounded-[10px] border border-[var(--color-stone-surface)] bg-[color-mix(in_srgb,var(--color-ash)_10%,transparent)]" />
         </div>
-      </div>
-    </div>
+      </ViewportModalPanel>
+    </ViewportModal>
   );
 }

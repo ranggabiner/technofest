@@ -4,12 +4,14 @@ import { redirect } from "next/navigation";
 import { SharedHeader } from "@/components/shared-header";
 import { SiteFooter } from "@/components/site-footer";
 import { PendingSubmitButton } from "@/components/ui/async-action-button";
+import { motion } from "@/components/ui/motion";
 import { postLoginHandoffPath } from "@/lib/auth/post-login";
 import { roleEntryPath } from "@/lib/auth/roles";
 import { getCurrentUser, resolveRoleForUser } from "@/lib/auth/session";
 import { getLocale } from "@/lib/i18n/server";
 import { getRoleOptions } from "@/lib/i18n/marketing";
 import { dictionary } from "@/lib/i18n/dictionary";
+import { cn } from "@/lib/utils";
 
 import { completeRoleSelectionAction } from "../actions";
 
@@ -77,9 +79,12 @@ export default async function RoleSelectionPage({
                   />
                   <label
                     htmlFor={`role-${option.intent}`}
-                    className="flex min-h-[160px] cursor-pointer flex-col items-start rounded-xl border border-[var(--color-stone-surface)] p-5 text-left transition duration-300 hover:-translate-y-0.5 hover:border-[var(--color-midnight)] hover:bg-[var(--color-warm-canvas)] peer-checked:border-[var(--color-midnight)] peer-checked:bg-[var(--color-warm-canvas)] sm:min-h-[180px] sm:p-6"
+                    className={cn(
+                      "flex min-h-[160px] cursor-pointer flex-col items-start rounded-xl border border-[var(--color-stone-surface)] p-5 text-left hover:border-[var(--color-midnight)] hover:bg-[var(--color-warm-canvas)] peer-checked:border-[var(--color-midnight)] peer-checked:bg-[var(--color-warm-canvas)] sm:min-h-[180px] sm:p-6",
+                      motion.cardInteractive,
+                    )}
                   >
-                    <span className="mb-6 flex size-12 items-center justify-center rounded-full bg-[var(--color-stone-surface)] text-[var(--color-midnight)] transition peer-checked:bg-[var(--color-midnight)] peer-checked:text-[var(--color-inverted)]">
+                    <span className={cn("mb-6 flex size-12 items-center justify-center rounded-full bg-[var(--color-stone-surface)] text-[var(--color-midnight)] peer-checked:bg-[var(--color-midnight)] peer-checked:text-[var(--color-inverted)]", motion.base)}>
                       <Icon size={20} aria-hidden="true" />
                     </span>
                     <span className="mb-2 text-xl font-semibold leading-tight text-[var(--color-charcoal-primary)]">
@@ -97,7 +102,7 @@ export default async function RoleSelectionPage({
           <div className="mt-10 flex sm:mt-12 sm:justify-end">
             <PendingSubmitButton
               type="submit"
-              className="inline-flex min-h-11 w-full min-w-40 cursor-pointer items-center justify-center rounded-full bg-[var(--color-midnight)] px-8 py-2 text-xs font-semibold text-[var(--color-inverted)] transition hover:bg-[var(--color-charcoal-primary)] hover:text-[var(--color-warm-canvas)] sm:w-auto"
+              className="inline-flex min-h-11 w-full min-w-40 cursor-pointer items-center justify-center rounded-full bg-[var(--color-midnight)] px-8 py-2 text-xs font-semibold text-[var(--color-inverted)] hover:bg-[var(--color-charcoal-primary)] hover:text-[var(--color-warm-canvas)] sm:w-auto"
               loadingLabel={copy.marketing.role.submitting}
               slotClassName="w-full sm:w-auto"
             >

@@ -2,11 +2,14 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ArrowLeft, Lock } from "lucide-react";
 
+import { SaveStatusToast } from "@/app/_components/save-status-toast";
 import { OnboardingShell } from "@/components/onboarding-shell";
+import { motion } from "@/components/ui/motion";
 import { roleEntryPath } from "@/lib/auth/roles";
 import { requireRole } from "@/lib/auth/session";
 import { getDictionary } from "@/lib/i18n/server";
 import { loadKycDocumentSummaries } from "@/lib/kyc/service";
+import { cn } from "@/lib/utils";
 
 import { DoctorDocumentUploadForm } from "./doctor-document-upload-form";
 
@@ -31,6 +34,7 @@ export default async function DoctorOnboardingStep2Page() {
       activeStep={2}
       themeLabels={copy.common.theme}
     >
+      <SaveStatusToast messages={copy.common.successToast} />
       <div className="mx-auto w-full max-w-2xl">
         <div className="mb-8 text-center sm:mb-12">
           <h1 className="text-3xl font-medium leading-tight tracking-normal text-[var(--color-charcoal-primary)] sm:text-3xl md:text-5xl md:leading-tight">
@@ -49,7 +53,7 @@ export default async function DoctorOnboardingStep2Page() {
         <div className="mt-10 flex items-center justify-between gap-4 sm:mt-12">
           <Link
             href="/doctor/onboarding/step-1"
-            className="inline-flex min-h-11 items-center gap-2 text-sm font-medium leading-6 tracking-normal text-[var(--color-ash)] transition hover:text-[var(--color-midnight)]"
+            className={cn("inline-flex min-h-11 items-center gap-2 text-sm font-medium leading-6 tracking-normal text-[var(--color-ash)] hover:text-[var(--color-midnight)]", motion.navLink)}
           >
             <ArrowLeft size={18} aria-hidden="true" />
             {copy.doctor.onboarding.back}

@@ -6,8 +6,12 @@ import { dictionary } from "@/lib/i18n/dictionary";
 describe("patient chat Stitch redesign contract", () => {
   const pageSource = () =>
     readFileSync(new URL("./chat/page.tsx", import.meta.url), "utf8");
+  const actionSource = () =>
+    readFileSync(new URL("./actions.ts", import.meta.url), "utf8");
   const clientSource = () =>
     readFileSync(new URL("./_components/ai-journal-client.tsx", import.meta.url), "utf8");
+  const serviceSource = () =>
+    readFileSync(new URL("../../lib/ai/journal-service.ts", import.meta.url), "utf8");
 
   it("keeps /patient/chat outside the shared patient portal shell", () => {
     expect(existsSync(new URL("./chat/page.tsx", import.meta.url))).toBe(true);
@@ -296,6 +300,25 @@ describe("patient chat Stitch redesign contract", () => {
     expect(source).not.toContain("remainingMessages");
   });
 
+  it("keeps finished sessions out of the default active chat while leaving history accessible", () => {
+    const source = serviceSource();
+    const stateStart = source.indexOf("export async function loadPatientJournalState");
+    const dashboardStart = source.indexOf("export async function loadPatientJournalDashboardState");
+    const historyStart = source.indexOf("export async function loadPatientChatHistory");
+    const sessionStart = source.indexOf("export async function loadPatientChatSession");
+    const stateLoader = source.slice(stateStart, dashboardStart);
+    const historyLoader = source.slice(historyStart, sessionStart);
+
+    expect(stateLoader).toContain(".is(\"ended_at\", null)");
+    expect(stateLoader).toContain("const selectedSession = activeSession;");
+    expect(stateLoader).not.toContain("chatHistory[0]");
+    expect(stateLoader).not.toContain("loadPatientSessionRow(patientId, chatHistory[0].id)");
+
+    expect(historyLoader).toContain(".from(\"ai_sessions\")");
+    expect(historyLoader).toContain(".order(\"created_at\", { ascending: false })");
+    expect(historyLoader).not.toContain(".is(\"ended_at\", null)");
+  });
+
   it("replaces the bottom composer with a fixed readonly component for closed sessions", () => {
     const source = clientSource();
     const closedBranchIndex = source.indexOf("selectedSessionIsClosed ? (");
@@ -435,6 +458,27 @@ describe("patient chat Stitch redesign contract", () => {
     expect(searchOverlay).toContain("{searchResultsEmptyMessage}");
   });
 
+  it("reuses sidebar history for empty search and avoids an empty query request", () => {
+    const source = clientSource();
+
+    expect(source).toContain("const trimmedQuery = nextQuery.trim()");
+    expect(source).toContain("if (!trimmedQuery)");
+    expect(source).toContain("setSearchResults(history)");
+    expect(source).toContain("encodeURIComponent(trimmedQuery)");
+    expect(source).not.toContain("encodeURIComponent(nextQuery)");
+  });
+
+  it("batches streamed assistant text updates before touching React state", () => {
+    const source = clientSource();
+
+    expect(source).toContain("appendAssistantContent");
+    expect(source).toContain("pendingAssistantContentRef");
+    expect(source).toContain("streamFlushFrameRef");
+    expect(source).toContain("requestAnimationFrame");
+    expect(source).toContain("flushAssistantContent");
+    expect(source).toContain("window.cancelAnimationFrame");
+  });
+
   it("moves Finish Session from the sidebar to a fixed main-chat action header", () => {
     const source = clientSource();
     const sidebarStart = source.indexOf('data-chat-sidebar="actions"');
@@ -457,7 +501,7 @@ describe("patient chat Stitch redesign contract", () => {
     expect(canvas).toContain("border-[var(--color-error-red)]");
     expect(canvas).toContain("text-[var(--color-error-red)]");
     expect(canvas).toContain("hover:bg-[var(--color-error-surface)]");
-    expect(canvas).toContain("await finishAiSessionAction()");
+    expect(canvas).toContain("void finishCurrentSession()");
     expect(canvas).toContain("{copy.finish}");
 
     const actionHeaderIndex = canvas.indexOf('data-chat-actions="main-session"');
@@ -465,6 +509,41 @@ describe("patient chat Stitch redesign contract", () => {
     expect(actionHeaderIndex).toBeGreaterThan(-1);
     expect(scrollListIndex).toBeGreaterThan(-1);
     expect(actionHeaderIndex).toBeLessThan(scrollListIndex);
+  });
+
+  it("finishes the selected chat in place instead of redirecting into a new chat", () => {
+    const client = clientSource();
+    const actions = actionSource();
+    const actionStart = actions.indexOf("export async function finishAiSessionAction");
+    const retryStart = actions.indexOf("export async function retryAiSessionSummaryAction");
+    const finishAction = actions.slice(actionStart, retryStart);
+    const finishHandlerStart = client.indexOf("function finishCurrentSession");
+    const retryHandlerStart = client.indexOf("function retrySummaryGeneration");
+    const finishHandler = client.slice(finishHandlerStart, retryHandlerStart);
+
+    expect(finishAction).toContain("finishAiSessionAction(sessionId: string)");
+    expect(finishAction).toContain("const detail = await finishPatientChatSession(role, sessionId)");
+    expect(finishAction).toContain("return detail");
+    expect(finishAction).not.toContain("redirect(");
+
+    expect(finishHandler).toContain("if (!sessionId || isStreaming || selectedSessionIsClosed) return");
+    expect(finishHandler).toContain("const detail = await finishAiSessionAction(sessionId)");
+    expect(finishHandler).toContain("applySessionDetail(detail)");
+    expect(finishHandler).toContain("showSuccessToast(successToast.aiSessionFinished)");
+    expect(finishHandler).toContain("void loadHistory()");
+    expect(finishHandler).not.toContain("createNewChat");
+  });
+
+  it("uses shared top-right success toast for chat lifecycle mutations", () => {
+    const source = clientSource();
+    const page = pageSource();
+
+    expect(source).toContain('import { AppToast } from "@/components/ui/app-toast";');
+    expect(source).toContain("successToast.aiSessionCreated");
+    expect(source).toContain("successToast.aiSessionFinished");
+    expect(source).toContain("successToast.summaryRetryStarted");
+    expect(source).not.toContain("showSuccessToast(successToast.messageSent)");
+    expect(page).toContain("successToast={copy.common.successToast}");
   });
 
   it("renders Markdown only for assistant chat bubbles", () => {

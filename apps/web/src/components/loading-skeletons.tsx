@@ -203,6 +203,109 @@ export function RoleSelectionSkeleton() {
   );
 }
 
+export function ArticlesPageSkeleton() {
+  return (
+    <div className="min-h-screen bg-[var(--color-warm-canvas)] text-[var(--color-graphite)]" data-loading-pattern="articles">
+      <HeaderSkeleton position="fixed" />
+      <main className="mx-auto min-h-screen w-full max-w-[1100px] px-4 pb-16 pt-28 sm:px-6 sm:pb-24 sm:pt-36">
+        <section className="mb-10 grid gap-4">
+          <Skeleton className="h-12 w-full max-w-[520px] sm:h-14" />
+          <Skeleton className="h-5 w-full max-w-2xl" />
+        </section>
+        <Skeleton className="mb-8 h-14 w-full rounded-xl" />
+        <div className="grid gap-6">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <Card key={index} className="grid gap-5 p-5 md:grid-cols-[220px_minmax(0,1fr)] md:p-6">
+              <Skeleton className="h-44 w-full rounded-lg" />
+              <div className="grid content-center gap-3">
+                <Skeleton className="h-8 w-full max-w-[520px]" />
+                <Skeleton className="h-4 w-full max-w-2xl" />
+                <Skeleton className="h-4 w-4/5 max-w-xl" />
+                <Skeleton className="mt-2 h-5 w-32" />
+              </div>
+            </Card>
+          ))}
+        </div>
+      </main>
+    </div>
+  );
+}
+
+export function ArticleDetailSkeleton() {
+  return (
+    <div className="min-h-screen bg-[var(--color-warm-canvas)] text-[var(--color-graphite)]" data-loading-pattern="article-detail">
+      <HeaderSkeleton position="fixed" />
+      <main className="mx-auto min-h-screen w-full max-w-[860px] px-4 pb-16 pt-28 sm:px-6 sm:pb-24 sm:pt-36">
+        <div className="mb-8 flex flex-wrap gap-2">
+          <Skeleton className="h-5 w-16" />
+          <Skeleton className="h-5 w-3" />
+          <Skeleton className="h-5 w-28" />
+        </div>
+        <Skeleton className="h-14 w-full max-w-[720px] sm:h-16" />
+        <Skeleton className="mt-5 h-5 w-full max-w-2xl" />
+        <Skeleton className="mt-8 aspect-[16/9] w-full rounded-xl" />
+        <article className="mt-10 grid gap-4">
+          {Array.from({ length: 8 }).map((_, index) => (
+            <Skeleton
+              key={index}
+              className={cn("h-4", index % 4 === 0 ? "w-full" : index % 4 === 1 ? "w-11/12" : index % 4 === 2 ? "w-4/5" : "w-2/3")}
+            />
+          ))}
+        </article>
+      </main>
+    </div>
+  );
+}
+
+export function ProfilePageSkeleton() {
+  return (
+    <div
+      className="min-h-screen bg-[var(--color-warm-canvas)] md:grid md:grid-cols-[260px_1fr]"
+      data-loading-pattern="profile-page"
+    >
+      <aside className="border-b border-[var(--color-stone-surface)] bg-[var(--color-card)] p-5 md:min-h-screen md:border-b-0 md:border-r">
+        <Skeleton className="mb-4 size-11 rounded-full" />
+        <nav className="flex gap-2 overflow-hidden md:grid">
+          <Skeleton className="h-11 w-36 rounded-lg md:w-full" />
+          <Skeleton className="h-11 w-40 rounded-lg md:w-full" />
+        </nav>
+      </aside>
+      <main className="mx-auto w-full max-w-[980px] px-5 py-8 md:px-8">
+        <Card className="grid gap-6 p-5 sm:p-8">
+          <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
+            <Skeleton className="size-24 shrink-0 rounded-full" />
+            <div className="grid flex-1 gap-3">
+              <Skeleton className="h-9 w-full max-w-[360px]" />
+              <Skeleton className="h-4 w-full max-w-lg" />
+            </div>
+          </div>
+          <LoadingForm fields={5} />
+        </Card>
+      </main>
+    </div>
+  );
+}
+
+export function SuperAdminDashboardSkeleton() {
+  return (
+    <div className="min-h-screen bg-[var(--color-warm-canvas)]" data-loading-pattern="superadmin-dashboard">
+      <HeaderSkeleton position="fixed" />
+      <main className="mx-auto grid min-h-screen max-w-[1400px] grid-cols-1 gap-5 px-4 pb-16 pt-20 sm:px-6 sm:pb-24 sm:pt-[100px] md:grid-cols-12 lg:gap-8">
+        <aside className="hidden md:col-span-3 md:block">
+          <div className="sticky top-[100px] flex flex-col gap-6">
+            <LoadingCard className="p-8" lines={2} />
+            <LoadingCard className="p-4" lines={3} />
+          </div>
+        </aside>
+        <div className="col-span-1 flex flex-col gap-5 md:col-span-9 md:gap-8">
+          <LoadingCard className="md:hidden" lines={2} />
+          <AdminDashboardSkeleton />
+        </div>
+      </main>
+    </div>
+  );
+}
+
 export function OnboardingPageSkeleton({
   role = "patient",
   variant = "form",

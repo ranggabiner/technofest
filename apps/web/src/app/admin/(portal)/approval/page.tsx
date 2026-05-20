@@ -5,8 +5,10 @@ import { PortalTransitionLink } from "@/app/_components/portal-navigation";
 import { AdminDoctorTable } from "@/app/admin/_components/admin-doctor-table";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/form";
+import { motion } from "@/components/ui/motion";
 import { adminDoctorStatuses, loadAdminApprovalState, rowsPerPageOptions } from "@/lib/admin/service";
 import { getDictionary, getLocale } from "@/lib/i18n/server";
+import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -42,11 +44,13 @@ export default async function AdminApprovalPage({
               key={status}
               href={approvalHref({ status, page: 1, pageSize: state.pageSize })}
               aria-current={state.status === status ? "page" : undefined}
-              className={
+              className={cn(
+                "inline-flex min-h-11 cursor-pointer items-center rounded-[10px] px-4 py-2 text-sm font-semibold",
+                motion.navItem,
                 state.status === status
-                  ? "inline-flex min-h-11 cursor-pointer items-center rounded-[10px] bg-[var(--color-midnight)] px-4 py-2 text-sm font-semibold text-[var(--color-inverted)]"
-                  : "inline-flex min-h-11 cursor-pointer items-center rounded-[10px] bg-[var(--color-stone-surface)] px-4 py-2 text-sm font-semibold text-[var(--color-midnight)]"
-              }
+                  ? "bg-[var(--color-midnight)] text-[var(--color-inverted)]"
+                  : "bg-[var(--color-stone-surface)] text-[var(--color-midnight)] hover:bg-[var(--color-parchment-card)]",
+              )}
             >
               {statusLabel(copy, status)}
             </PortalTransitionLink>
@@ -147,11 +151,13 @@ function PaginationLink({
   return (
     <PortalTransitionLink
       href={href}
-      className={
+      className={cn(
+        "inline-flex min-h-11 cursor-pointer items-center rounded-[10px] px-3 py-2 text-sm font-semibold",
+        motion.navItem,
         active
-          ? "inline-flex min-h-11 cursor-pointer items-center rounded-[10px] bg-[var(--color-midnight)] px-3 py-2 text-sm font-semibold text-[var(--color-inverted)]"
-          : "inline-flex min-h-11 cursor-pointer items-center rounded-[10px] bg-[var(--color-stone-surface)] px-3 py-2 text-sm font-semibold text-[var(--color-midnight)]"
-      }
+          ? "bg-[var(--color-midnight)] text-[var(--color-inverted)]"
+          : "bg-[var(--color-stone-surface)] text-[var(--color-midnight)] hover:bg-[var(--color-parchment-card)]",
+      )}
     >
       {children}
     </PortalTransitionLink>
