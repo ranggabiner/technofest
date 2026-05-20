@@ -19,6 +19,15 @@ describe("profile photo form file reader", () => {
     expect(readSelectedProfilePhotoFile(formData, "profile_photo")).toBe(file);
   });
 
+  it("ignores photo state when no valid-selection marker is present", () => {
+    const file = new File(["avatar"], "avatar.jpg", { type: "image/jpeg" });
+    const formData = new FormData();
+    formData.set("profile_photo_state", "selected");
+    formData.set("profile_photo", file);
+
+    expect(readSelectedProfilePhotoFile(formData, "profile_photo")).toBeNull();
+  });
+
   it("keeps marked empty selected files available for photo validation", () => {
     const file = new File([], "empty.jpg", { type: "image/jpeg" });
     const formData = new FormData();

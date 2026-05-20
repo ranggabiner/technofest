@@ -91,6 +91,8 @@ describe("role profile pages contract", () => {
     expect(shell).toContain("form={formId}");
     expect(shell).toContain('accept="image/jpeg,image/png"');
     expect(shell).toContain('addEventListener("reset"');
+    expect(shell).toContain('name={`${inputName}_state`}');
+    expect(shell).toContain('value={photoState}');
     expect(patient).toContain('inputName="profile_photo"');
     expect(doctor).toContain('inputName="profile_photo"');
     expect(admin).toContain("ProfilePhotoPicker");
@@ -127,6 +129,8 @@ describe("role profile pages contract", () => {
     expect(shell).toContain("createProfileFormSnapshot");
     expect(shell).toContain("event.preventDefault()");
     expect(shell).toContain("onDirtyStateChange?.()");
+    expect(shell).toContain("useEffect(() => {");
+    expect(shell).toContain("}, [onDirtyStateChange, photoState]);");
     expect(shell).toContain("window.setTimeout(updateDirtyState, 0)");
     expect(patient).toContain("const profileFormDirty = useProfileFormDirty(formRef)");
     expect(patient).toContain("const profilingFormDirty = useProfileFormDirty(formRef)");
@@ -144,9 +148,12 @@ describe("role profile pages contract", () => {
     const shell = readRoute("_components/profile-shell.tsx");
 
     expect(shell).toContain("const [hasSelectedPhoto, setHasSelectedPhoto] = useState(false)");
+    expect(shell).toContain("const [photoState, setPhotoState] = useState(savedPhotoState)");
     expect(shell).toContain("name={hasSelectedPhoto ? inputName : undefined}");
     expect(shell).toContain('name={`${inputName}_selected`}');
     expect(shell).toContain("input.name = inputName");
+    expect(shell).toContain('setPhotoState("selected")');
+    expect(shell).toContain("setPhotoState(savedPhotoState)");
     expect(shell).toContain("setHasSelectedPhoto(true)");
     expect(shell).toContain("setHasSelectedPhoto(false)");
     expect(shell).toContain('input.removeAttribute("name")');
