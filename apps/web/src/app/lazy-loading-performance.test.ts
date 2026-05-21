@@ -4,6 +4,50 @@ import { describe, expect, it } from "vitest";
 
 const appSource = (path: string) => readFileSync(new URL(`./${path}`, import.meta.url), "utf8");
 const componentSource = (path: string) => readFileSync(new URL(`../components/${path}`, import.meta.url), "utf8");
+const appRootSource = (path: string) => readFileSync(new URL(`../../${path}`, import.meta.url), "utf8");
+
+type WebPDimensions = {
+  height: number;
+  width: number;
+};
+
+function parseWebPDimensions(bytes: Buffer): WebPDimensions {
+  expect(bytes.subarray(0, 4).toString("ascii")).toBe("RIFF");
+  expect(bytes.subarray(8, 12).toString("ascii")).toBe("WEBP");
+
+  let offset = 12;
+  while (offset + 8 <= bytes.length) {
+    const chunkType = bytes.subarray(offset, offset + 4).toString("ascii");
+    const chunkSize = bytes.readUInt32LE(offset + 4);
+    const chunkStart = offset + 8;
+
+    if (chunkType === "VP8 ") {
+      return {
+        width: bytes.readUInt16LE(chunkStart + 6) & 0x3fff,
+        height: bytes.readUInt16LE(chunkStart + 8) & 0x3fff,
+      };
+    }
+
+    if (chunkType === "VP8X") {
+      return {
+        width:
+          1 +
+          bytes[chunkStart + 4] +
+          (bytes[chunkStart + 5] << 8) +
+          (bytes[chunkStart + 6] << 16),
+        height:
+          1 +
+          bytes[chunkStart + 7] +
+          (bytes[chunkStart + 8] << 8) +
+          (bytes[chunkStart + 9] << 16),
+      };
+    }
+
+    offset = chunkStart + chunkSize + (chunkSize % 2);
+  }
+
+  throw new Error("Unsupported WebP encoding");
+}
 
 describe("lazy loading performance contracts", () => {
   it("defers rare patient QR scanner UI from initial dashboard and access bundles", () => {
@@ -26,11 +70,11 @@ describe("lazy loading performance contracts", () => {
 
     expect(chatClient).toContain('import dynamic from "next/dynamic"');
     expect(chatClient).toContain("AssistantMarkdownFallback");
-    expect(chatClient).toContain('import("./assistant-markdown")');
+    expect(chatClient).toContain('import("@/components/assistant-markdown")');
     expect(chatClient).not.toContain('import { AssistantMarkdown } from "./assistant-markdown";');
     expect(journalHistoryClient).toContain('import dynamic from "next/dynamic"');
     expect(journalHistoryClient).toContain("JournalAssistantMarkdownFallback");
-    expect(journalHistoryClient).toContain('import("../../../../_components/assistant-markdown")');
+    expect(journalHistoryClient).toContain('import("@/components/assistant-markdown")');
     expect(journalHistoryClient).not.toContain(
       'import { AssistantMarkdown } from "../../../../_components/assistant-markdown";',
     );
@@ -94,29 +138,91 @@ describe("lazy loading performance contracts", () => {
     const articlesPage = appSource("articles/page.tsx");
     const articleDetailPage = appSource("articles/[slug]/page.tsx");
     const kycPreview = componentSource("kyc-document-preview.tsx");
+    const nextConfig = appRootSource("next.config.ts");
 
     expect(landingPage.match(/sizes=/g)?.length).toBeGreaterThanOrEqual(3);
     expect(articlesPage.match(/sizes=/g)?.length).toBeGreaterThanOrEqual(1);
     expect(articleDetailPage.match(/sizes=/g)?.length).toBeGreaterThanOrEqual(2);
+    expect(nextConfig).toContain('formats: ["image/webp"]');
+    expect(nextConfig).toContain("qualities: [75, 82, 88]");
+    expect(landingPage.match(/quality=\{88\}/g)?.length).toBeGreaterThanOrEqual(2);
+    expect(articlesPage).toContain("quality={82}");
+    expect(articleDetailPage).toContain("quality={88}");
+    expect(articleDetailPage).toContain("fill");
     expect(kycPreview.match(/loading="lazy"/g)?.length).toBeGreaterThanOrEqual(2);
     expect(kycPreview.match(/decoding="async"/g)?.length).toBeGreaterThanOrEqual(2);
   });
 
-  it("stores article .webp assets as real WebP bytes instead of mislabeled PNG files", () => {
-    const articleAssetDir = join(process.cwd(), "public", "assets", "articles");
-    const articleImages = [
-      "ai-diagnostics-clinic.webp",
-      "encryption-records.webp",
-      "medical-network.webp",
-      "medical-research-lab.webp",
-      "patient-rights.webp",
+  it("stores marketing WebP assets at display-safe resolution without oversized sources", () => {
+    const images = [
+      {
+        path: "public/assets/landing/hero-ai-interface.webp",
+        minWidth: 1536,
+        minHeight: 1536,
+        maxBytes: 220 * 1024,
+      },
+      {
+        path: "public/assets/landing/doctor-tablet.webp",
+        minWidth: 1536,
+        minHeight: 1536,
+        maxBytes: 220 * 1024,
+      },
+      {
+        path: "public/assets/articles/medical-research-lab.webp",
+        minWidth: 1200,
+        minHeight: 900,
+        maxBytes: 220 * 1024,
+      },
+      {
+        path: "public/assets/articles/encryption-records.webp",
+        minWidth: 1200,
+        minHeight: 900,
+        maxBytes: 220 * 1024,
+      },
+      {
+        path: "public/assets/articles/medical-network.webp",
+        minWidth: 1200,
+        minHeight: 900,
+        maxBytes: 220 * 1024,
+      },
+      {
+        path: "public/assets/articles/patient-rights.webp",
+        minWidth: 1200,
+        minHeight: 900,
+        maxBytes: 220 * 1024,
+      },
+      {
+        path: "public/assets/articles/ai-diagnostics-clinic.webp",
+        minWidth: 2200,
+        minHeight: 1238,
+        maxBytes: 280 * 1024,
+      },
+      {
+        path: "public/assets/articles/encryption-records-detail.webp",
+        minWidth: 2200,
+        minHeight: 1238,
+        maxBytes: 280 * 1024,
+      },
+      {
+        path: "public/assets/articles/medical-network-detail.webp",
+        minWidth: 2200,
+        minHeight: 1238,
+        maxBytes: 280 * 1024,
+      },
+      {
+        path: "public/assets/articles/patient-rights-detail.webp",
+        minWidth: 2200,
+        minHeight: 1238,
+        maxBytes: 280 * 1024,
+      },
     ];
 
-    for (const image of articleImages) {
-      const bytes = readFileSync(join(articleAssetDir, image));
-      expect(bytes.subarray(0, 4).toString("ascii"), image).toBe("RIFF");
-      expect(bytes.subarray(8, 12).toString("ascii"), image).toBe("WEBP");
-      expect(bytes.byteLength, image).toBeLessThan(80 * 1024);
+    for (const image of images) {
+      const bytes = readFileSync(join(process.cwd(), image.path));
+      const dimensions = parseWebPDimensions(bytes);
+      expect(bytes.byteLength, image.path).toBeLessThanOrEqual(image.maxBytes);
+      expect(dimensions.width, image.path).toBeGreaterThanOrEqual(image.minWidth);
+      expect(dimensions.height, image.path).toBeGreaterThanOrEqual(image.minHeight);
     }
   });
 });

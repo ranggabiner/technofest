@@ -1,9 +1,8 @@
 import Link from "next/link";
-import { Download, FileText } from "lucide-react";
+import { ArrowRight, Download, FileText, FolderOpen } from "lucide-react";
 
 import { DashboardCard } from "@/app/_components/portal-layout";
 import { requireApprovedDoctorPortalRole } from "@/app/doctor/_components/doctor-portal-role";
-import { EmptyState } from "@/components/state-panel";
 import { StatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
 import { CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -79,8 +78,31 @@ export default async function DoctorMedicalRecordLibraryPage() {
           ))}
         </div>
       ) : (
-        <DashboardCard className="p-6 md:p-8">
-          <EmptyState message={copy.doctor.library.noRecords} />
+        <DashboardCard className="p-6 md:p-8" data-doctor-library-empty>
+          <div className="grid gap-5 sm:grid-cols-[auto_1fr] sm:items-start">
+            <div className="flex size-12 items-center justify-center rounded-[10px] bg-[var(--color-fog)] text-[var(--color-midnight)]">
+              <FolderOpen size={22} aria-hidden="true" />
+            </div>
+            <div className="grid gap-4">
+              <div className="grid gap-2">
+                <h2 className="text-xl font-semibold leading-snug text-[var(--color-midnight)]">
+                  {copy.doctor.library.emptyTitle}
+                </h2>
+                <p className="max-w-2xl text-sm leading-6 text-[var(--color-charcoal-primary)]">
+                  {copy.doctor.library.noRecords}
+                </p>
+              </div>
+              <p className="max-w-2xl text-sm leading-6 text-[var(--color-ash)]">
+                {copy.doctor.library.emptyDescription}
+              </p>
+              <Button asChild variant="secondary" className="w-full rounded-[10px] sm:w-fit">
+                <Link href="/doctor">
+                  {copy.doctor.dashboard.title}
+                  <ArrowRight size={16} aria-hidden="true" />
+                </Link>
+              </Button>
+            </div>
+          </div>
         </DashboardCard>
       )}
     </section>

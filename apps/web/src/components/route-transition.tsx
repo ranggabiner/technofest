@@ -14,8 +14,10 @@ import {
 } from "react";
 
 type RouteTransitionContextValue = {
+  beginRouteRefreshTransition: (targetRefreshKey: string) => void;
   beginRouteTransition: (href: string) => void;
   pendingHref: string | null;
+  pendingRefreshKey: string | null;
 };
 
 const RouteTransitionContext = createContext<RouteTransitionContextValue | null>(null);
@@ -23,12 +25,21 @@ const sameOriginBase = "https://medproof.local";
 const pendingSkeletonDelayMs = 120;
 const pendingSafetyTimeoutMs = 4_000;
 
-export function RouteTransitionProvider({ children }: { children: ReactNode }) {
+export function RouteTransitionProvider({
+  children,
+  refreshKey,
+}: {
+  children: ReactNode;
+  refreshKey?: string | null;
+}) {
   const pathname = usePathname() ?? "/";
   const searchParams = useSearchParams();
   const routeKey = searchParams?.toString() ? `${pathname}?${searchParams}` : pathname;
   const [pendingHref, setPendingHref] = useState<string | null>(null);
+  const [pendingRefreshKey, setPendingRefreshKey] = useState<string | null>(null);
   const visiblePendingHref = pendingHref && pendingHref !== routeKey ? pendingHref : null;
+  const visiblePendingRefreshKey = pendingRefreshKey && pendingRefreshKey !== refreshKey ? pendingRefreshKey : null;
+  const isPending = Boolean(visiblePendingHref || visiblePendingRefreshKey);
 
   const beginRouteTransition = useCallback((href: string) => {
     const targetHref = normalizeTransitionHref(href);
@@ -36,15 +47,21 @@ export function RouteTransitionProvider({ children }: { children: ReactNode }) {
     setPendingHref(targetHref);
   }, [routeKey]);
 
+  const beginRouteRefreshTransition = useCallback((targetRefreshKey: string) => {
+    if (!targetRefreshKey || targetRefreshKey === refreshKey) return;
+    setPendingRefreshKey(targetRefreshKey);
+  }, [refreshKey]);
+
   useEffect(() => {
-    if (!visiblePendingHref) return;
+    if (!isPending) return;
 
     const timer = window.setTimeout(() => {
       setPendingHref(null);
+      setPendingRefreshKey(null);
     }, pendingSafetyTimeoutMs);
 
     return () => window.clearTimeout(timer);
-  }, [visiblePendingHref]);
+  }, [isPending]);
 
   useEffect(() => {
     function handleDocumentClick(event: MouseEvent) {
@@ -62,15 +79,17 @@ export function RouteTransitionProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<RouteTransitionContextValue>(
     () => ({
+      beginRouteRefreshTransition,
       beginRouteTransition,
       pendingHref: visiblePendingHref,
+      pendingRefreshKey: visiblePendingRefreshKey,
     }),
-    [beginRouteTransition, visiblePendingHref],
+    [beginRouteRefreshTransition, beginRouteTransition, visiblePendingHref, visiblePendingRefreshKey],
   );
 
   return (
     <RouteTransitionContext.Provider value={value}>
-      <div data-route-transition-root="" data-route-transition-pending={visiblePendingHref ? "true" : undefined}>
+      <div data-route-transition-root="" data-route-transition-pending={isPending ? "true" : undefined}>
         <div key={routeKey} data-route-transition-page="">
           {children}
         </div>
@@ -81,8 +100,10 @@ export function RouteTransitionProvider({ children }: { children: ReactNode }) {
 
 export function useRouteTransition() {
   return useContext(RouteTransitionContext) ?? {
+    beginRouteRefreshTransition: () => undefined,
     beginRouteTransition: () => undefined,
     pendingHref: null,
+    pendingRefreshKey: null,
   };
 }
 

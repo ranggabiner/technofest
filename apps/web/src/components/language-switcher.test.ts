@@ -6,7 +6,9 @@ describe("LanguageSwitcher", () => {
 
   it("uses the same single-click button pattern as the theme toggle", () => {
     expect(source).toContain("import { Button } from \"@/components/ui/button\";");
+    expect(source).toContain("useRouteTransition");
     expect(source).toContain("getNextLocale");
+    expect(source).toContain("beginRouteRefreshTransition(nextLocale)");
     expect(source).toContain("router.refresh()");
     expect(source).toContain("window.document.cookie");
     expect(source).not.toContain("supportedLocales.map");
@@ -17,7 +19,17 @@ describe("LanguageSwitcher", () => {
   it("announces the target language while showing the current locale code", () => {
     expect(source).toContain("aria-label={ariaLabel}");
     expect(source).toContain("title={ariaLabel}");
-    expect(source).toContain("currentLocale === \"id\" ? labels.indonesia : labels.english");
+    expect(source).toContain("locale === \"id\" ? labels.indonesia : labels.english");
     expect(source).toContain("nextLocale === \"id\" ? labels.switchToIndonesian : labels.switchToEnglish");
+    expect(source).not.toContain("currentLocale");
+    expect(source).not.toContain("setCurrentLocale");
+  });
+
+  it("starts the shared top loading bar before refreshing translated server content", () => {
+    const beginIndex = source.indexOf("beginRouteRefreshTransition(nextLocale)");
+    const refreshIndex = source.indexOf("router.refresh()");
+
+    expect(beginIndex).toBeGreaterThanOrEqual(0);
+    expect(refreshIndex).toBeGreaterThan(beginIndex);
   });
 });

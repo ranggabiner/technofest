@@ -19,7 +19,12 @@ import { SharedHeader } from "@/components/shared-header";
 import { SiteFooter } from "@/components/site-footer";
 import { motion } from "@/components/ui/motion";
 import { redirectAuthenticatedUserFromPublicRoute } from "@/lib/auth/session";
-import { articleAssets, getArticleDetailPath, getLandingArticlePreviews, type MarketingArticle } from "@/lib/articles";
+import {
+  getArticleDetailPath,
+  getArticleListImageAsset,
+  getLandingArticlePreviews,
+  type MarketingArticle,
+} from "@/lib/articles";
 import { dictionary } from "@/lib/i18n/dictionary";
 import { defaultLocale } from "@/lib/i18n/locales";
 import { getDictionary } from "@/lib/i18n/server";
@@ -130,9 +135,10 @@ function HeroSection({ landing }: { landing: LandingCopy }) {
             <Image
               src={imagePaths.hero}
               alt={landing.hero.imageAlt}
-              width={512}
-              height={512}
-              priority
+              width={1536}
+              height={1536}
+              preload
+              quality={88}
               sizes="(max-width: 1023px) calc(100vw - 2rem), 512px"
               className="aspect-square w-full rounded-3xl object-cover shadow-[var(--shadow-elevated)]"
             />
@@ -160,8 +166,9 @@ function AboutSection({ landing }: { landing: LandingCopy }) {
           data-scroll-reveal-group="about-image"
           src={imagePaths.about}
           alt={resolveLandingText(about.imageAlt, defaultLanding.about.imageAlt)}
-          width={512}
-          height={512}
+          width={1536}
+          height={1536}
+          quality={88}
           sizes="(max-width: 1023px) calc(100vw - 2rem), 512px"
           className="aspect-square w-full rounded-3xl object-cover shadow-[var(--shadow-elevated)]"
         />
@@ -232,43 +239,48 @@ function ArticleSection({
         description={landing.articles.description}
       />
       <div className="mx-auto grid w-full max-w-[1100px] gap-8 md:grid-cols-3">
-        {articles.map((article, index) => (
-          <div
-            key={article.slug}
-            data-scroll-reveal=""
-            data-scroll-reveal-group="article-card"
-            style={revealDelay(index)}
-          >
-            <Link
-              href={getArticleDetailPath(article.slug)}
-              className={cn(
-                "group flex cursor-pointer overflow-hidden rounded-3xl border border-[var(--color-stone-surface)] bg-[var(--color-card)] shadow-[var(--shadow-elevated)] hover:border-[color-mix(in_srgb,var(--color-teal-primary)_36%,var(--color-stone-surface))]",
-                motion.cardInteractive,
-              )}
+        {articles.map((article, index) => {
+          const articleImage = getArticleListImageAsset(article.slug);
+
+          return (
+            <div
+              key={article.slug}
+              data-scroll-reveal=""
+              data-scroll-reveal-group="article-card"
+              style={revealDelay(index)}
             >
-              <article className="flex w-full flex-col">
-                <Image
-                  src={articleAssets[article.slug]?.list ?? "/assets/landing/article-ai-healthcare.webp"}
-                  alt={article.imageAlt}
-                  width={512}
-                  height={512}
-                  sizes="(max-width: 767px) calc(100vw - 2rem), 33vw"
-                  className="h-48 w-full object-cover motion-safe:transition-transform motion-safe:duration-300 motion-safe:ease-out motion-safe:group-hover:scale-[1.03] motion-reduce:transition-none"
-                />
-                <div className="flex flex-1 flex-col p-6">
-                  <h3 className="mb-3 text-lg font-bold leading-snug text-[var(--color-charcoal-primary)]">{article.title}</h3>
-                  <p className="mb-5 flex-1 text-sm leading-6 text-[var(--color-graphite)]">{article.excerpt}</p>
-                  <span
-                    className={cn("inline-flex cursor-pointer items-center gap-2 text-sm font-semibold uppercase tracking-normal text-[var(--color-teal-deep)] hover:text-[var(--color-teal-primary)]", motion.navLink)}
-                  >
-                    <Send size={15} aria-hidden="true" />
-                    {readMoreLabel}
-                  </span>
-                </div>
-              </article>
-            </Link>
-          </div>
-        ))}
+              <Link
+                href={getArticleDetailPath(article.slug)}
+                className={cn(
+                  "group flex cursor-pointer overflow-hidden rounded-3xl border border-[var(--color-stone-surface)] bg-[var(--color-card)] shadow-[var(--shadow-elevated)] hover:border-[color-mix(in_srgb,var(--color-teal-primary)_36%,var(--color-stone-surface))]",
+                  motion.cardInteractive,
+                )}
+              >
+                <article className="flex w-full flex-col">
+                  <Image
+                    src={articleImage.src}
+                    alt={article.imageAlt}
+                    width={articleImage.width}
+                    height={articleImage.height}
+                    quality={82}
+                    sizes="(max-width: 767px) calc(100vw - 2rem), (max-width: 1100px) calc((100vw - 6rem) / 3), 348px"
+                    className="h-48 w-full object-cover motion-safe:transition-transform motion-safe:duration-300 motion-safe:ease-out motion-safe:group-hover:scale-[1.03] motion-reduce:transition-none"
+                  />
+                  <div className="flex flex-1 flex-col p-6">
+                    <h3 className="mb-3 text-lg font-bold leading-snug text-[var(--color-charcoal-primary)]">{article.title}</h3>
+                    <p className="mb-5 flex-1 text-sm leading-6 text-[var(--color-graphite)]">{article.excerpt}</p>
+                    <span
+                      className={cn("inline-flex cursor-pointer items-center gap-2 text-sm font-semibold uppercase tracking-normal text-[var(--color-teal-deep)] hover:text-[var(--color-teal-primary)]", motion.navLink)}
+                    >
+                      <Send size={15} aria-hidden="true" />
+                      {readMoreLabel}
+                    </span>
+                  </div>
+                </article>
+              </Link>
+            </div>
+          );
+        })}
       </div>
       <div data-scroll-reveal="" data-scroll-reveal-group="articles-view-all" className="mx-auto mt-10 flex w-full max-w-[1100px] justify-start sm:justify-end">
         <Link

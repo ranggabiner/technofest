@@ -71,7 +71,7 @@ Demo accounts, all with password `test123`:
 Role visibility after full seed:
 
 - Patient sees Indonesian health history, encrypted AI journaling/chat history, Scope 2 mental/physical summaries, complaints, symptoms, doctor grants, revoked/expired/pending access examples, proof statuses, and audit/activity history.
-- Doctor sees approved profile data, active patient grants, multiple patient summaries, reviewed records, notes, Scope 2 context for RAG, and interaction history.
+- Doctor sees approved profile data, active patient grants, multiple patient summaries, reviewed records, downloadable Medical Record Library attachments, notes, Scope 2 context for RAG, and interaction history.
 - Admin sees realistic doctor verification queues, approved/rejected/pending doctors, KYC document metadata, admin invitations, user-management examples, notification failures, and operational audit logs.
 - Superadmin sees the same operational surface plus broader admin/invitation state and platform-level doctors, patients, grants, verification records, and system activity.
 
@@ -79,6 +79,7 @@ Assumptions:
 
 - Extra `@medproof.test` users exist only to populate demo lists, filters, search, pagination, dashboard cards, and audit history.
 - No schema changes were added for seed richness; unsupported future integrations such as SATUSEHAT, KKI lookup, FHIR export, or production identity verification remain out of scope.
+- After `pnpm supabase:reset` alone, the Doctor Medical Record Library can show an empty state because the SQL seed is intentionally baseline-only. Run `pnpm demo:seed-auth` when `dokter@test.com` needs sample downloadable library records.
 - SQL seed keeps local reset useful before storage objects exist, but it does not create KYC secure file rows because those require environment-specific encryption. The service-role script is the canonical rich demo seed because it encrypts health content and KYC metadata with the active environment key and uploads encrypted storage payloads.
 
 ## Google OAuth Locally
