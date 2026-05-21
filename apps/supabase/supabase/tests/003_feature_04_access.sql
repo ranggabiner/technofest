@@ -145,8 +145,8 @@ select lives_ok(
       false,
       true,
       false,
-      '2026-05-15T10:00:00+00'::timestamptz,
-      '2026-05-20T10:00:00+00'::timestamptz,
+      transaction_timestamp(),
+      transaction_timestamp() + interval '5 days',
       'consent-create-hash',
       null,
       '90000000-0000-0000-0000-000000004001',
@@ -194,8 +194,8 @@ select lives_ok(
       true,
       false,
       false,
-      '2026-05-15T11:00:00+00'::timestamptz,
-      '2026-05-21T10:00:00+00'::timestamptz,
+      transaction_timestamp(),
+      transaction_timestamp() + interval '6 days',
       'consent-replace-hash',
       'prior-replaced-consent-hash',
       '90000000-0000-0000-0000-000000004002',
@@ -212,7 +212,7 @@ select isnt_empty(
     from public.access_grants
     where grant_id = '80000000-0000-0000-0000-000000004001'
       and is_revoked = true
-      and revoked_at = '2026-05-15T11:00:00+00'::timestamptz
+      and revoked_at = transaction_timestamp()
       and replaced_by_grant_id = '80000000-0000-0000-0000-000000004002'
       and consent_hash = 'prior-replaced-consent-hash'
       and blockchain_status = 'pending'$$,
@@ -236,7 +236,7 @@ select lives_ok(
   $$select public.revoke_active_access_grant(
       '80000000-0000-0000-0000-000000004002',
       '10000000-0000-0000-0000-000000004001',
-      '2026-05-15T12:00:00+00'::timestamptz,
+      transaction_timestamp(),
       'consent-revoked-hash',
       '90000000-0000-0000-0000-000000004003',
       'audit-revoke-hash',
@@ -252,7 +252,7 @@ select isnt_empty(
     from public.access_grants
     where grant_id = '80000000-0000-0000-0000-000000004002'
       and is_revoked = true
-      and revoked_at = '2026-05-15T12:00:00+00'::timestamptz
+      and revoked_at = transaction_timestamp()
       and consent_hash = 'consent-revoked-hash'
       and blockchain_status = 'pending'$$,
   'grant revoke stores refreshed consent proof'
@@ -399,8 +399,8 @@ select lives_ok(
         'mental', jsonb_build_object('mode', 'date_range', 'start_date', '2026-05-01', 'end_date', '2026-05-31'),
         'physical', jsonb_build_object('mode', 'date_range', 'start_date', '2026-05-10', 'end_date', '2026-05-20')
       ),
-      '2026-05-15T13:00:00+00'::timestamptz,
-      '2026-05-20T13:00:00+00'::timestamptz,
+      transaction_timestamp(),
+      transaction_timestamp() + interval '7 days',
       'consent-granular-hash',
       null,
       '90000000-0000-0000-0000-000000004004',
@@ -466,8 +466,8 @@ select throws_ok(
       jsonb_build_object(
         'mental', jsonb_build_object('mode', 'date_range', 'start_date', '2026-05-31', 'end_date', '2026-05-01')
       ),
-      '2026-05-15T13:00:00+00'::timestamptz,
-      '2026-05-20T13:00:00+00'::timestamptz,
+      transaction_timestamp(),
+      transaction_timestamp() + interval '7 days',
       'consent-invalid-range-hash',
       null,
       '90000000-0000-0000-0000-000000004005',

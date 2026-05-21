@@ -1163,9 +1163,9 @@ export const dictionary = {
         title: "Pustaka Rekam Medis",
         description:
           "Lampiran rekam medis yang sedang diizinkan pasien untuk diunduh oleh akun dokter ini.",
-        emptyTitle: "Belum ada pustaka khusus",
+        emptyTitle: "Belum ada rekam medis yang bisa diunduh",
         emptyDescription:
-          "Gunakan Dashboard untuk membuka sesi pasien aktif dan membuat rekam medis dari modal.",
+          "Buka Dashboard untuk melihat sesi pasien aktif dan membuat rekam medis saat pasien memberi izin.",
         noRecords: "Belum ada lampiran rekam medis yang bisa diunduh untuk akses aktif dokter ini.",
       },
       status: {
@@ -2664,9 +2664,9 @@ export const dictionary = {
         title: "Medical Record Library",
         description:
           "Medical record attachments that patients currently allow this doctor account to download.",
-        emptyTitle: "No dedicated library yet",
+        emptyTitle: "No downloadable medical records yet",
         emptyDescription:
-          "Use Dashboard to open active patient sessions and create medical records from a modal.",
+          "Open Dashboard to view active patient sessions and create medical records when patients grant access.",
         noRecords: "No downloadable medical record attachments are available for this doctor's active access grants yet.",
       },
       status: {

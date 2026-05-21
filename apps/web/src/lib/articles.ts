@@ -3,26 +3,47 @@ import type { Dictionary } from "@/lib/i18n/dictionary";
 export type MarketingArticle = Dictionary["marketing"]["articlesHub"]["items"][number];
 
 type ArticleAsset = {
-  detail: string;
-  list: string;
+  detail: MarketingImageAsset;
+  list: MarketingImageAsset;
 };
+
+export type MarketingImageAsset = {
+  height: number;
+  src: string;
+  width: number;
+};
+
+const articleListImage = (src: string): MarketingImageAsset => ({
+  src,
+  width: 1200,
+  height: 900,
+});
+
+const articleDetailImage = (src: string): MarketingImageAsset => ({
+  src,
+  width: 2200,
+  height: 1238,
+});
+
+const fallbackArticleListAsset = articleListImage("/assets/landing/article-ai-healthcare.webp");
+const fallbackArticleDetailAsset = articleDetailImage("/assets/articles/ai-diagnostics-clinic.webp");
 
 export const articleAssets: Record<string, ArticleAsset> = {
   "medproof-ai-verifikasi-rekam-medis": {
-    detail: "/assets/articles/ai-diagnostics-clinic.webp",
-    list: "/assets/articles/medical-research-lab.webp",
+    detail: articleDetailImage("/assets/articles/ai-diagnostics-clinic.webp"),
+    list: articleListImage("/assets/articles/medical-research-lab.webp"),
   },
   "standar-enkripsi-privasi-pasien": {
-    detail: "/assets/articles/encryption-records.webp",
-    list: "/assets/articles/encryption-records.webp",
+    detail: articleDetailImage("/assets/articles/encryption-records-detail.webp"),
+    list: articleListImage("/assets/articles/encryption-records.webp"),
   },
   "rs-sejahtera-administrasi-40": {
-    detail: "/assets/articles/medical-network.webp",
-    list: "/assets/articles/medical-network.webp",
+    detail: articleDetailImage("/assets/articles/medical-network-detail.webp"),
+    list: articleListImage("/assets/articles/medical-network.webp"),
   },
   "hak-akses-rekam-medis-elektronik": {
-    detail: "/assets/articles/patient-rights.webp",
-    list: "/assets/articles/patient-rights.webp",
+    detail: articleDetailImage("/assets/articles/patient-rights-detail.webp"),
+    list: articleListImage("/assets/articles/patient-rights.webp"),
   },
 };
 
@@ -32,6 +53,14 @@ export function getArticleBySlug(articles: readonly MarketingArticle[], slug: st
 
 export function getArticleDetailPath(slug: string) {
   return `/articles/${slug}`;
+}
+
+export function getArticleDetailImageAsset(slug: string) {
+  return articleAssets[slug]?.detail ?? fallbackArticleDetailAsset;
+}
+
+export function getArticleListImageAsset(slug: string) {
+  return articleAssets[slug]?.list ?? fallbackArticleListAsset;
 }
 
 export function getLandingArticlePreviews(articles: readonly MarketingArticle[], limit = 3) {

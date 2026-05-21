@@ -550,7 +550,7 @@ describe("patient chat Stitch redesign contract", () => {
     const source = clientSource();
 
     expect(source).toContain('import dynamic from "next/dynamic"');
-    expect(source).toContain('import("./assistant-markdown")');
+    expect(source).toContain('import("@/components/assistant-markdown")');
     expect(source).toContain("AssistantMarkdownFallback");
     expect(source).toContain("<AssistantMarkdown content={message.content || copy.writing} />");
     expect(source).toContain("{message.content || copy.writing}");

@@ -29,7 +29,7 @@ import { cn } from "@/lib/utils";
 type JournalDetailCopy = Dictionary["patient"]["healthHistory"]["journalDetail"];
 
 const AssistantMarkdown = dynamic(
-  () => import("../../../../_components/assistant-markdown").then((module) => module.AssistantMarkdown),
+  () => import("@/components/assistant-markdown").then((module) => module.AssistantMarkdown),
   {
     ssr: false,
     loading: () => <JournalAssistantMarkdownFallback />,

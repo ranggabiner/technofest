@@ -8,6 +8,10 @@ const nextConfig: NextConfig = {
   experimental: {
     turbopackFileSystemCacheForDev: false,
   },
+  images: {
+    formats: ["image/webp"],
+    qualities: [75, 82, 88],
+  },
   turbopack: {
     root: path.resolve(appRoot, "../../"),
   },

@@ -2,7 +2,7 @@ import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
-import { AssistantMarkdown } from "./_components/assistant-markdown";
+import { AssistantMarkdown } from "./assistant-markdown";
 
 describe("AssistantMarkdown", () => {
   function render(content: string) {
@@ -11,8 +11,9 @@ describe("AssistantMarkdown", () => {
     );
   }
 
-  it("renders emphasis, lists, paragraphs, inline code, and code blocks", () => {
+  it("renders emphasis, lists, line breaks, inline code, and code blocks", () => {
     const html = render(`**Penting** dan _tenang_.
+Baris kedua.
 
 - Minum air
 - Istirahat
@@ -30,6 +31,8 @@ baris panjang tanpa spasi
     expect(html).toContain("Penting");
     expect(html).toContain("<em");
     expect(html).toContain("tenang");
+    expect(html).toContain("Baris kedua");
+    expect(html).toContain("whitespace-pre-wrap");
     expect(html).toContain("<ul");
     expect(html).toContain("<ol");
     expect(html).toContain("<li");

@@ -1,12 +1,19 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Send } from "lucide-react";
 
+import { AssistantMarkdown } from "@/components/assistant-markdown";
 import { RagAnswerSkeleton } from "@/components/loading-skeletons";
 import { LoadingActionButton } from "@/components/ui/async-action-button";
 import { Field, Label, Textarea } from "@/components/ui/form";
 import { DOCTOR_RAG_DISCLAIMER } from "@/lib/doctor-records/rag";
+import {
+  getDoctorRagScrollIntent,
+  getDoctorRagScrollStateAfterPanelScroll,
+  getPanelScrollTopToRevealChildStart,
+  isScrollContainerNearBottom,
+} from "./doctor-rag-scroll";
 
 export function DoctorRagClient({
   grantId,
@@ -26,7 +33,117 @@ export function DoctorRagClient({
   const [answer, setAnswer] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const answerRef = useRef<HTMLDivElement | null>(null);
+  const autoScrollResetRef = useRef<number | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const hasRenderedAnswerRef = useRef(false);
+  const isAutoScrollingRef = useRef(false);
+  const lastObservedScrollHeightRef = useRef(0);
   const loadingRef = useRef(false);
+  const shouldRevealAnswerStartRef = useRef(true);
+  const shouldStickToBottomRef = useRef(true);
+
+  useEffect(() => {
+    const panel = containerRef.current?.closest("[data-viewport-modal-panel]") as HTMLElement | null;
+    if (!panel) return;
+
+    const syncStickyState = () => {
+      const nextScrollHeight = panel.scrollHeight;
+      const update = getDoctorRagScrollStateAfterPanelScroll({
+        isAutoScrolling: isAutoScrollingRef.current,
+        isNearBottom: isScrollContainerNearBottom(panel),
+        nextScrollHeight,
+        previousScrollHeight: lastObservedScrollHeightRef.current,
+        shouldRevealAnswerStart: shouldRevealAnswerStartRef.current,
+      });
+
+      lastObservedScrollHeightRef.current = nextScrollHeight;
+
+      if (!update) return;
+
+      shouldRevealAnswerStartRef.current = update.shouldRevealAnswerStart;
+      shouldStickToBottomRef.current = update.shouldStickToBottom;
+    };
+
+    lastObservedScrollHeightRef.current = panel.scrollHeight;
+    shouldStickToBottomRef.current = isScrollContainerNearBottom(panel);
+    panel.addEventListener("scroll", syncStickyState, { passive: true });
+
+    return () => panel.removeEventListener("scroll", syncStickyState);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (autoScrollResetRef.current !== null) {
+        window.clearTimeout(autoScrollResetRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    const hasAnswer = Boolean(answer);
+    const isFirstAnswer = hasAnswer && !hasRenderedAnswerRef.current;
+    const intent = getDoctorRagScrollIntent({
+      hasAnswer,
+      isFirstAnswer,
+      isLoading,
+      shouldRevealAnswerStart: shouldRevealAnswerStartRef.current,
+      shouldStickToBottom: shouldStickToBottomRef.current,
+    });
+
+    if (hasAnswer) hasRenderedAnswerRef.current = true;
+    if (intent === "none") return;
+
+    const panel = containerRef.current?.closest("[data-viewport-modal-panel]") as HTMLElement | null;
+    if (!panel) return;
+
+    if (autoScrollResetRef.current !== null) {
+      window.clearTimeout(autoScrollResetRef.current);
+      autoScrollResetRef.current = null;
+    }
+
+    const frameId = window.requestAnimationFrame(() => {
+      const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const behavior = prefersReducedMotion ? "auto" : "smooth";
+
+      isAutoScrollingRef.current = true;
+      autoScrollResetRef.current = window.setTimeout(() => {
+        isAutoScrollingRef.current = false;
+        lastObservedScrollHeightRef.current = panel.scrollHeight;
+        shouldStickToBottomRef.current = isScrollContainerNearBottom(panel);
+      }, prefersReducedMotion ? 0 : 320);
+
+      if (intent === "reveal-answer-start") {
+        const answerNode = answerRef.current;
+        if (!answerNode) return;
+
+        const panelRect = panel.getBoundingClientRect();
+        const answerRect = answerNode.getBoundingClientRect();
+        const nextScrollTop = getPanelScrollTopToRevealChildStart({
+          childTop: answerRect.top,
+          panelBottom: panelRect.bottom,
+          panelScrollTop: panel.scrollTop,
+          panelTop: panelRect.top,
+        });
+
+        shouldStickToBottomRef.current = false;
+        if (nextScrollTop === null) return;
+
+        panel.scrollTo({
+          top: nextScrollTop,
+          behavior,
+        });
+        return;
+      }
+
+      panel.scrollTo({
+        top: panel.scrollHeight,
+        behavior,
+      });
+    });
+
+    return () => window.cancelAnimationFrame(frameId);
+  }, [answer, isLoading]);
 
   async function askQuestion() {
     if (loadingRef.current) return;
@@ -38,6 +155,9 @@ export function DoctorRagClient({
     }
 
     loadingRef.current = true;
+    hasRenderedAnswerRef.current = false;
+    shouldRevealAnswerStartRef.current = true;
+    shouldStickToBottomRef.current = true;
     setIsLoading(true);
     setError(null);
     setAnswer(null);
@@ -60,7 +180,7 @@ export function DoctorRagClient({
   }
 
   return (
-    <div className="grid gap-4">
+    <div ref={containerRef} className="grid gap-4">
       <div className="rounded-[10px] bg-[var(--color-teal-surface)] p-4 text-sm leading-6 text-[var(--color-charcoal-primary)]">
         {DOCTOR_RAG_DISCLAIMER}
       </div>
@@ -93,8 +213,11 @@ export function DoctorRagClient({
       {isLoading ? (
         <RagAnswerSkeleton />
       ) : answer ? (
-        <div className="whitespace-pre-wrap break-words rounded-[10px] bg-[var(--color-parchment-card)] p-4 text-sm leading-6 text-[var(--color-charcoal-primary)] [overflow-wrap:anywhere]">
-          {answer}
+        <div
+          ref={answerRef}
+          className="rounded-[10px] bg-[var(--color-parchment-card)] p-4 text-sm leading-6 text-[var(--color-charcoal-primary)]"
+        >
+          <AssistantMarkdown content={answer} />
         </div>
       ) : null}
     </div>

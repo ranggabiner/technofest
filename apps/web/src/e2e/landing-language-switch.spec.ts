@@ -41,12 +41,46 @@ test.describe("landing language switch", () => {
     await expect(page.getByRole("heading", { name: /Tentang\s+MedProof/i })).toBeAttached();
     await expectLandingSectionsVisible(page);
 
+    await installRoutePendingObserver(page);
     await page.getByRole("button", { name: /Ganti ke Bahasa Inggris/i }).click();
+    await expect.poll(() => sawRoutePending(page), { message: "top route loading bar appeared" }).toBe(true);
     await expect(page.getByRole("heading", { name: /Why Choose\s+MedProof\?/i })).toBeAttached();
+    await expect(page.locator("[data-route-transition-root]")).not.toHaveAttribute("data-route-transition-pending", "true");
     await expectLandingSectionsVisible(page);
 
+    await installRoutePendingObserver(page);
     await page.getByRole("button", { name: /Switch to Indonesian/i }).click();
+    await expect.poll(() => sawRoutePending(page), { message: "top route loading bar appeared" }).toBe(true);
     await expect(page.getByRole("heading", { name: /Tentang\s+MedProof/i })).toBeAttached();
+    await expect(page.locator("[data-route-transition-root]")).not.toHaveAttribute("data-route-transition-pending", "true");
     await expectLandingSectionsVisible(page);
   });
 });
+
+async function installRoutePendingObserver(page: Page) {
+  await page.evaluate(() => {
+    const key = "__medproofRoutePendingObserver";
+    const previous = (window as Window & { [key]?: MutationObserver })[key];
+    previous?.disconnect();
+
+    const root = document.querySelector("[data-route-transition-root]");
+    (window as Window & {
+      __medproofSawRoutePending?: boolean;
+      [key]?: MutationObserver;
+    }).__medproofSawRoutePending = root?.getAttribute("data-route-transition-pending") === "true";
+
+    if (!root) return;
+
+    const observer = new MutationObserver(() => {
+      if (root.getAttribute("data-route-transition-pending") === "true") {
+        (window as Window & { __medproofSawRoutePending?: boolean }).__medproofSawRoutePending = true;
+      }
+    });
+    observer.observe(root, { attributes: true, attributeFilter: ["data-route-transition-pending"] });
+    (window as Window & { [key]?: MutationObserver })[key] = observer;
+  });
+}
+
+async function sawRoutePending(page: Page) {
+  return page.evaluate(() => Boolean((window as Window & { __medproofSawRoutePending?: boolean }).__medproofSawRoutePending));
+}

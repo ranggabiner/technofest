@@ -24,6 +24,17 @@ describe("marketing articles", () => {
     expect(enArticles.map((article) => article.slug)).toEqual(idArticles.map((article) => article.slug));
   });
 
+  it("exposes responsive WebP metadata for list and detail article images", () => {
+    for (const asset of Object.values(articleAssets)) {
+      expect(asset.list.src).toMatch(/^\/assets\/articles\/.+\.webp$/);
+      expect(asset.list.width).toBe(1200);
+      expect(asset.list.height).toBe(900);
+      expect(asset.detail.src).toMatch(/^\/assets\/articles\/.+\.webp$/);
+      expect(asset.detail.width).toBe(2200);
+      expect(asset.detail.height).toBe(1238);
+    }
+  });
+
   it("resolves article detail routes and related articles by slug", () => {
     const articles = dictionary.id.marketing.articlesHub.items;
     const article = getArticleBySlug(articles, "medproof-ai-verifikasi-rekam-medis");

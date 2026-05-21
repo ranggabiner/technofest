@@ -229,6 +229,7 @@ async function upsertRichDemoRows() {
   await upsertRows("access_grant_attachment_permissions", data.attachmentPermissions, "grant_id,record_id");
   await upsertRows("access_grant_scope2_filters", data.scope2Filters, "grant_id,scope_kind");
   await upsertRows("audit_logs", data.auditLogs, "log_id");
+  await assertDoctorLibraryDemoRecordsVisible();
 }
 
 function buildRichDemoData() {
@@ -793,6 +794,79 @@ async function upsertRows(table, rows, onConflict) {
       supabase.from(table).upsert(rows.slice(index, index + 100), { onConflict }),
     );
   }
+}
+
+async function assertDoctorLibraryDemoRecordsVisible() {
+  const doctorEmail = "dokter@test.com";
+  const doctorResult = await supabase
+    .from("doctors")
+    .select("doctor_id,account_status")
+    .eq("email", doctorEmail)
+    .maybeSingle();
+
+  if (doctorResult.error) throw doctorResult.error;
+  if (!doctorResult.data) {
+    throw new Error(`[seed] ${doctorEmail} is missing a doctor profile.`);
+  }
+  if (doctorResult.data.account_status !== "approved") {
+    throw new Error(`[seed] ${doctorEmail} doctor profile is not approved.`);
+  }
+
+  const activeDownloadGrantsResult = await supabase
+    .from("access_grants")
+    .select("grant_id,patient_id")
+    .eq("doctor_id", doctorResult.data.doctor_id)
+    .eq("can_view_scope1", true)
+    .eq("can_download_attachments", true)
+    .eq("is_revoked", false)
+    .gt("expires_at", new Date().toISOString());
+
+  if (activeDownloadGrantsResult.error) throw activeDownloadGrantsResult.error;
+
+  const activeDownloadGrants = activeDownloadGrantsResult.data ?? [];
+  if (activeDownloadGrants.length === 0) {
+    throw new Error(`[seed] ${doctorEmail} has no active Scope 1 grants with attachment downloads enabled.`);
+  }
+
+  const grantIds = activeDownloadGrants.map((grant) => grant.grant_id);
+  const patientIds = [...new Set(activeDownloadGrants.map((grant) => grant.patient_id))];
+  const grantIdsByPatient = new Map();
+  for (const grant of activeDownloadGrants) {
+    grantIdsByPatient.set(grant.patient_id, [
+      ...(grantIdsByPatient.get(grant.patient_id) ?? []),
+      grant.grant_id,
+    ]);
+  }
+
+  const recordsResult = await supabase
+    .from("scope_1_medical_records")
+    .select("record_id,patient_id,attachment_file_id")
+    .in("patient_id", patientIds)
+    .not("attachment_file_id", "is", null);
+
+  if (recordsResult.error) throw recordsResult.error;
+
+  const permissionsResult = await supabase
+    .from("access_grant_attachment_permissions")
+    .select("grant_id,record_id")
+    .in("grant_id", grantIds);
+
+  if (permissionsResult.error) throw permissionsResult.error;
+
+  const permittedRecords = new Set(
+    (permissionsResult.data ?? []).map((permission) => `${permission.grant_id}:${permission.record_id}`),
+  );
+  const visibleRecordCount = (recordsResult.data ?? []).filter((record) =>
+    (grantIdsByPatient.get(record.patient_id) ?? []).some((grantId) =>
+      permittedRecords.has(`${grantId}:${record.record_id}`),
+    ),
+  ).length;
+
+  if (visibleRecordCount === 0) {
+    throw new Error(`[seed] ${doctorEmail} has active grants but no permitted downloadable attachment records.`);
+  }
+
+  console.log(`[seed] ${doctorEmail} Medical Record Library records visible: ${visibleRecordCount}`);
 }
 
 async function uploadStorageObject(file) {
