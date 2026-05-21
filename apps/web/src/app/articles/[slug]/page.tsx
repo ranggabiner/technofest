@@ -7,7 +7,13 @@ import { ArrowLeft, ChevronRight } from "lucide-react";
 import { SharedHeader } from "@/components/shared-header";
 import { SiteFooter } from "@/components/site-footer";
 import { motion } from "@/components/ui/motion";
-import { articleAssets, getArticleBySlug, getArticleDetailPath, getRelatedArticles } from "@/lib/articles";
+import {
+  getArticleBySlug,
+  getArticleDetailImageAsset,
+  getArticleDetailPath,
+  getArticleListImageAsset,
+  getRelatedArticles,
+} from "@/lib/articles";
 import { dictionary } from "@/lib/i18n/dictionary";
 import { getDictionary } from "@/lib/i18n/server";
 import { cn } from "@/lib/utils";
@@ -54,6 +60,7 @@ export default async function ArticleDetailPage({ params }: ArticleDetailPagePro
   const publishedMeta = articlesCopy.publishedMeta
     .replace("{date}", article.publishedAt)
     .replace("{readTime}", article.readTime);
+  const detailImage = getArticleDetailImageAsset(article.slug);
 
   return (
     <div className="min-h-screen bg-[var(--color-warm-canvas)] text-[var(--color-graphite)]">
@@ -85,19 +92,15 @@ export default async function ArticleDetailPage({ params }: ArticleDetailPagePro
             <p className="mt-6 text-xs leading-5 text-[var(--color-graphite)]">{publishedMeta}</p>
           </header>
 
-          <div className="mb-20 overflow-hidden rounded-xl border border-[var(--color-stone-surface)] bg-[var(--color-card)]">
+          <div className="relative mb-20 aspect-video w-full overflow-hidden rounded-xl border border-[var(--color-stone-surface)] bg-[var(--color-card)] lg:aspect-auto lg:h-[500px]">
             <Image
-              src={
-                articleAssets[article.slug]?.detail ??
-                articleAssets[article.slug]?.list ??
-                "/assets/landing/article-ai-healthcare.webp"
-              }
+              src={detailImage.src}
               alt={article.detailImageAlt}
-              width={1280}
-              height={720}
-              priority
+              fill
+              preload
+              quality={88}
               sizes="(max-width: 1100px) calc(100vw - 3rem), 1100px"
-              className="max-h-[500px] w-full object-cover"
+              className="object-cover"
             />
           </div>
 
@@ -142,31 +145,36 @@ export default async function ArticleDetailPage({ params }: ArticleDetailPagePro
             </Link>
           </div>
           <div className="grid gap-6 md:grid-cols-3">
-            {relatedArticles.map((related) => (
-              <Link
-                key={related.slug}
-                href={getArticleDetailPath(related.slug)}
-                className={cn(
-                  "group flex cursor-pointer flex-col rounded-lg border border-[var(--color-stone-surface)] bg-[var(--color-card)] p-6 hover:bg-[var(--color-parchment-card)]",
-                  motion.cardInteractive,
-                )}
-              >
-                <Image
-                  src={articleAssets[related.slug]?.list ?? "/assets/landing/article-ai-healthcare.webp"}
-                  alt={related.imageAlt}
-                  width={480}
-                  height={320}
-                  sizes="(max-width: 767px) calc(100vw - 3rem), 33vw"
-                  className="mb-4 h-40 w-full rounded-md object-cover motion-safe:transition-transform motion-safe:duration-300 motion-safe:ease-out motion-safe:group-hover:scale-[1.02] motion-reduce:transition-none"
-                />
-                <h3 className="line-clamp-2 text-lg font-medium leading-snug text-[var(--color-midnight)]">
-                  {related.title}
-                </h3>
-                <p className="mt-auto pt-4 text-xs leading-5 text-[var(--color-graphite)]">
-                  {related.publishedAt}
-                </p>
-              </Link>
-            ))}
+            {relatedArticles.map((related) => {
+              const relatedImage = getArticleListImageAsset(related.slug);
+
+              return (
+                <Link
+                  key={related.slug}
+                  href={getArticleDetailPath(related.slug)}
+                  className={cn(
+                    "group flex cursor-pointer flex-col rounded-lg border border-[var(--color-stone-surface)] bg-[var(--color-card)] p-6 hover:bg-[var(--color-parchment-card)]",
+                    motion.cardInteractive,
+                  )}
+                >
+                  <Image
+                    src={relatedImage.src}
+                    alt={related.imageAlt}
+                    width={relatedImage.width}
+                    height={relatedImage.height}
+                    quality={82}
+                    sizes="(max-width: 767px) calc(100vw - 6rem), 302px"
+                    className="mb-4 h-40 w-full rounded-md object-cover motion-safe:transition-transform motion-safe:duration-300 motion-safe:ease-out motion-safe:group-hover:scale-[1.02] motion-reduce:transition-none"
+                  />
+                  <h3 className="line-clamp-2 text-lg font-medium leading-snug text-[var(--color-midnight)]">
+                    {related.title}
+                  </h3>
+                  <p className="mt-auto pt-4 text-xs leading-5 text-[var(--color-graphite)]">
+                    {related.publishedAt}
+                  </p>
+                </Link>
+              );
+            })}
           </div>
         </section>
       </main>

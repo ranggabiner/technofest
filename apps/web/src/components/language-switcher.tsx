@@ -2,8 +2,8 @@
 
 import { Languages } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
 
+import { useRouteTransition } from "@/components/route-transition";
 import { Button } from "@/components/ui/button";
 import { getNextLocale, localeCookieName, type Locale } from "@/lib/i18n/locales";
 
@@ -20,14 +20,14 @@ export function LanguageSwitcher({
   };
 }) {
   const router = useRouter();
-  const [currentLocale, setCurrentLocale] = useState<Locale>(locale);
+  const { beginRouteRefreshTransition } = useRouteTransition();
 
-  const nextLocale = getNextLocale(currentLocale);
-  const label = currentLocale === "id" ? labels.indonesia : labels.english;
+  const nextLocale = getNextLocale(locale);
+  const label = locale === "id" ? labels.indonesia : labels.english;
   const ariaLabel = nextLocale === "id" ? labels.switchToIndonesian : labels.switchToEnglish;
 
   function handleClick() {
-    setCurrentLocale(nextLocale);
+    beginRouteRefreshTransition(nextLocale);
     window.document.cookie = `${localeCookieName}=${nextLocale}; path=/; max-age=31536000; samesite=lax`;
     router.refresh();
   }

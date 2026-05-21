@@ -42,7 +42,7 @@ describe("navigation transition architecture", () => {
 
     expect(existsSync(transitionPath)).toBe(true);
     expect(layout).toContain('import { RouteTransitionProvider } from "@/components/route-transition";');
-    expect(layout).toContain("<RouteTransitionProvider>");
+    expect(layout).toContain("<RouteTransitionProvider refreshKey={locale}>");
     expect(layout).toContain("</RouteTransitionProvider>");
     expect(layout).toContain('id="app-shell"');
     expect(layout).toContain("data-app-shell");
@@ -54,6 +54,11 @@ describe("navigation transition architecture", () => {
     expect(source).toContain("pendingSkeletonDelayMs");
     expect(source).toContain("document.addEventListener(\"click\"");
     expect(source).toContain("beginRouteTransition");
+    expect(source).toContain("beginRouteRefreshTransition");
+    expect(source).toContain("pendingRefreshKey");
+    expect(source).toContain("visiblePendingRefreshKey");
+    expect(source).toContain("pendingRefreshKey !== refreshKey");
+    expect(source).toContain("visiblePendingHref || visiblePendingRefreshKey");
     expect(source).toContain("RouteTransitionSurface");
     expect(source).toContain("data-route-transition-surface");
     expect(source).toContain("data-route-transition-current");

@@ -111,10 +111,14 @@ describe("doctor dashboard contract", () => {
     expect(page).toContain("loadDoctorMedicalRecordLibraryState");
     expect(page).toContain("data-doctor-library-file");
     expect(page).toContain("/doctor/grants/${grantId}/attachments/${record.attachmentFileId}/download");
+    expect(page).toContain("data-doctor-library-empty");
+    expect(page).toContain("copy.doctor.library.emptyTitle");
+    expect(page).toContain("copy.doctor.library.noRecords");
+    expect(page).toContain("copy.doctor.library.emptyDescription");
+    expect(page).toContain('href="/doctor"');
     expect(page).not.toContain("/doctor/grants/${grantId}/attachments/${record.attachmentFileId}/preview");
     expect(page).not.toContain("copy.doctor.dashboard.downloadUnavailable");
     expect(page).not.toContain("Placeholder Sprint 1");
-    expect(page).not.toContain("copy.doctor.library.emptyTitle");
   });
 
   it("exposes a dedicated service loader for the doctor medical record library", () => {
@@ -172,6 +176,26 @@ describe("doctor dashboard contract", () => {
     expect(modalContent).toContain("[overflow-wrap:anywhere]");
     expect(skeleton).toContain("data-doctor-session-skeleton-cards");
     expect(skeleton).toContain("data-doctor-session-skeleton-table");
+  });
+
+  it("renders doctor RAG answers as safe Markdown and scrolls only the dashboard modal panel", () => {
+    const ragClient = route("doctor/_components/doctor-rag-client.tsx");
+
+    expect(ragClient).toContain('import { AssistantMarkdown } from "@/components/assistant-markdown";');
+    expect(ragClient).toContain("<AssistantMarkdown content={answer} />");
+    expect(ragClient).not.toContain("\n          {answer}\n");
+    expect(ragClient).toContain("getDoctorRagScrollIntent");
+    expect(ragClient).toContain("getDoctorRagScrollStateAfterPanelScroll");
+    expect(ragClient).toContain("getPanelScrollTopToRevealChildStart");
+    expect(ragClient).toContain("isScrollContainerNearBottom");
+    expect(ragClient).toContain("shouldRevealAnswerStartRef");
+    expect(ragClient).toContain("shouldStickToBottomRef");
+    expect(ragClient).toContain("lastObservedScrollHeightRef");
+    expect(ragClient).toContain("isAutoScrollingRef");
+    expect(ragClient).toContain("answerRef");
+    expect(ragClient).toContain('closest("[data-viewport-modal-panel]")');
+    expect(ragClient).toContain("panel.scrollTo");
+    expect(ragClient).not.toContain("window.scrollTo");
   });
 
   it("loads dashboard sessions newest grant first with explicit columns and scope flags", () => {

@@ -33,7 +33,7 @@ import { cn } from "@/lib/utils";
 import { finishAiSessionAction, retryAiSessionSummaryAction } from "../actions";
 
 const AssistantMarkdown = dynamic(
-  () => import("./assistant-markdown").then((module) => module.AssistantMarkdown),
+  () => import("@/components/assistant-markdown").then((module) => module.AssistantMarkdown),
   {
     ssr: false,
     loading: () => <AssistantMarkdownFallback />,

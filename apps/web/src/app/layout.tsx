@@ -57,7 +57,7 @@ export default async function RootLayout({
         <ThemeProvider>
           <div id="app-shell" data-app-shell>
             <Suspense fallback={children}>
-              <RouteTransitionProvider>
+              <RouteTransitionProvider refreshKey={locale}>
                 {children}
               </RouteTransitionProvider>
             </Suspense>
